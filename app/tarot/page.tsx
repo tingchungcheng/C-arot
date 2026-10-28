@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import TarotCardBack from '../components/TarotCardBack';
+import TarotArt, { artSrc, TarotNamedBack } from '../components/TarotArt';
 import LoadingWatch from '../components/LoadingWatch';
+import Icon, { type IconName } from '../components/Icon';
 
 type Topic = 'love' | 'career' | 'personal_growth';
 
@@ -18,261 +20,377 @@ interface DrawnCard {
   keywords: string[];
 }
 
+const TOPICS: { value: Topic; label: string; en: string; icon: IconName; desc: string; tone: string; ring: string }[] = [
+  { value: 'love', label: '爱情', en: 'Love', icon: 'love', desc: '感情关系与心灵连接', tone: 'text-primary', ring: 'border-primary/40' },
+  { value: 'career', label: '事业', en: 'Career', icon: 'career', desc: '职业发展与工作机会', tone: 'text-gold', ring: 'border-gold/40' },
+  { value: 'personal_growth', label: '个人成长', en: 'Growth', icon: 'growth', desc: '自我探索与内在成长', tone: 'text-green', ring: 'border-green/40' },
+];
+const SLOTS: { label: string; icon: IconName }[] = [
+  { label: '过去', icon: 'past' },
+  { label: '现在', icon: 'present' },
+  { label: '未来', icon: 'future' },
+];
+const FAN = 15;
+const NUM_ZH = ['一', '二', '三'];
+
+const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export default function TarotPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'topic' | 'question' | 'draw' | 'reveal'>('topic');
+  const [step, setStep] = useState<'topic' | 'question' | 'draw'>('topic');
   const [topic, setTopic] = useState<Topic>('love');
   const [question, setQuestion] = useState('');
   const [cards, setCards] = useState<DrawnCard[]>([]);
   const [readingId, setReadingId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [revealedCards, setRevealedCards] = useState<boolean[]>([false, false, false]);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [shuffling, setShuffling] = useState(false);
+  const [error, setError] = useState('');
+  const [slots, setSlots] = useState<(number | null)[]>([null, null, null]); // fan index placed in each slot
+  const [revealed, setRevealed] = useState([false, false, false]);
+  const [flipped, setFlipped] = useState(false);
+  const [dragI, setDragI] = useState<number | null>(null); // fan card being dragged
+  const [over, setOver] = useState<number | null>(null);   // empty slot under the pointer
+  const rootRef = useRef<HTMLDivElement>(null);
+  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const fanRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ i: number; sx: number; sy: number; x: number; y: number; ox: number; oy: number; w: number; active: boolean; pid: number } | null>(null);
+  const suppressClick = useRef(false);
+  const flipping = useRef(false);
+  const landing = useRef<{ slot: number; from: DOMRect; drop: boolean } | null>(null);
+  const picked = slots.filter((x): x is number => x !== null);
+  const nextEmpty = slots.indexOf(null);
 
+  // deep link from the nav dropdown: /tarot?topic=career
   useEffect(() => {
-    if (step === 'reveal' && cards.length === 3) {
-      animateReveal();
+    const t = new URLSearchParams(window.location.search).get('topic');
+    if (t && TOPICS.some((x) => x.value === t)) setTopic(t as Topic);
+  }, []);
+
+  // step entrance
+  useEffect(() => {
+    if (reduceMotion()) return;
+    const ctx = gsap.context(() => {
+      gsap.from('.step-in', { opacity: 0, y: 16, duration: 0.5, stagger: 0.05, ease: 'power3.out' });
+      if (step === 'draw') gsap.from('.fan-card', { opacity: 0, y: 60, rotation: 0, duration: 0.6, stagger: 0.03, ease: 'power3.out' });
+    }, rootRef);
+    return () => ctx.revert();
+  }, [step]);
+
+  const place = (fan: number, slot: number, from: DOMRect, drop: boolean) => {
+    landing.current = { slot, from, drop };
+    setSlots((s) => { const n = [...s]; n[slot] = fan; return n; });
+  };
+  // click / Enter / Space: fill the next empty slot
+  const pick = (i: number) => {
+    if (slots.includes(i) || nextEmpty < 0 || flipped) return;
+    const el = fanRefs.current[i]; if (!el) return;
+    place(i, nextEmpty, el.getBoundingClientRect(), false);
+  };
+  // landed card travels from where it came from (fan card or drop point) into its slot
+  useLayoutEffect(() => {
+    const L = landing.current; if (!L) return; landing.current = null;
+    const el = slotRefs.current[L.slot]?.querySelector<HTMLElement>('.slot-card');
+    if (!el || reduceMotion()) return;
+    const to = el.getBoundingClientRect();
+    gsap.fromTo(el, { x: L.from.left - to.left, y: L.from.top - to.top, scaleX: L.from.width / to.width, scaleY: L.from.height / to.height, transformOrigin: '0 0' },
+      { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: L.drop ? 0.25 : 0.45, ease: L.drop ? 'back.out(1.7)' : 'power3.out', clearProps: 'transform,transformOrigin' });
+  }, [slots]);
+
+  // ---- pointer drag (mouse + touch + pen) ----
+  const hitSlot = (x: number, y: number) => slotRefs.current.findIndex((el, k) => {
+    if (!el || slots[k] !== null) return false;
+    const r = el.getBoundingClientRect(); return x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12;
+  });
+  const onFanDown = (e: React.PointerEvent<HTMLButtonElement>, i: number) => {
+    if (e.button !== 0 || slots.includes(i) || nextEmpty < 0 || flipped) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    dragRef.current = { i, sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, ox: e.clientX - r.left, oy: e.clientY - r.top, w: r.width, active: false, pid: e.pointerId };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onFanMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return;
+    const dx = e.clientX - d.x; d.x = e.clientX; d.y = e.clientY;
+    if (!d.active) { if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return; d.active = true; setDragI(d.i); return; }
+    const g = ghostRef.current; if (!g) return;
+    gsap.set(g, { x: e.clientX - d.ox, y: e.clientY - d.oy });
+    if (!reduceMotion()) gsap.to(g, { rotation: gsap.utils.clamp(-4, 4, dx * 0.6), duration: 0.2, overwrite: 'auto' }); // tilt toward drag direction
+    const h = hitSlot(e.clientX, e.clientY); setOver(h < 0 ? null : h);
+  };
+  const endDrag = (e: React.PointerEvent<HTMLButtonElement>, cancelled: boolean) => {
+    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return;
+    dragRef.current = null;
+    if (!d.active) return; // plain click → onClick
+    suppressClick.current = true; setTimeout(() => { suppressClick.current = false; }, 0); // swallow only this drag's trailing click
+    const g = ghostRef.current; const h = cancelled ? -1 : hitSlot(e.clientX, e.clientY);
+    setOver(null);
+    if (h >= 0 && g) { place(d.i, h, g.getBoundingClientRect(), true); setDragI(null); return; }
+    // dropped outside any slot: back to the deck
+    const home = fanRefs.current[d.i]?.getBoundingClientRect();
+    if (!g || !home || reduceMotion()) { setDragI(null); return; }
+    gsap.to(g, { x: home.left, y: home.top, rotation: 0, scale: 1, duration: 0.3, ease: 'power2.out', onComplete: () => setDragI(null) });
+  };
+  // ghost appears under the pointer, lifted: scale 1.06 + soft shadow
+  useLayoutEffect(() => {
+    const d = dragRef.current, g = ghostRef.current;
+    if (dragI === null || !d || !g) return;
+    gsap.set(g, { x: d.x - d.ox, y: d.y - d.oy, width: d.w });
+    if (reduceMotion()) gsap.set(g, { scale: 1.06 }); else gsap.fromTo(g, { scale: 1 }, { scale: 1.06, duration: 0.15, ease: 'power2.out' });
+  }, [dragI]);
+
+  // POST /api/readings → a fresh server-side draw (new readingId). The AI interpretation is not
+  // generated here; the result page streams it after 查看解读.
+  const createDraw = async (avoid?: string) => {
+    const birthDataStr = localStorage.getItem('birthData');
+    const birthData = birthDataStr ? JSON.parse(birthDataStr) : undefined;
+    let data: { readingId: string; cards: DrawnCard[] } | null = null;
+    // a reshuffle must change the cards: redraw (max 3 tries) if the server repeats the same set
+    for (let tries = 0; tries < 3; tries++) {
+      const response = await fetch('/api/readings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, question, birthData }),
+      });
+      if (!response.ok) throw new Error('Failed to create reading');
+      data = await response.json();
+      const key = data!.cards.map((c) => c.id).join(',');
+      if (!avoid || key !== avoid) break;
     }
-  }, [step, cards]);
+    return data!;
+  };
+  const resetSlots = () => { setSlots([null, null, null]); setRevealed([false, false, false]); setFlipped(false); };
 
-  const animateReveal = () => {
-    const tl = gsap.timeline();
+  const shuffle = async () => {
+    if (shuffling || isLoading) return;
+    setShuffling(true);
+    setError('');
+    try {
+      const data = await createDraw(cards.map((c) => c.id).join(','));
+      setCards(data.cards);
+      setReadingId(data.readingId);
+      resetSlots();
+      if (!reduceMotion()) {
+        requestAnimationFrame(() => gsap.fromTo('.fan-card', { x: () => gsap.utils.random(-40, 40), y: () => gsap.utils.random(-20, 20) }, { x: 0, y: 0, duration: 0.5, stagger: 0.02, ease: 'back.out(1.4)' }));
+      }
+    } catch (e) {
+      console.error('Error reshuffling:', e);
+      setError('洗牌时出现问题,请重试。');
+    } finally {
+      setShuffling(false);
+    }
+  };
 
-    // Shuffle animation
-    tl.to('.card-wrapper', {
-      x: () => gsap.utils.random(-50, 50),
-      y: () => gsap.utils.random(-30, 30),
-      rotation: () => gsap.utils.random(-15, 15),
-      duration: 0.3,
-      stagger: 0.05,
-      repeat: 5,
-      ease: 'power1.inOut'
-    });
-
-    // Spread animation
-    tl.to('.card-wrapper', {
-      x: (index) => (index - 1) * 140,
-      y: 0,
-      rotation: (index) => (index - 1) * 5,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: 'back.out(1.2)'
-    });
-
-    // Reveal cards one by one
-    cards.forEach((_, index) => {
-      tl.add(() => {
-        setRevealedCards(prev => {
-          const newState = [...prev];
-          newState[index] = true;
-          return newState;
-        });
-      }, `+=${index * 0.8}`);
+  // 3D Y-flip, 0.5s per card, face swaps in at 90°; reduced motion: crossfade
+  const flip = () => {
+    if (flipping.current || flipped) return;
+    const els = slotRefs.current.map((r) => r?.querySelector<HTMLElement>('.slot-card')).filter(Boolean) as HTMLElement[];
+    const reveal = (k: number) => setRevealed((r) => { const n = [...r]; n[k] = true; return n; });
+    if (reduceMotion()) {
+      setRevealed([true, true, true]); setFlipped(true);
+      requestAnimationFrame(() => gsap.fromTo('.slot-card', { opacity: 0 }, { opacity: 1, duration: 0.3, clearProps: 'opacity' }));
+      return;
+    }
+    flipping.current = true;
+    const tl = gsap.timeline({ onComplete: () => { flipping.current = false; setFlipped(true); } });
+    els.forEach((el, k) => {
+      const t0 = k * 0.15;
+      tl.to(el, { rotationY: 90, duration: 0.25, ease: 'power1.in' }, t0)
+        .add(() => reveal(k), t0 + 0.25)
+        .fromTo(el, { rotationY: -90 }, { rotationY: 0, duration: 0.25, ease: 'power1.out', immediateRender: false, clearProps: 'transform' }, t0 + 0.25);
     });
   };
 
   const handleDrawCards = async () => {
     if (!question.trim()) return;
-
     setIsLoading(true);
-
+    setError('');
     try {
-      const birthDataStr = typeof window !== 'undefined' ? localStorage.getItem('birthData') : null;
-      const birthData = birthDataStr ? JSON.parse(birthDataStr) : undefined;
-
-      const response = await fetch('/api/readings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, question, birthData })
-      });
-
-      if (!response.ok) throw new Error('Failed to create reading');
-
-      const data = await response.json();
+      const data = await createDraw();
       setCards(data.cards);
       setReadingId(data.readingId);
-      setStep('reveal');
-    } catch (error) {
-      console.error('Error drawing cards:', error);
-      alert('抱歉,抽牌时出现问题。请重试。');
+      resetSlots();
+      setStep('draw');
+    } catch (e) {
+      console.error('Error drawing cards:', e);
+      setError('抽牌时出现问题,请重试。');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInterpret = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/readings/${readingId}/interpret`, {
-        method: 'POST'
-      });
+  // the result page streams the reading itself
+  const handleInterpret = () => { setIsLoading(true); router.push(`/tarot/reading/${readingId}`); };
 
-      if (!response.ok) throw new Error('Failed to interpret');
-
-      router.push(`/tarot/reading/${readingId}`);
-    } catch (error) {
-      console.error('Error interpreting:', error);
-      alert('解读失败,请重试。');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const t = TOPICS.find((x) => x.value === topic)!;
+  const questionChip = (
+    <p className="step-in mt-4 flex gap-3 items-center bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text text-left">
+      <Icon name={t.icon} size={18} className={`${t.tone} shrink-0`} />“{question}”
+    </p>
+  );
+  const allPicked = picked.length === 3;
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-4xl">
-        {/* Topic selection */}
+    <div ref={rootRef} className="min-h-screen bg-bg pt-16 md:pt-20 pb-16">
+      <div className="mx-auto max-w-[1312px] px-5 md:px-10 xl:px-16 pt-8 md:pt-12">
+        {/* Step 1: topic */}
         {step === 'topic' && (
-          <div className="text-center">
-            <div className="mb-8">
-              <div className="text-6xl mb-4">🃏</div>
-              <h1 className="text-4xl font-bold text-[#f5e6d3] mb-2">选择占卜主题</h1>
-              <p className="text-[#f5e6d3]/60">牌灵在等待你的问题</p>
+          <section aria-labelledby="topic-title">
+            <p className="step-in overline text-primary">Tarot · Step 1 / 2</p>
+            <h1 id="topic-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">选择占卜主题</h1>
+            <p className="step-in text-[16px] text-text-2 mt-2">牌灵在等待你的问题</p>
+
+            <div role="radiogroup" aria-label="占卜主题" className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
+              {TOPICS.map((x) => {
+                const sel = topic === x.value;
+                return (
+                  <button key={x.value} type="button" role="radio" aria-checked={sel} onClick={() => setTopic(x.value)}
+                    onDoubleClick={() => setStep('question')}
+                    className={`step-in relative text-center rounded-[var(--r-card)] border p-6 md:p-8 transition-[border-color,box-shadow,background-color] ${sel ? 'border-primary bg-primary-soft shadow-[var(--glow-primary)]' : 'border-border bg-surface-1 hover:border-border-strong'}`}>
+                    {sel && <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center"><Icon name="check" size={16} /></span>}
+                    <span className={`mx-auto w-24 h-24 md:w-28 md:h-28 rounded-full border ${x.ring} flex items-center justify-center`}>
+                      <span className={`w-[84%] h-[84%] rounded-full border border-dashed ${x.ring} flex items-center justify-center ${x.tone}`}><Icon name={x.icon} size={40} /></span>
+                    </span>
+                    <span className={`block font-display italic text-[16px] mt-5 ${x.tone}`}>{x.en}</span>
+                    <span className="block font-[family-name:var(--font-display-zh)] font-bold text-[22px] text-text mt-1">{x.label}</span>
+                    <span className="block text-[15px] text-text-2 mt-1">{x.desc}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              {[
-                { value: 'love' as Topic, label: '爱情', icon: '💕', desc: '感情关系与心灵连接' },
-                { value: 'career' as Topic, label: '事业', icon: '💼', desc: '职业发展与工作机会' },
-                { value: 'personal_growth' as Topic, label: '个人成长', icon: '🌱', desc: '自我探索与内在成长' }
-              ].map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => {
-                    setTopic(t.value);
-                    setStep('question');
-                  }}
-                  className="bg-[#1a1a1a] p-8 rounded-2xl border-2 border-[#ff6b35]/20 hover:border-[#ff6b35] hover:shadow-[0_0_30px_rgba(255,107,53,0.3)] transition-all group"
-                >
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">{t.icon}</div>
-                  <h3 className="text-xl font-bold text-[#f5e6d3] mb-2">{t.label}</h3>
-                  <p className="text-sm text-[#f5e6d3]/60">{t.desc}</p>
-                </button>
-              ))}
+            <div className="step-in mt-8 flex flex-col-reverse md:flex-row gap-4 md:items-center md:justify-between">
+              <p className="flex gap-2 items-center bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text-3 md:max-w-md">
+                <Icon name="lock" size={18} className="text-gold shrink-0" />请勿输入身份证号、地址等敏感个人资料。
+              </p>
+              <button type="button" onClick={() => setStep('question')} className="btn btn-primary w-full md:w-auto">
+                下一步:写下你的问题 <Icon name="arrow_right" size={20} />
+              </button>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Question input */}
+        {/* Step 2: question */}
         {step === 'question' && (
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="text-6xl mb-4">🥕</div>
-              <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">你的问题是?</h2>
-              <p className="text-[#f5e6d3]/60">诚心提问,牌灵会给予指引</p>
-            </div>
-
-            <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-[#ff6b35]/20">
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="在此输入你的问题..."
-                className="w-full h-32 px-4 py-3 bg-[#0a0a0a] text-[#f5e6d3] rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none resize-none"
-                maxLength={500}
-                autoFocus
-              />
-
-              <p className="mt-4 text-sm text-[#f5e6d3]/40 flex items-center">
-                <span className="mr-2">🔒</span>
-                你的问题是私密的,仅用于生成解读
+          <section aria-labelledby="q-title" className="md:grid md:grid-cols-12 md:gap-6">
+            <div className="md:col-span-8 xl:col-span-7">
+              <p className="step-in overline text-primary">Tarot · Step 2 / 2</p>
+              <h1 id="q-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">你的问题是?</h1>
+              <p className="step-in text-[16px] text-text-2 mt-2 flex items-center gap-2">
+                <Icon name={t.icon} size={18} className={t.tone} />{t.label} · 诚心提问,牌灵会给予指引
               </p>
-
-              <div className="flex space-x-4 mt-6">
-                <button
-                  onClick={() => setStep('topic')}
-                  className="flex-1 px-6 py-3 bg-[#1a1a1a] text-[#f5e6d3] rounded-xl border-2 border-[#f5e6d3]/20 hover:border-[#f5e6d3]/40"
-                >
-                  ← 返回
-                </button>
-                <button
-                  onClick={handleDrawCards}
-                  disabled={!question.trim() || isLoading}
-                  className="flex-1 px-6 py-3 bg-[#ff6b35] text-[#0a0a0a] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,107,53,0.6)] disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? '抽牌中...' : '开始抽牌 🃏'}
-                </button>
+              <div className="step-in mt-8 bg-surface-1 border border-border rounded-[var(--r-card)] p-5 md:p-6">
+                <label htmlFor="question" className="block text-[15px] text-text mb-2">写下你的问题</label>
+                <textarea id="question" value={question} onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="例如:我和他的关系接下来会怎样?" maxLength={500} autoFocus
+                  className="w-full h-36 px-4 py-3 bg-bg text-text text-[16px] rounded-[12px] border border-border-strong focus:border-primary focus:outline-none focus:shadow-[var(--focus-ring)] resize-none placeholder:text-text-3" />
+                <div className="mt-2 flex justify-between text-[15px] text-text-3">
+                  <span className="flex items-center gap-2"><Icon name="lock" size={18} className="text-gold" />问题仅用于生成解读</span>
+                  <span className="num">{question.length}/500</span>
+                </div>
+                {error && <p role="alert" className="mt-3 flex items-center gap-2 text-[15px] text-danger"><Icon name="warning" size={18} />{error}</p>}
+                <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                  <button type="button" onClick={() => setStep('topic')} className="btn btn-secondary"><Icon name="arrow_left" size={20} />上一步</button>
+                  <button type="button" onClick={handleDrawCards} disabled={!question.trim() || isLoading} className="btn btn-primary">
+                    {isLoading ? '洗牌中…' : <>开始抽牌 <Icon name="tarot_cards" size={20} /></>}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Card reveal */}
-        {step === 'reveal' && (
-          <div>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">你的牌阵</h2>
-              <p className="text-[#f5e6d3]/60">过去 · 现在 · 未来</p>
+        {/* Step 3: draw from the fan */}
+        {step === 'draw' && (
+          <section aria-labelledby="draw-title">
+            <div className={flipped ? 'flex flex-col items-center text-center' : 'md:grid md:grid-cols-12 md:gap-6 md:items-start'}>
+              <div className={flipped ? '' : 'md:col-span-6 xl:col-span-5 md:pt-6'}>
+                <p className="step-in overline text-primary">Tarot · 抽牌 · {Math.min(picked.length + 1, 3)} / 3</p>
+                <h1 id="draw-title" className="step-in text-[28px] md:text-[36px] leading-[1.2] tracking-[0.04em] text-text mt-3" aria-live="polite">
+                  {allPicked ? (flipped ? '你的牌阵' : '牌阵已就位') : `凭直觉,选出第${NUM_ZH[picked.length]}张牌`}
+                </h1>
+                {!flipped && questionChip}
+              </div>
+
+              <ol className={`step-in grid grid-cols-3 ${flipped ? 'mt-8 gap-3 md:gap-8 w-full md:w-auto md:grid-cols-[repeat(3,206px)]' : 'mt-6 md:mt-0 md:col-span-6 xl:col-span-5 xl:col-start-8 gap-3 md:gap-5'}`} aria-label="牌阵">
+                {SLOTS.map((s, i) => {
+                  const filled = slots[i] !== null;
+                  const c = cards[i];
+                  const art = artSrc(c?.id);
+                  const hot = over === i;
+                  return (
+                    <li key={s.label} className="flex flex-col items-center gap-2">
+                      <div ref={(el) => { slotRefs.current[i] = el; }} data-slot={i}
+                        className={`relative w-full aspect-[2/3.5] rounded-[12px] [perspective:800px] ${filled ? '' : `outline-1 outline-dashed -outline-offset-1 transition-[outline-color,box-shadow] duration-200 flex items-center justify-center ${hot ? 'outline-primary shadow-[var(--glow-primary)]' : 'outline-ob-border hover:outline-primary hover:shadow-[var(--glow-primary)]'}`}`}>
+                        {!filled && <Icon name="sparkle" size={22} className={hot ? 'text-primary' : 'text-text-3'} />}
+                        {filled && (
+                          <div className="slot-card absolute inset-0 [transform-style:preserve-3d]">
+                            {!revealed[i] ? <TarotCardBack className="shadow-[var(--shadow-1)]" />
+                              : c && art ? <TarotArt src={art} alt={`${s.label}:${c.name_zh}${c.orientation === 'reversed' ? '(逆位)' : ''}`} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />
+                              : c && <TarotNamedBack nameZh={c.name_zh} nameEn={c.name_en} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />}
+                          </div>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1.5 text-[15px] text-text-2"><Icon name={s.icon} size={16} />{s.label}
+                        {/* reversed: art stays rotated; the upright chip lives in the label row */}
+                        {revealed[i] && c?.orientation === 'reversed' && (
+                          <><span aria-hidden="true">·</span><span className="rounded-full border border-gold px-2 py-px text-[12px] md:text-[13px] leading-[18px] font-bold text-gold whitespace-nowrap">逆位</span></>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
 
-            <div className="relative h-96 flex items-center justify-center mb-12">
-              {cards.map((card, index) => (
-                <div
-                  key={index}
-                  className="card-wrapper absolute w-40"
-                  style={{ zIndex: index }}
-                >
-                  <div className="relative perspective-1000">
-                    <div
-                      className={`transition-all duration-700 preserve-3d ${
-                        revealedCards[index] ? 'rotate-y-180' : ''
-                      }`}
-                      style={{
-                        transformStyle: 'preserve-3d',
-                        transform: revealedCards[index] ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                      }}
-                    >
-                      {/* Card back */}
-                      <div className="absolute inset-0 backface-hidden">
-                        <TarotCardBack className="w-full drop-shadow-2xl" />
-                      </div>
-
-                      {/* Card front */}
-                      <div
-                        className="absolute inset-0 backface-hidden bg-[#f5e6d3] rounded-lg p-4 shadow-2xl border-2 border-[#ff6b35]"
-                        style={{ transform: 'rotateY(180deg)' }}
-                      >
-                        <div className="text-center h-full flex flex-col justify-between">
-                          <div>
-                            <p className="text-xs text-[#ff6b35] font-bold mb-1">
-                              {['过去', '现在', '未来'][index]}
-                            </p>
-                            <h3 className="text-lg font-bold text-[#0a0a0a] mb-1">{card.name_zh}</h3>
-                            <p className="text-xs text-[#0a0a0a]/60 mb-2">{card.name_en}</p>
-                          </div>
-                          <div className="text-4xl my-4">
-                            {card.orientation === 'reversed' ? '🔄' : '✨'}
-                          </div>
-                          <div>
-                            <p className="text-xs text-[#0a0a0a]/80 mb-1">
-                              {card.orientation === 'upright' ? '正位' : '逆位'}
-                            </p>
-                            <p className="text-xs text-[#0a0a0a]/60">
-                              {card.keywords.slice(0, 3).join(' · ')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {revealedCards.every(r => r) && (
-              <div className="text-center">
-                {isLoading ? (
-                  <LoadingWatch message="AI 正在解读你的牌..." />
-                ) : (
-                  <button
-                    onClick={handleInterpret}
-                    className="px-12 py-4 bg-[#ff6b35] text-[#0a0a0a] text-lg font-bold rounded-full hover:shadow-[0_0_30px_rgba(255,107,53,0.6)] transition-all"
-                  >
-                    查看解读 🔮
-                  </button>
-                )}
+            {/* fan */}
+            {!flipped && (
+              <div className="relative mt-6 md:mt-4 h-[160px] md:h-[200px] xl:h-[210px] mb-[calc(var(--fan-overhang)_+_32px)] [--fan-overhang:67px] md:[--fan-overhang:110px] xl:[--fan-overhang:118px]" role="group" aria-label="牌堆,选择三张:点击或拖到牌阵">
+                <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[min(1000px,140vw)] h-[560px] bg-[radial-gradient(closest-side,var(--c-ob-bg),transparent)]" />
+                {Array.from({ length: FAN }, (_, i) => {
+                  const mid = (FAN - 1) / 2;
+                  const off = i - mid;
+                  const taken = picked.includes(i) || dragI === i;
+                  return (
+                    <button key={i} ref={(el) => { fanRefs.current[i] = el; }} type="button" disabled={taken || allPicked}
+                      onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } pick(i); }}
+                      onPointerDown={(e) => onFanDown(e, i)} onPointerMove={onFanMove}
+                      onPointerUp={(e) => endDrag(e, false)} onPointerCancel={(e) => endDrag(e, true)}
+                      aria-label={`第 ${i + 1} 张牌`}
+                      className="fan-card touch-none select-none cursor-grab active:cursor-grabbing absolute left-1/2 bottom-0 w-[64px] -ml-[32px] md:w-[104px] md:-ml-[52px] xl:w-[112px] xl:-ml-[56px] origin-[50%_260%] transition-[translate,opacity] duration-200 hover:-translate-y-4 focus-visible:-translate-y-4 focus-visible:outline-none disabled:hover:translate-y-0 disabled:cursor-default"
+                      style={{ rotate: `${off * 6}deg`, opacity: taken ? 0 : 1 }}>
+                      <TarotCardBack className="shadow-[var(--shadow-1)]" />
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </div>
+            {dragI !== null && (
+              <div ref={ghostRef} aria-hidden="true" className="fixed left-0 top-0 z-50 pointer-events-none rounded-[12px] shadow-[var(--shadow-1)]">
+                <TarotCardBack className="shadow-[var(--shadow-1)]" />
+              </div>
+            )}
+
+            {error && <p role="alert" className="mt-4 text-center text-[15px] text-danger">{error}</p>}
+
+            {flipped && <div className="flex justify-center">{questionChip}</div>}
+
+            <div className={`${flipped ? 'mt-6' : 'mt-0'} flex flex-col-reverse sm:flex-row gap-3 justify-center`}>
+              {isLoading || shuffling ? (
+                <LoadingWatch message={shuffling ? '重新洗牌中…' : 'AI 正在解读你的牌...'} />
+              ) : (
+                <>
+                  <button type="button" onClick={shuffle} className="btn btn-secondary"><Icon name="reversed" size={20} />重新洗牌</button>
+                  {!flipped ? (
+                    <button type="button" onClick={flip} disabled={!allPicked} className="btn btn-primary">
+                      {allPicked ? '翻开牌面' : `再选 ${3 - picked.length} 张`} <Icon name="sparkle" size={20} />
+                    </button>
+                  ) : (
+                    <button type="button" onClick={handleInterpret} className="btn btn-primary">查看解读 <Icon name="crystal_ball" size={20} /></button>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </div>

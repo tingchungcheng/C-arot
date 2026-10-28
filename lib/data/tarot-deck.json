@@ -1,860 +1,1973 @@
 [
   {
     "id": "the_fool",
+    "slug": "the-fool",
     "name_en": "The Fool",
-    "name_zh": "愚者",
+    "name_zh": "愚人",
     "arcana_type": "major",
     "number": 0,
-    "upright_keywords": ["新开始", "自发性", "信念", "纯真"],
-    "upright_meaning": "愚者代表新的开始和无限的可能性。这是一张充满希望和潜力的牌,鼓励你迈出第一步,相信自己的直觉。",
-    "reversed_keywords": ["鲁莽", "冒险", "愚昧", "缺乏计划"],
-    "reversed_meaning": "逆位的愚者提醒你在行动前需要更多的思考和准备。避免不必要的风险和冲动的决定。"
+    "element": "air",
+    "astro": "Uranus/Air",
+    "upright_keywords": [
+      "新的开始",
+      "自发",
+      "信任",
+      "冒险",
+      "纯真"
+    ],
+    "upright_meaning": "你站在一段旅程的起点，心中带着好奇与开放。这张牌邀请你相信直觉，轻装上路，允许未知成为探索的一部分。",
+    "reversed_keywords": [
+      "鲁莽",
+      "犹豫",
+      "分心",
+      "逃避责任"
+    ],
+    "reversed_meaning": "也许你在冲动与裹足不前之间摇摆。可以停下来想一想：哪些准备能让你的自由更踏实？",
+    "wonderland_motif": "A white rabbit stepping off a cliff edge into a swirling rabbit hole, pocket watch dangling"
   },
   {
     "id": "the_magician",
+    "slug": "the-magician",
     "name_en": "The Magician",
     "name_zh": "魔术师",
     "arcana_type": "major",
     "number": 1,
-    "upright_keywords": ["力量", "技能", "专注", "行动力"],
-    "upright_meaning": "魔术师象征着你拥有实现目标所需的所有资源和能力。现在是将想法转化为现实的时候。",
-    "reversed_keywords": ["操纵", "欺骗", "浪费天赋", "缺乏方向"],
-    "reversed_meaning": "逆位的魔术师可能表示你正在浪费自己的才能,或者被他人操纵。重新审视你的目标和手段。"
+    "element": "air",
+    "astro": "Mercury",
+    "upright_keywords": [
+      "意志",
+      "创造力",
+      "资源",
+      "专注",
+      "行动"
+    ],
+    "upright_meaning": "你已经拥有实现想法所需的工具与能力。这张牌鼓励你把意图化为具体行动，让专注成为连接想法与现实的桥梁。",
+    "reversed_keywords": [
+      "分散",
+      "未发挥的潜能",
+      "操控",
+      "自我怀疑"
+    ],
+    "reversed_meaning": "你的能量可能被分散，或尚未相信自己的能力。不妨回到真实的意图，看看哪些资源被忽略了。",
+    "wonderland_motif": "A top-hatted rabbit at a table conjuring a carrot, teacup, card-blade and pocket watch from orange smoke"
   },
   {
     "id": "the_high_priestess",
+    "slug": "the-high-priestess",
     "name_en": "The High Priestess",
     "name_zh": "女祭司",
     "arcana_type": "major",
     "number": 2,
-    "upright_keywords": ["直觉", "神秘", "潜意识", "智慧"],
-    "upright_meaning": "女祭司鼓励你倾听内心的声音,相信你的直觉。有些事情不需要理性分析,而是需要感受。",
-    "reversed_keywords": ["隐藏", "压抑", "忽视直觉", "肤浅"],
-    "reversed_meaning": "逆位的女祭司暗示你可能忽视了内心的声音,或者被表面现象所迷惑。深入探索真相。"
+    "element": "water",
+    "astro": "Moon",
+    "upright_keywords": [
+      "直觉",
+      "内在智慧",
+      "沉静",
+      "奥秘"
+    ],
+    "upright_meaning": "答案或许不在外界，而在你安静的内心。这张牌邀请你放慢脚步，倾听直觉与梦境中传来的细微讯息。",
+    "reversed_keywords": [
+      "忽视直觉",
+      "隐瞒",
+      "内外失联",
+      "浮躁"
+    ],
+    "reversed_meaning": "外界的声音可能盖过了你的内在感受。给自己一些独处的时间，重新与内心的智慧建立联系。",
+    "wonderland_motif": "A veiled Alice seated between a black and an orange pillar, a crescent-moon pocket watch in her lap"
   },
   {
     "id": "the_empress",
+    "slug": "the-empress",
     "name_en": "The Empress",
     "name_zh": "皇后",
     "arcana_type": "major",
     "number": 3,
-    "upright_keywords": ["丰盛", "养育", "创造力", "成长"],
-    "upright_meaning": "皇后代表丰富和繁荣。这是一个充满创造力和成长的时期,你的努力将带来丰硕的成果。",
-    "reversed_keywords": ["依赖", "窒息", "创意枯竭", "忽视自我"],
-    "reversed_meaning": "逆位的皇后可能表示过度依赖他人,或者忽视了自己的需求。重新找回平衡和自我关怀。"
+    "element": "earth",
+    "astro": "Venus",
+    "upright_keywords": [
+      "丰盛",
+      "滋养",
+      "感官",
+      "创造",
+      "自然"
+    ],
+    "upright_meaning": "这是一段适合滋养与创造的时期。这张牌提醒你善待身体与感受，让关怀与美在生活中自然生长。",
+    "reversed_keywords": [
+      "过度付出",
+      "停滞",
+      "依赖",
+      "忽视自我"
+    ],
+    "reversed_meaning": "你也许把照顾都给了别人，却忘了自己。试着把同样的温柔留一些给自己。",
+    "wonderland_motif": "A crowned rabbit queen reclining in a garden of glowing orange carrots under a dark velvet sky"
   },
   {
     "id": "the_emperor",
+    "slug": "the-emperor",
     "name_en": "The Emperor",
     "name_zh": "皇帝",
     "arcana_type": "major",
     "number": 4,
-    "upright_keywords": ["权威", "结构", "稳定", "领导力"],
-    "upright_meaning": "皇帝象征着秩序和稳定。通过建立清晰的结构和规则,你可以实现长期的成功。",
-    "reversed_keywords": ["专制", "僵化", "控制欲", "缺乏纪律"],
-    "reversed_meaning": "逆位的皇帝可能表示过度控制或缺乏灵活性。学会在权威和适应性之间找到平衡。"
+    "element": "fire",
+    "astro": "Aries",
+    "upright_keywords": [
+      "结构",
+      "权威",
+      "稳定",
+      "责任",
+      "领导"
+    ],
+    "upright_meaning": "清晰的结构与边界能为你的目标提供支撑。这张牌鼓励你以成熟和担当来组织生活，建立可靠的秩序。",
+    "reversed_keywords": [
+      "控制",
+      "僵化",
+      "专断",
+      "缺乏纪律"
+    ],
+    "reversed_meaning": "秩序可能变得过于僵硬，或者你感到缺少方向。思考一下，怎样的规则真正服务于你，而不是束缚你。",
+    "wonderland_motif": "A stern rabbit king on a stone throne carved with ram heads, holding a carrot scepter"
   },
   {
     "id": "the_hierophant",
+    "slug": "the-hierophant",
     "name_en": "The Hierophant",
     "name_zh": "教皇",
     "arcana_type": "major",
     "number": 5,
-    "upright_keywords": ["传统", "教导", "信仰", "遵从"],
-    "upright_meaning": "教皇代表传统智慧和正统价值观。向有经验的人寻求指导,尊重既定的规则和习俗。",
-    "reversed_keywords": ["叛逆", "打破常规", "质疑权威", "个人信念"],
-    "reversed_meaning": "逆位的教皇鼓励你挑战传统,找到自己的道路。不要盲目跟随,而是要独立思考。"
+    "element": "earth",
+    "astro": "Taurus",
+    "upright_keywords": [
+      "传统",
+      "信念",
+      "学习",
+      "指导",
+      "群体"
+    ],
+    "upright_meaning": "传统与前人的智慧能为你提供指引。这张牌邀请你向导师或可信的体系学习，在共同的价值中找到归属。",
+    "reversed_keywords": [
+      "打破常规",
+      "质疑权威",
+      "个人信念",
+      "教条"
+    ],
+    "reversed_meaning": "你可能正在质疑既定的规则，寻找属于自己的道路。这是一个审视哪些信念仍然适合你的好时机。",
+    "wonderland_motif": "The Caterpillar as a robed teacher atop a mushroom pulpit, two small rabbits listening below"
   },
   {
     "id": "the_lovers",
+    "slug": "the-lovers",
     "name_en": "The Lovers",
     "name_zh": "恋人",
     "arcana_type": "major",
     "number": 6,
-    "upright_keywords": ["爱情", "和谐", "选择", "关系"],
-    "upright_meaning": "恋人牌象征着深刻的连接和重要的选择。这是关于价值观一致和心灵契合的时刻。",
-    "reversed_keywords": ["分歧", "失衡", "错误选择", "自我矛盾"],
-    "reversed_meaning": "逆位的恋人可能表示关系中的不和谐或内心的冲突。重新审视你的价值观和优先事项。"
+    "element": "air",
+    "astro": "Gemini",
+    "upright_keywords": [
+      "连结",
+      "选择",
+      "价值一致",
+      "和谐",
+      "爱"
+    ],
+    "upright_meaning": "这张牌关乎真诚的连结，也关乎依据内心价值做出的选择。当行动与价值一致时，关系会更加和谐。",
+    "reversed_keywords": [
+      "失衡",
+      "价值冲突",
+      "犹豫不决",
+      "疏离"
+    ],
+    "reversed_meaning": "你可能面临内外不一致的拉扯。回到自己真正在乎的东西，有助于理清方向。",
+    "wonderland_motif": "Two rabbits sharing a single orange carrot beneath a winged Cheshire grin in the night sky"
   },
   {
     "id": "the_chariot",
+    "slug": "the-chariot",
     "name_en": "The Chariot",
     "name_zh": "战车",
     "arcana_type": "major",
     "number": 7,
-    "upright_keywords": ["胜利", "意志力", "决心", "前进"],
-    "upright_meaning": "战车代表通过决心和意志力克服障碍。保持专注,你将朝着目标稳步前进。",
-    "reversed_keywords": ["失控", "缺乏方向", "侵略性", "挫折"],
-    "reversed_meaning": "逆位的战车暗示你可能失去了方向或控制。重新评估你的策略,找回平衡。"
+    "element": "water",
+    "astro": "Cancer",
+    "upright_keywords": [
+      "决心",
+      "意志力",
+      "前进",
+      "自律",
+      "胜利"
+    ],
+    "upright_meaning": "凭借专注与自律，你能够驾驭相互拉扯的力量向前推进。这张牌肯定你的决心，鼓励你稳住方向。",
+    "reversed_keywords": [
+      "失控",
+      "方向不明",
+      "受阻",
+      "急躁"
+    ],
+    "reversed_meaning": "力量可能朝不同方向分散，让你感到无法前进。先停下来整合目标，再出发会更稳。",
+    "wonderland_motif": "A rabbit driving a teacup chariot pulled by one black and one orange hare"
   },
   {
     "id": "strength",
+    "slug": "strength",
     "name_en": "Strength",
     "name_zh": "力量",
     "arcana_type": "major",
     "number": 8,
-    "upright_keywords": ["勇气", "耐心", "内在力量", "温柔"],
-    "upright_meaning": "力量牌展示的不是蛮力,而是内在的勇气和温柔的控制。用爱和耐心克服挑战。",
-    "reversed_keywords": ["自我怀疑", "软弱", "滥用权力", "缺乏信心"],
-    "reversed_meaning": "逆位的力量可能表示你正在经历自我怀疑或缺乏信心。重新连接你内在的力量源泉。"
+    "element": "fire",
+    "astro": "Leo",
+    "upright_keywords": [
+      "勇气",
+      "温柔的力量",
+      "耐心",
+      "自信",
+      "慈悲"
+    ],
+    "upright_meaning": "真正的力量来自温柔与耐心，而非强迫。这张牌提醒你以平和的勇气面对内在的情绪与挑战。",
+    "reversed_keywords": [
+      "自我怀疑",
+      "软弱感",
+      "情绪失衡",
+      "缺乏耐心"
+    ],
+    "reversed_meaning": "你可能暂时怀疑自己的力量。允许自己慢下来，用温柔的方式重建内在的信心。",
+    "wonderland_motif": "Alice gently closing the jaws of a great orange lion-cat, an infinity loop of carrot vines above her"
   },
   {
     "id": "the_hermit",
+    "slug": "the-hermit",
     "name_en": "The Hermit",
     "name_zh": "隐士",
     "arcana_type": "major",
     "number": 9,
-    "upright_keywords": ["内省", "独处", "智慧", "寻求真理"],
-    "upright_meaning": "隐士鼓励你暂时退出喧嚣,进行内在的探索和反思。独处是获得智慧的途径。",
-    "reversed_keywords": ["孤立", "逃避", "迷失", "拒绝帮助"],
-    "reversed_meaning": "逆位的隐士可能表示过度孤立或逃避现实。重新连接外部世界,寻求平衡。"
+    "element": "earth",
+    "astro": "Virgo",
+    "upright_keywords": [
+      "内省",
+      "独处",
+      "寻找",
+      "智慧",
+      "指引"
+    ],
+    "upright_meaning": "这是一段适合向内探索的时期。这张牌邀请你暂时远离喧嚣，借由独处找到属于自己的光。",
+    "reversed_keywords": [
+      "孤立",
+      "逃避",
+      "迷失",
+      "封闭"
+    ],
+    "reversed_meaning": "独处可能变成了隔绝。可以思考：哪些连结能帮助你，而不打扰你的内在节奏？",
+    "wonderland_motif": "An old grey rabbit on a dark hill holding a lantern with a glowing orange carrot flame"
   },
   {
     "id": "wheel_of_fortune",
+    "slug": "wheel-of-fortune",
     "name_en": "Wheel of Fortune",
     "name_zh": "命运之轮",
     "arcana_type": "major",
     "number": 10,
-    "upright_keywords": ["变化", "循环", "机遇", "命运"],
-    "upright_meaning": "命运之轮提醒我们生活是不断变化的。接受变化,抓住新的机遇,顺应生活的节奏。",
-    "reversed_keywords": ["厄运", "抗拒变化", "运气不佳", "失控"],
-    "reversed_meaning": "逆位的命运之轮可能表示你正在抗拒不可避免的变化。学会适应,相信一切都会过去。"
+    "element": "fire",
+    "astro": "Jupiter",
+    "upright_keywords": [
+      "循环",
+      "变化",
+      "转折",
+      "机遇",
+      "流动"
+    ],
+    "upright_meaning": "生活处在不断流转之中，变化也带来新的机会。这张牌提醒你顺应节奏，在转折中看见成长的可能。",
+    "reversed_keywords": [
+      "抗拒变化",
+      "停滞",
+      "失控感",
+      "重复模式"
+    ],
+    "reversed_meaning": "你也许在抗拒正在发生的变化，或陷入熟悉的循环。觉察这些模式，是转变的第一步。",
+    "wonderland_motif": "A giant pocket-watch wheel turning in the dark, rabbit, cat and caterpillar riding its rim"
   },
   {
     "id": "justice",
+    "slug": "justice",
     "name_en": "Justice",
     "name_zh": "正义",
     "arcana_type": "major",
     "number": 11,
-    "upright_keywords": ["公平", "真理", "平衡", "因果"],
-    "upright_meaning": "正义牌代表公平和真理。你的行为将带来相应的结果,保持诚实和正直。",
-    "reversed_keywords": ["不公", "偏见", "逃避责任", "失衡"],
-    "reversed_meaning": "逆位的正义可能表示不公平的待遇或逃避责任。面对真相,承担后果。"
+    "element": "air",
+    "astro": "Libra",
+    "upright_keywords": [
+      "公平",
+      "真相",
+      "因果",
+      "责任",
+      "平衡"
+    ],
+    "upright_meaning": "这张牌关乎诚实面对事实与承担选择的结果。以清晰与公正的态度行动，会带来内在的平衡。",
+    "reversed_keywords": [
+      "不公",
+      "逃避责任",
+      "偏见",
+      "自我欺骗"
+    ],
+    "reversed_meaning": "你可能对某些事实避而不见，或感到不被公平对待。诚实地审视自己的部分，有助于恢复平衡。",
+    "wonderland_motif": "The Queen of Hearts' court reimagined: a calm rabbit judge holding scales of teacups and a card-blade"
   },
   {
     "id": "the_hanged_man",
+    "slug": "the-hanged-man",
     "name_en": "The Hanged Man",
-    "name_zh": "吊人",
+    "name_zh": "倒吊人",
     "arcana_type": "major",
     "number": 12,
-    "upright_keywords": ["暂停", "放手", "新视角", "牺牲"],
-    "upright_meaning": "吊人鼓励你从不同的角度看待问题。有时候,放手和等待比行动更有智慧。",
-    "reversed_keywords": ["拖延", "停滞", "抗拒", "无谓牺牲"],
-    "reversed_meaning": "逆位的吊人可能表示你在无谓地拖延或做出不必要的牺牲。重新评估你的选择。"
+    "element": "water",
+    "astro": "Neptune/Water",
+    "upright_keywords": [
+      "暂停",
+      "换位思考",
+      "放下",
+      "臣服",
+      "等待"
+    ],
+    "upright_meaning": "暂时的停顿能让你从全新的角度看待事物。这张牌邀请你放下执着，在等待中获得新的领悟。",
+    "reversed_keywords": [
+      "拖延",
+      "抗拒",
+      "无谓牺牲",
+      "停滞"
+    ],
+    "reversed_meaning": "停顿可能变成了无尽的拖延。问问自己：继续等待是为了什么，又在回避什么？",
+    "wonderland_motif": "A rabbit hanging upside down by one foot from a carrot vine, serene, a halo of orange light"
   },
   {
     "id": "death",
+    "slug": "death",
     "name_en": "Death",
     "name_zh": "死神",
     "arcana_type": "major",
     "number": 13,
-    "upright_keywords": ["结束", "转变", "重生", "释放"],
-    "upright_meaning": "死神代表重要的转变和新生。结束旧的阶段,为新的开始腾出空间。",
-    "reversed_keywords": ["抗拒变化", "停滞", "恐惧", "无法放手"],
-    "reversed_meaning": "逆位的死神表示你正在抗拒必要的改变。接受结束,才能迎来新的开始。"
+    "element": "water",
+    "astro": "Scorpio",
+    "upright_keywords": [
+      "结束",
+      "转化",
+      "告别",
+      "新生",
+      "释放"
+    ],
+    "upright_meaning": "某个阶段正在自然地结束，为新的事物腾出空间。这张牌象征转化，邀请你温和地告别已完成的部分。",
+    "reversed_keywords": [
+      "抗拒结束",
+      "执着",
+      "停滞",
+      "害怕改变"
+    ],
+    "reversed_meaning": "你也许在紧紧抓住已经不再适合的东西。允许结束发生，往往能带来意想不到的轻松。",
+    "wonderland_motif": "A skeletal white horse ridden by a cloaked rabbit through falling playing cards at dusk"
   },
   {
     "id": "temperance",
+    "slug": "temperance",
     "name_en": "Temperance",
     "name_zh": "节制",
     "arcana_type": "major",
     "number": 14,
-    "upright_keywords": ["平衡", "和谐", "耐心", "调和"],
-    "upright_meaning": "节制牌教导我们中庸之道。通过耐心和平衡,融合对立的力量,找到内在的和谐。",
-    "reversed_keywords": ["失衡", "过度", "不耐烦", "冲突"],
-    "reversed_meaning": "逆位的节制可能表示生活失去平衡或过度追求某一方面。重新找回中心点。"
+    "element": "fire",
+    "astro": "Sagittarius",
+    "upright_keywords": [
+      "平衡",
+      "调和",
+      "耐心",
+      "适度",
+      "疗愈"
+    ],
+    "upright_meaning": "耐心地融合不同的元素，会带来和谐与疗愈。这张牌鼓励你在生活中寻找中道与节奏。",
+    "reversed_keywords": [
+      "失衡",
+      "过度",
+      "急躁",
+      "不协调"
+    ],
+    "reversed_meaning": "生活中的某些部分可能失去了平衡。觉察哪里过度、哪里不足，是重新调和的开始。",
+    "wonderland_motif": "A winged rabbit pouring orange tea between two cups, one foot in a pool, one on land"
   },
   {
     "id": "the_devil",
+    "slug": "the-devil",
     "name_en": "The Devil",
     "name_zh": "恶魔",
     "arcana_type": "major",
     "number": 15,
-    "upright_keywords": ["束缚", "诱惑", "物质主义", "上瘾"],
-    "upright_meaning": "恶魔牌揭示我们对物质或欲望的依赖。认清束缚你的东西,才能获得真正的自由。",
-    "reversed_keywords": ["解脱", "觉醒", "打破枷锁", "重获自由"],
-    "reversed_meaning": "逆位的恶魔表示你正在打破旧的束缚,重获自由。继续努力,摆脱负面模式。"
+    "element": "earth",
+    "astro": "Capricorn",
+    "upright_keywords": [
+      "束缚",
+      "执念",
+      "欲望",
+      "习惯",
+      "阴影"
+    ],
+    "upright_meaning": "这张牌映照出让你感到受限的习惯或执念。看清这些模式，本身就是重获选择权的开始。",
+    "reversed_keywords": [
+      "解脱",
+      "觉醒",
+      "挣脱束缚",
+      "重获自由"
+    ],
+    "reversed_meaning": "你正在意识到某些束缚并开始放手。这是收回自主权、走向自由的时刻。",
+    "wonderland_motif": "Two rabbits loosely chained to a giant carrot pedestal beneath a horned shadow with a Cheshire grin"
   },
   {
     "id": "the_tower",
+    "slug": "the-tower",
     "name_en": "The Tower",
-    "name_zh": "塔",
+    "name_zh": "高塔",
     "arcana_type": "major",
     "number": 16,
-    "upright_keywords": ["突变", "崩溃", "启示", "解放"],
-    "upright_meaning": "塔代表突然的改变和结构的崩塌。虽然动荡,但这是清除旧有、重建更坚固基础的机会。",
-    "reversed_keywords": ["逃避灾难", "延迟改变", "内在动荡", "恐惧"],
-    "reversed_meaning": "逆位的塔可能表示你正在回避必要的改变。延迟只会让问题积累,勇敢面对。"
+    "element": "fire",
+    "astro": "Mars",
+    "upright_keywords": [
+      "突变",
+      "真相揭示",
+      "瓦解",
+      "觉醒",
+      "释放"
+    ],
+    "upright_meaning": "原本不稳固的结构正在改变，真相随之显露。虽然令人震动，但这也为更真实的重建清出了空间。",
+    "reversed_keywords": [
+      "避免剧变",
+      "延迟改变",
+      "内在动荡",
+      "抗拒"
+    ],
+    "reversed_meaning": "你可能感觉到变化的迫近，却试图避免它。温和地面对，往往比一再拖延更轻松。",
+    "wonderland_motif": "A tall rabbit-hole tower struck by orange lightning, playing cards and teacups tumbling out"
   },
   {
     "id": "the_star",
+    "slug": "the-star",
     "name_en": "The Star",
     "name_zh": "星星",
     "arcana_type": "major",
     "number": 17,
-    "upright_keywords": ["希望", "灵感", "宁静", "更新"],
-    "upright_meaning": "星星带来希望和灵感。即使在黑暗之后,也有光明和更新的可能。保持信念。",
-    "reversed_keywords": ["失望", "缺乏信念", "悲观", "失去方向"],
-    "reversed_meaning": "逆位的星星可能表示你感到失望或失去希望。重新连接你的梦想和内在的光芒。"
+    "element": "air",
+    "astro": "Aquarius",
+    "upright_keywords": [
+      "希望",
+      "疗愈",
+      "灵感",
+      "平静",
+      "信心"
+    ],
+    "upright_meaning": "在经历之后，希望与宁静重新回到你身边。这张牌鼓励你相信疗愈的过程，向未来敞开。",
+    "reversed_keywords": [
+      "失去信心",
+      "沮丧",
+      "疏离",
+      "缺乏灵感"
+    ],
+    "reversed_meaning": "你可能暂时看不到光亮。从小小的善意与休息开始，让希望慢慢回来。",
+    "wonderland_motif": "Alice kneeling by a dark pool pouring starlight from two teacups, a great orange star overhead"
   },
   {
     "id": "the_moon",
+    "slug": "the-moon",
     "name_en": "The Moon",
     "name_zh": "月亮",
     "arcana_type": "major",
     "number": 18,
-    "upright_keywords": ["幻象", "直觉", "潜意识", "不确定"],
-    "upright_meaning": "月亮代表潜意识和不确定性。相信你的直觉,但要警惕幻象和自我欺骗。",
-    "reversed_keywords": ["混乱", "恐惧", "误解", "释放恐惧"],
-    "reversed_meaning": "逆位的月亮可能表示你正在释放恐惧,或者被混乱和误解所困扰。寻求清晰。"
+    "element": "water",
+    "astro": "Pisces",
+    "upright_keywords": [
+      "潜意识",
+      "不确定",
+      "直觉",
+      "梦境",
+      "想象"
+    ],
+    "upright_meaning": "事情未必如表面那样清晰，这是一段倾听潜意识的时期。这张牌邀请你温柔地面对模糊与不确定。",
+    "reversed_keywords": [
+      "澄清",
+      "释放困惑",
+      "面对真相",
+      "误解"
+    ],
+    "reversed_meaning": "迷雾正在逐渐散去，或你仍被误解所困扰。给自己时间去辨别什么是真实的感受。",
+    "wonderland_motif": "A winding path between two mushroom towers under an orange moon, a rabbit and a cat howling"
   },
   {
     "id": "the_sun",
+    "slug": "the-sun",
     "name_en": "The Sun",
     "name_zh": "太阳",
     "arcana_type": "major",
     "number": 19,
-    "upright_keywords": ["成功", "喜悦", "活力", "光明"],
-    "upright_meaning": "太阳是塔罗牌中最积极的牌之一。它代表成功、喜悦和生命的活力。享受这美好的时刻。",
-    "reversed_keywords": ["暂时失意", "过度乐观", "延迟快乐", "自我怀疑"],
-    "reversed_meaning": "逆位的太阳可能表示暂时的阴霾或过度的乐观。保持现实的态度,光明即将到来。"
+    "element": "fire",
+    "astro": "Sun",
+    "upright_keywords": [
+      "喜悦",
+      "活力",
+      "成功",
+      "清晰",
+      "温暖"
+    ],
+    "upright_meaning": "温暖与明朗充满你的生活。这张牌带来喜悦与活力，邀请你自信地展现真实的自己。",
+    "reversed_keywords": [
+      "暂时的阴霾",
+      "过度乐观",
+      "低落",
+      "延迟"
+    ],
+    "reversed_meaning": "光芒也许暂时被遮蔽，但它仍然存在。从简单的快乐入手，重新找回内在的温度。",
+    "wonderland_motif": "A small child on a white rabbit beneath a blazing orange sun, sunflower-carrots behind a wall"
   },
   {
     "id": "judgement",
+    "slug": "judgement",
     "name_en": "Judgement",
     "name_zh": "审判",
     "arcana_type": "major",
     "number": 20,
-    "upright_keywords": ["觉醒", "反思", "重生", "赎罪"],
-    "upright_meaning": "审判牌代表重要的觉醒和内在的呼唤。反思过去,原谅自己,准备迎接新的阶段。",
-    "reversed_keywords": ["自我怀疑", "逃避责任", "缺乏自我意识", "延迟判断"],
-    "reversed_meaning": "逆位的审判可能表示你回避自我反思或难以原谅过去。面对真相,才能前进。"
+    "element": "fire",
+    "astro": "Pluto/Fire",
+    "upright_keywords": [
+      "觉醒",
+      "召唤",
+      "反思",
+      "重生",
+      "释怀"
+    ],
+    "upright_meaning": "你正在听见内在更深的召唤。这张牌邀请你回顾过往，原谅并接纳自己，迈向新的阶段。",
+    "reversed_keywords": [
+      "自我批判",
+      "犹豫",
+      "忽视召唤",
+      "悔恨"
+    ],
+    "reversed_meaning": "你可能对自己过于苛刻，或犹豫回应内心的召唤。以宽容面对过去，才能轻松前行。",
+    "wonderland_motif": "The White Rabbit blowing a golden trumpet as figures rise from teacup coffins at dawn"
   },
   {
     "id": "the_world",
+    "slug": "the-world",
     "name_en": "The World",
     "name_zh": "世界",
     "arcana_type": "major",
     "number": 21,
-    "upright_keywords": ["完成", "成就", "整合", "圆满"],
-    "upright_meaning": "世界牌代表一个周期的完成和成就。庆祝你的成功,同时准备开启新的旅程。",
-    "reversed_keywords": ["未完成", "缺乏闭合", "延迟成功", "寻求完成"],
-    "reversed_meaning": "逆位的世界可能表示某些事情尚未完成或需要更多努力。继续坚持,成功在望。"
+    "element": "earth",
+    "astro": "Saturn",
+    "upright_keywords": [
+      "完成",
+      "圆满",
+      "整合",
+      "成就",
+      "旅程"
+    ],
+    "upright_meaning": "一个重要的循环正在圆满完成。这张牌庆祝你的成长与整合，邀请你带着收获迈入新的篇章。",
+    "reversed_keywords": [
+      "未完成",
+      "寻求结尾",
+      "停滞",
+      "缺少闭环"
+    ],
+    "reversed_meaning": "某件事似乎差最后一步才能完成。看看还需要什么，才能为这个阶段画上句点。",
+    "wonderland_motif": "Alice dancing inside a wreath of carrot vines, the four creatures of Wonderland in the corners"
   },
   {
     "id": "ace_of_wands",
+    "slug": "ace-of-wands",
     "name_en": "Ace of Wands",
     "name_zh": "权杖王牌",
     "arcana_type": "minor",
+    "number": 1,
     "suit": "wands",
-    "upright_keywords": ["创造力", "灵感", "新开始", "潜力"],
-    "upright_meaning": "权杖王牌代表创造力的爆发和新的开始。抓住这股能量,开启充满激情的项目。",
-    "reversed_keywords": ["缺乏方向", "拖延", "创意枯竭", "挫折"],
-    "reversed_meaning": "逆位的权杖王牌可能表示你感到缺乏灵感或难以开始。重新点燃你的热情。"
+    "element": "fire",
+    "astro": null,
+    "upright_keywords": [
+      "灵感",
+      "热情",
+      "新机会",
+      "创造力"
+    ],
+    "upright_meaning": "一股新的热情与灵感正在萌芽。这张牌邀请你抓住这份火花，让它成为行动的起点。",
+    "reversed_keywords": [
+      "延迟",
+      "缺乏动力",
+      "方向不明"
+    ],
+    "reversed_meaning": "灵感也许暂时受阻或尚未成形。给想法一些时间，看看什么真正点燃你。",
+    "wonderland_motif": "A hand from an orange cloud holding a single sprouting carrot staff, rendered in black and orange"
   },
   {
     "id": "two_of_wands",
+    "slug": "two-of-wands",
     "name_en": "Two of Wands",
     "name_zh": "权杖二",
     "arcana_type": "minor",
+    "number": 2,
     "suit": "wands",
-    "upright_keywords": ["计划", "远见", "决策", "探索"],
-    "upright_meaning": "权杖二鼓励你制定长远计划,展望未来的可能性。现在是做出重要决策的时候。",
-    "reversed_keywords": ["缺乏计划", "恐惧未知", "犹豫不决", "受限视野"],
-    "reversed_meaning": "逆位的权杖二可能表示你对未来感到不确定或害怕做决定。勇敢迈出第一步。"
+    "element": "fire",
+    "astro": "Mars in Aries",
+    "upright_keywords": [
+      "规划",
+      "远见",
+      "抉择",
+      "未来"
+    ],
+    "upright_meaning": "你站在高处眺望未来，思考下一步的方向。这张牌鼓励你为目标做出清晰的规划。",
+    "reversed_keywords": [
+      "犹豫",
+      "害怕未知",
+      "缺乏规划"
+    ],
+    "reversed_meaning": "你也许在安全区与未知之间犹豫。小步尝试可以让抉择变得更容易。",
+    "wonderland_motif": "A rabbit on a castle wall holding a tiny globe, two carrot staffs beside it, rendered in black and orange"
   },
   {
     "id": "three_of_wands",
+    "slug": "three-of-wands",
     "name_en": "Three of Wands",
     "name_zh": "权杖三",
     "arcana_type": "minor",
+    "number": 3,
     "suit": "wands",
-    "upright_keywords": ["扩展", "展望", "合作", "机遇"],
-    "upright_meaning": "权杖三代表扩展和成长的机会。你的视野正在拓宽,新的可能性即将到来。",
-    "reversed_keywords": ["障碍", "延迟", "缺乏远见", "过度谨慎"],
-    "reversed_meaning": "逆位的权杖三可能表示计划遇到障碍或进展缓慢。保持耐心,重新评估策略。"
+    "element": "fire",
+    "astro": "Sun in Aries",
+    "upright_keywords": [
+      "扩展",
+      "远望",
+      "进展",
+      "准备"
+    ],
+    "upright_meaning": "早先的努力开始显现成果，视野随之开阔。这张牌鼓励你继续向前，迎接更广阔的可能。",
+    "reversed_keywords": [
+      "受阻",
+      "延误",
+      "视野受限"
+    ],
+    "reversed_meaning": "进展可能比预期慢一些。重新检视计划，有助于理解哪里需要调整。",
+    "wonderland_motif": "A rabbit watching ships of teacups sail toward an orange horizon, three carrot staffs planted, rendered in black and orange"
   },
   {
     "id": "four_of_wands",
+    "slug": "four-of-wands",
     "name_en": "Four of Wands",
     "name_zh": "权杖四",
     "arcana_type": "minor",
+    "number": 4,
     "suit": "wands",
-    "upright_keywords": ["庆祝", "和谐", "家庭", "里程碑"],
-    "upright_meaning": "权杖四代表庆祝和稳定的时刻。享受你所建立的和谐,庆祝重要的里程碑。",
-    "reversed_keywords": ["不稳定", "缺乏支持", "过渡期", "延迟庆祝"],
-    "reversed_meaning": "逆位的权杖四可能表示家庭或关系中的不稳定。努力重建和谐和安全感。"
+    "element": "fire",
+    "astro": "Venus in Aries",
+    "upright_keywords": [
+      "庆祝",
+      "归属",
+      "稳定",
+      "家园"
+    ],
+    "upright_meaning": "这是值得庆祝的时刻，关系与成就带来安定感。这张牌邀请你享受与他人共享的喜悦。",
+    "reversed_keywords": [
+      "不安定",
+      "过渡",
+      "缺乏归属"
+    ],
+    "reversed_meaning": "你可能感到家或团体中有些不稳定。思考什么能让你真正感到安心。",
+    "wonderland_motif": "Rabbits dancing under a garland strung between four carrot staffs, rendered in black and orange"
   },
   {
     "id": "five_of_wands",
+    "slug": "five-of-wands",
     "name_en": "Five of Wands",
     "name_zh": "权杖五",
     "arcana_type": "minor",
+    "number": 5,
     "suit": "wands",
-    "upright_keywords": ["竞争", "冲突", "多样性", "挑战"],
-    "upright_meaning": "权杖五代表竞争和冲突。虽然有挑战,但这也是成长和学习的机会。",
-    "reversed_keywords": ["避免冲突", "内在冲突", "协作", "解决分歧"],
-    "reversed_meaning": "逆位的权杖五可能表示你正在回避必要的对抗,或者冲突即将得到解决。"
+    "element": "fire",
+    "astro": "Saturn in Leo",
+    "upright_keywords": [
+      "竞争",
+      "分歧",
+      "挑战",
+      "磨合"
+    ],
+    "upright_meaning": "不同意见与力量正在交锋。这张牌提醒你，摩擦也可以成为成长与磨合的契机。",
+    "reversed_keywords": [
+      "避免冲突",
+      "内耗",
+      "和解"
+    ],
+    "reversed_meaning": "你或许在回避分歧，或冲突正在平息。寻找共同点会让能量重新流动。",
+    "wonderland_motif": "Five young rabbits sparring playfully with carrot staffs in the dusk, rendered in black and orange"
   },
   {
     "id": "six_of_wands",
+    "slug": "six-of-wands",
     "name_en": "Six of Wands",
     "name_zh": "权杖六",
     "arcana_type": "minor",
+    "number": 6,
     "suit": "wands",
-    "upright_keywords": ["胜利", "认可", "成功", "自信"],
-    "upright_meaning": "权杖六代表公开的认可和成功。你的努力得到了回报,享受这一刻的荣耀。",
-    "reversed_keywords": ["失败", "缺乏认可", "自我怀疑", "傲慢"],
-    "reversed_meaning": "逆位的权杖六可能表示你感到不被认可或过于自负。保持谦逊,继续努力。"
+    "element": "fire",
+    "astro": "Jupiter in Leo",
+    "upright_keywords": [
+      "认可",
+      "成功",
+      "自信",
+      "进展"
+    ],
+    "upright_meaning": "你的努力获得了认可。这张牌肯定你的成就，也提醒你保持谦逊与感恩。",
+    "reversed_keywords": [
+      "缺乏认可",
+      "自我怀疑",
+      "骄傲"
+    ],
+    "reversed_meaning": "外在的掌声也许未如期而至。试着从内在肯定自己的价值。",
+    "wonderland_motif": "A laurel-crowned rabbit riding through a cheering crowd, carrot staffs raised, rendered in black and orange"
   },
   {
     "id": "seven_of_wands",
+    "slug": "seven-of-wands",
     "name_en": "Seven of Wands",
     "name_zh": "权杖七",
     "arcana_type": "minor",
+    "number": 7,
     "suit": "wands",
-    "upright_keywords": ["防御", "坚持", "勇气", "挑战"],
-    "upright_meaning": "权杖七鼓励你坚守立场,勇敢面对挑战。即使面对压力,也要相信自己的信念。",
-    "reversed_keywords": ["放弃", "压倒性", "缺乏信念", "屈服"],
-    "reversed_meaning": "逆位的权杖七可能表示你感到不堪重负或准备放弃。重新评估你的优先事项。"
+    "element": "fire",
+    "astro": "Mars in Leo",
+    "upright_keywords": [
+      "坚持",
+      "捍卫",
+      "立场",
+      "勇气"
+    ],
+    "upright_meaning": "你正为自己重视的事物坚守立场。这张牌鼓励你在压力下保持信念与勇气。",
+    "reversed_keywords": [
+      "疲惫",
+      "退让",
+      "压力过大"
+    ],
+    "reversed_meaning": "坚守可能让你感到疲惫。想一想哪些战斗真正值得投入。",
+    "wonderland_motif": "A rabbit on a hilltop holding one carrot staff against six rising from below, rendered in black and orange"
   },
   {
     "id": "eight_of_wands",
+    "slug": "eight-of-wands",
     "name_en": "Eight of Wands",
     "name_zh": "权杖八",
     "arcana_type": "minor",
+    "number": 8,
     "suit": "wands",
-    "upright_keywords": ["快速行动", "进展", "运动", "消息"],
-    "upright_meaning": "权杖八代表快速的进展和变化。事情正在加速,保持专注,准备好行动。",
-    "reversed_keywords": ["延迟", "挫折", "仓促", "缺乏方向"],
-    "reversed_meaning": "逆位的权杖八可能表示计划被延迟或你行动过于仓促。减速,重新调整方向。"
+    "element": "fire",
+    "astro": "Mercury in Sagittarius",
+    "upright_keywords": [
+      "快速",
+      "进展",
+      "讯息",
+      "行动"
+    ],
+    "upright_meaning": "事情正在迅速推进，讯息与机会接踵而来。这张牌鼓励你顺势而为，把握节奏。",
+    "reversed_keywords": [
+      "延误",
+      "急躁",
+      "混乱"
+    ],
+    "reversed_meaning": "节奏可能被打乱或过于匆忙。放慢一点，能让方向更清晰。",
+    "wonderland_motif": "Eight carrot staffs flying in parallel across an orange night sky, rendered in black and orange"
   },
   {
     "id": "nine_of_wands",
+    "slug": "nine-of-wands",
     "name_en": "Nine of Wands",
     "name_zh": "权杖九",
     "arcana_type": "minor",
+    "number": 9,
     "suit": "wands",
-    "upright_keywords": ["韧性", "坚持", "防御", "毅力"],
-    "upright_meaning": "权杖九代表在困难中的坚持。虽然疲惫,但成功就在眼前,继续保持。",
-    "reversed_keywords": ["筋疲力尽", "偏执", "顽固", "放弃"],
-    "reversed_meaning": "逆位的权杖九可能表示你已经筋疲力尽或过于防御。允许自己休息和接受帮助。"
+    "element": "fire",
+    "astro": "Moon in Sagittarius",
+    "upright_keywords": [
+      "韧性",
+      "坚守",
+      "警觉",
+      "最后一程"
+    ],
+    "upright_meaning": "你已走过很长的路，仍保有前行的力量。这张牌肯定你的韧性，鼓励你坚持到最后。",
+    "reversed_keywords": [
+      "防备过度",
+      "疲惫",
+      "固执"
+    ],
+    "reversed_meaning": "持续的防备让你身心疲惫。允许自己休息，也是一种力量。",
+    "wonderland_motif": "A bandaged rabbit leaning on a carrot staff, eight more fenced behind, rendered in black and orange"
   },
   {
     "id": "ten_of_wands",
+    "slug": "ten-of-wands",
     "name_en": "Ten of Wands",
     "name_zh": "权杖十",
     "arcana_type": "minor",
+    "number": 10,
     "suit": "wands",
-    "upright_keywords": ["负担", "责任", "压力", "完成"],
-    "upright_meaning": "权杖十代表沉重的责任和负担。虽然辛苦,但你正接近目标的完成。",
-    "reversed_keywords": ["释放负担", "委派", "解脱", "不堪重负"],
-    "reversed_meaning": "逆位的权杖十可能表示你正在放下不必要的负担或需要学会委派。寻求平衡。"
+    "element": "fire",
+    "astro": "Saturn in Sagittarius",
+    "upright_keywords": [
+      "负担",
+      "责任",
+      "压力",
+      "承担"
+    ],
+    "upright_meaning": "你可能同时背负了许多责任。这张牌邀请你看清哪些重担是必须的，哪些可以放下。",
+    "reversed_keywords": [
+      "放下负担",
+      "委派",
+      "减压"
+    ],
+    "reversed_meaning": "你正在学习卸下不必要的重担。分担与求助能让路变得轻盈。",
+    "wonderland_motif": "A rabbit hunched under a bundle of ten carrot staffs walking toward a distant house, rendered in black and orange"
   },
   {
     "id": "page_of_wands",
+    "slug": "page-of-wands",
     "name_en": "Page of Wands",
     "name_zh": "权杖侍从",
     "arcana_type": "minor",
+    "number": 11,
     "suit": "wands",
-    "upright_keywords": ["热情", "探索", "发现", "好奇"],
-    "upright_meaning": "权杖侍从带来新的热情和探索的渴望。保持好奇心,勇于尝试新事物。",
-    "reversed_keywords": ["缺乏方向", "拖延", "消息延迟", "不成熟"],
-    "reversed_meaning": "逆位的权杖侍从可能表示你缺乏明确的方向或行动不够成熟。重新聚焦你的能量。"
+    "element": "fire",
+    "astro": null,
+    "upright_keywords": [
+      "好奇",
+      "探索",
+      "热忱",
+      "新讯息"
+    ],
+    "upright_meaning": "一份新鲜的好奇心带你开始探索。这张牌鼓励你以开放的心态尝试新事物。",
+    "reversed_keywords": [
+      "三分钟热度",
+      "分心",
+      "不成熟"
+    ],
+    "reversed_meaning": "热情可能来得快去得也快。找到真正吸引你的方向，会更持久。",
+    "wonderland_motif": "A young rabbit page gazing at a sprouting carrot staff in a desert of dark sand, rendered in black and orange"
   },
   {
     "id": "knight_of_wands",
+    "slug": "knight-of-wands",
     "name_en": "Knight of Wands",
     "name_zh": "权杖骑士",
     "arcana_type": "minor",
+    "number": 12,
     "suit": "wands",
-    "upright_keywords": ["冒险", "激情", "冲动", "行动"],
-    "upright_meaning": "权杖骑士代表充满激情的行动和冒险精神。抓住机会,勇敢前进,但不要鲁莽。",
-    "reversed_keywords": ["鲁莽", "冲动", "缺乏自控", "延迟"],
-    "reversed_meaning": "逆位的权杖骑士可能表示你过于冲动或缺乏计划。在行动前多思考。"
+    "element": "fire",
+    "astro": null,
+    "upright_keywords": [
+      "冒险",
+      "热情",
+      "行动力",
+      "冲劲"
+    ],
+    "upright_meaning": "你充满冲劲，渴望行动与冒险。这张牌鼓励你带着热情前进，同时留意方向。",
+    "reversed_keywords": [
+      "冲动",
+      "鲁莽",
+      "半途而废"
+    ],
+    "reversed_meaning": "冲劲可能变成急躁。行动前稍作思考，能让热情更有效。",
+    "wonderland_motif": "A rabbit knight on a rearing orange horse, carrot staff held high, rendered in black and orange"
   },
   {
     "id": "queen_of_wands",
+    "slug": "queen-of-wands",
     "name_en": "Queen of Wands",
-    "name_zh": "权杖王后",
+    "name_zh": "权杖皇后",
     "arcana_type": "minor",
+    "number": 13,
     "suit": "wands",
-    "upright_keywords": ["自信", "独立", "魅力", "决心"],
-    "upright_meaning": "权杖王后代表自信和独立的能量。相信自己的能力,勇敢追求你的目标。",
-    "reversed_keywords": ["嫉妒", "缺乏自信", "控制欲", "自私"],
-    "reversed_meaning": "逆位的权杖王后可能表示你缺乏自信或过于控制。找回内在的平衡和力量。"
+    "element": "fire",
+    "astro": null,
+    "upright_keywords": [
+      "自信",
+      "温暖",
+      "魅力",
+      "决断"
+    ],
+    "upright_meaning": "你散发着温暖与自信，能够鼓舞身边的人。这张牌鼓励你自在地展现自己的光芒。",
+    "reversed_keywords": [
+      "自我怀疑",
+      "嫉妒",
+      "过度要求"
+    ],
+    "reversed_meaning": "你的自信可能暂时动摇。回到让你热爱的事物，重新点燃内在的火焰。",
+    "wonderland_motif": "A rabbit queen with a black cat at her feet, holding a carrot staff and a sunflower, rendered in black and orange"
   },
   {
     "id": "king_of_wands",
+    "slug": "king-of-wands",
     "name_en": "King of Wands",
     "name_zh": "权杖国王",
     "arcana_type": "minor",
+    "number": 14,
     "suit": "wands",
-    "upright_keywords": ["领导力", "愿景", "企业家精神", "大胆"],
-    "upright_meaning": "权杖国王代表强大的领导力和远见。用你的热情和魅力激励他人,实现宏大的目标。",
-    "reversed_keywords": ["傲慢", "独裁", "无情", "冲动"],
-    "reversed_meaning": "逆位的权杖国王可能表示你过于专断或缺乏同理心。平衡你的力量和温柔。"
+    "element": "fire",
+    "astro": null,
+    "upright_keywords": [
+      "远见",
+      "领导",
+      "魄力",
+      "启发"
+    ],
+    "upright_meaning": "你具备将愿景化为现实的领导力。这张牌鼓励你以远见与担当带领自己和他人。",
+    "reversed_keywords": [
+      "专横",
+      "急躁",
+      "期望过高"
+    ],
+    "reversed_meaning": "领导力可能变得强势或急躁。倾听他人，会让你的愿景更有力量。",
+    "wonderland_motif": "A rabbit king on a throne carved with salamanders, carrot staff in hand, rendered in black and orange"
   },
   {
     "id": "ace_of_cups",
+    "slug": "ace-of-cups",
     "name_en": "Ace of Cups",
     "name_zh": "圣杯王牌",
     "arcana_type": "minor",
+    "number": 1,
     "suit": "cups",
-    "upright_keywords": ["新感情", "直觉", "创造力", "爱"],
-    "upright_meaning": "圣杯王牌代表情感的新开始和内心的满足。打开心扉,接受爱和创造性的灵感。",
-    "reversed_keywords": ["情感封闭", "压抑感情", "创意枯竭", "失望"],
-    "reversed_meaning": "逆位的圣杯王牌可能表示你封闭了情感或感到失望。重新连接你的内心。"
+    "element": "water",
+    "astro": null,
+    "upright_keywords": [
+      "新感情",
+      "情感开放",
+      "爱",
+      "直觉"
+    ],
+    "upright_meaning": "情感的源泉正在涌现。这张牌邀请你向爱、关怀与内在的柔软敞开心扉。",
+    "reversed_keywords": [
+      "压抑情感",
+      "封闭",
+      "空虚"
+    ],
+    "reversed_meaning": "你也许暂时把情感收了起来。温柔地关照自己的感受，是重新打开的开始。",
+    "wonderland_motif": "A hand from a cloud holding an overflowing teacup, a dove above, rendered in black and orange"
   },
   {
     "id": "two_of_cups",
+    "slug": "two-of-cups",
     "name_en": "Two of Cups",
     "name_zh": "圣杯二",
     "arcana_type": "minor",
+    "number": 2,
     "suit": "cups",
-    "upright_keywords": ["伙伴关系", "连接", "和谐", "爱情"],
-    "upright_meaning": "圣杯二代表深刻的连接和相互尊重的关系。这是一段平衡和谐的伙伴关系。",
-    "reversed_keywords": ["失衡", "分离", "误解", "破裂关系"],
-    "reversed_meaning": "逆位的圣杯二可能表示关系中的不平衡或误解。沟通是修复的关键。"
+    "element": "water",
+    "astro": "Venus in Cancer",
+    "upright_keywords": [
+      "伙伴关系",
+      "吸引",
+      "互相尊重",
+      "连结"
+    ],
+    "upright_meaning": "两颗心彼此呼应，建立起平等的连结。这张牌关乎相互尊重与真诚的交流。",
+    "reversed_keywords": [
+      "失衡",
+      "误解",
+      "疏远"
+    ],
+    "reversed_meaning": "关系中可能出现了不平衡。坦诚沟通能帮助双方重新对齐。",
+    "wonderland_motif": "Two rabbits exchanging teacups beneath a winged carrot caduceus, rendered in black and orange"
   },
   {
     "id": "three_of_cups",
+    "slug": "three-of-cups",
     "name_en": "Three of Cups",
     "name_zh": "圣杯三",
     "arcana_type": "minor",
+    "number": 3,
     "suit": "cups",
-    "upright_keywords": ["庆祝", "友谊", "社交", "喜悦"],
-    "upright_meaning": "圣杯三代表与朋友和家人的欢乐庆祝。享受社交联系,分享你的快乐。",
-    "reversed_keywords": ["过度放纵", "孤立", "排斥", "八卦"],
-    "reversed_meaning": "逆位的圣杯三可能表示你感到被排斥或过度放纵。寻求真正的连接和平衡。"
+    "element": "water",
+    "astro": "Mercury in Cancer",
+    "upright_keywords": [
+      "友谊",
+      "庆祝",
+      "社群",
+      "欢聚"
+    ],
+    "upright_meaning": "与朋友共享的喜悦正当其时。这张牌邀请你享受陪伴与社群带来的温暖。",
+    "reversed_keywords": [
+      "过度放纵",
+      "疏离",
+      "小圈子"
+    ],
+    "reversed_meaning": "社交可能让你疲惫或感到被排除。思考哪些关系真正滋养你。",
+    "wonderland_motif": "Three rabbits raising teacups in a toast at a mad tea party, rendered in black and orange"
   },
   {
     "id": "four_of_cups",
+    "slug": "four-of-cups",
     "name_en": "Four of Cups",
     "name_zh": "圣杯四",
     "arcana_type": "minor",
+    "number": 4,
     "suit": "cups",
-    "upright_keywords": ["冥想", "重新评估", "不满", "沉思"],
-    "upright_meaning": "圣杯四鼓励你退后一步,重新评估你的情况。内省可以带来新的视角。",
-    "reversed_keywords": ["觉醒", "新机遇", "接受", "动力"],
-    "reversed_meaning": "逆位的圣杯四可能表示你正在从沉思中醒来,准备接受新的机会。"
+    "element": "water",
+    "astro": "Moon in Cancer",
+    "upright_keywords": [
+      "冷淡",
+      "沉思",
+      "重新评估",
+      "内省"
+    ],
+    "upright_meaning": "你可能对眼前的选择提不起兴趣。这张牌邀请你在沉思中看清真正渴望的东西。",
+    "reversed_keywords": [
+      "重新投入",
+      "觉察机会",
+      "走出低潮"
+    ],
+    "reversed_meaning": "你正逐渐从倦怠中走出来。对新的可能保持开放会带来惊喜。",
+    "wonderland_motif": "A rabbit under a tree ignoring a teacup offered from a cloud, three cups before it, rendered in black and orange"
   },
   {
     "id": "five_of_cups",
+    "slug": "five-of-cups",
     "name_en": "Five of Cups",
     "name_zh": "圣杯五",
     "arcana_type": "minor",
+    "number": 5,
     "suit": "cups",
-    "upright_keywords": ["失望", "悲伤", "失落", "后悔"],
-    "upright_meaning": "圣杯五代表失望和悲伤。虽然经历了损失,但记住仍有希望和可能性存在。",
-    "reversed_keywords": ["接受", "向前看", "原谅", "复原"],
-    "reversed_meaning": "逆位的圣杯五可能表示你正在走出悲伤,学会原谅和向前看。"
+    "element": "water",
+    "astro": "Mars in Scorpio",
+    "upright_keywords": [
+      "失落",
+      "遗憾",
+      "悲伤",
+      "反思"
+    ],
+    "upright_meaning": "你也许正为失去的东西感到难过。这张牌承认这份悲伤，也提醒你身后仍有留存的美好。",
+    "reversed_keywords": [
+      "接纳",
+      "疗愈",
+      "向前看"
+    ],
+    "reversed_meaning": "你正在慢慢接纳过去。转身看看仍然拥有的，会带来新的力量。",
+    "wonderland_motif": "A cloaked rabbit mourning three spilled teacups, two still standing behind, rendered in black and orange"
   },
   {
     "id": "six_of_cups",
+    "slug": "six-of-cups",
     "name_en": "Six of Cups",
     "name_zh": "圣杯六",
     "arcana_type": "minor",
+    "number": 6,
     "suit": "cups",
-    "upright_keywords": ["怀旧", "回忆", "纯真", "重聚"],
-    "upright_meaning": "圣杯六唤起美好的回忆和童年的纯真。重温过去可以带来慰藉和洞见。",
-    "reversed_keywords": ["困于过去", "幻灭", "向前看", "放下"],
-    "reversed_meaning": "逆位的圣杯六可能表示你过于沉溺于过去或需要放下旧的回忆。面向未来。"
+    "element": "water",
+    "astro": "Sun in Scorpio",
+    "upright_keywords": [
+      "怀旧",
+      "童真",
+      "回忆",
+      "善意"
+    ],
+    "upright_meaning": "温暖的回忆浮现心头。这张牌邀请你重新连结单纯的喜悦与内在的童真。",
+    "reversed_keywords": [
+      "沉溺过去",
+      "难以前行",
+      "理想化"
+    ],
+    "reversed_meaning": "过去也许被过度美化。珍惜回忆，同时把注意力带回当下。",
+    "wonderland_motif": "A small rabbit offering a teacup of flowers to another in an old garden, rendered in black and orange"
   },
   {
     "id": "seven_of_cups",
+    "slug": "seven-of-cups",
     "name_en": "Seven of Cups",
     "name_zh": "圣杯七",
     "arcana_type": "minor",
+    "number": 7,
     "suit": "cups",
-    "upright_keywords": ["选择", "幻想", "梦想", "困惑"],
-    "upright_meaning": "圣杯七代表众多的选择和可能性。小心幻想和自我欺骗,做出明智的选择。",
-    "reversed_keywords": ["清晰", "决定", "现实", "专注"],
-    "reversed_meaning": "逆位的圣杯七可能表示你正在获得清晰,准备做出实际的决定。"
+    "element": "water",
+    "astro": "Venus in Scorpio",
+    "upright_keywords": [
+      "选择",
+      "想象",
+      "幻想",
+      "可能性"
+    ],
+    "upright_meaning": "眼前似乎有许多诱人的可能。这张牌提醒你分辨幻想与现实，看清真正的价值。",
+    "reversed_keywords": [
+      "清晰",
+      "专注",
+      "做出决定"
+    ],
+    "reversed_meaning": "迷雾正在散去，你更清楚自己想要什么。专注于一个方向会更踏实。",
+    "wonderland_motif": "Seven teacups floating in orange mist, each holding a strange dream, rendered in black and orange"
   },
   {
     "id": "eight_of_cups",
+    "slug": "eight-of-cups",
     "name_en": "Eight of Cups",
     "name_zh": "圣杯八",
     "arcana_type": "minor",
+    "number": 8,
     "suit": "cups",
-    "upright_keywords": ["离开", "放手", "寻求真理", "过渡"],
-    "upright_meaning": "圣杯八代表离开不再满足你的事物,寻求更深层次的意义。勇敢踏上新的旅程。",
-    "reversed_keywords": ["回避", "恐惧离开", "停滞", "寻求慰藉"],
-    "reversed_meaning": "逆位的圣杯八可能表示你害怕离开或正在回避必要的改变。勇敢面对。"
+    "element": "water",
+    "astro": "Saturn in Pisces",
+    "upright_keywords": [
+      "离开",
+      "寻找意义",
+      "放下",
+      "转向"
+    ],
+    "upright_meaning": "你可能感到需要离开不再满足你的处境。这张牌支持你去寻找更深的意义。",
+    "reversed_keywords": [
+      "犹豫离开",
+      "恐惧改变",
+      "徘徊"
+    ],
+    "reversed_meaning": "你也许在去与留之间徘徊。倾听内心，看看什么真正让你满足。",
+    "wonderland_motif": "A rabbit walking away from stacked teacups toward moonlit mountains, rendered in black and orange"
   },
   {
     "id": "nine_of_cups",
+    "slug": "nine-of-cups",
     "name_en": "Nine of Cups",
     "name_zh": "圣杯九",
     "arcana_type": "minor",
+    "number": 9,
     "suit": "cups",
-    "upright_keywords": ["满足", "愿望达成", "幸福", "成功"],
-    "upright_meaning": "圣杯九是愿望达成的牌。享受情感和物质上的满足,庆祝你的成功。",
-    "reversed_keywords": ["不满", "贪婪", "空虚", "延迟满足"],
-    "reversed_meaning": "逆位的圣杯九可能表示你感到不满足或追求错误的目标。重新定义真正的幸福。"
+    "element": "water",
+    "astro": "Jupiter in Pisces",
+    "upright_keywords": [
+      "满足",
+      "愿望实现",
+      "感恩",
+      "享受"
+    ],
+    "upright_meaning": "这是一段知足与愉悦的时光。这张牌邀请你享受成果，并对所拥有的心怀感恩。",
+    "reversed_keywords": [
+      "不满足",
+      "放纵",
+      "表面快乐"
+    ],
+    "reversed_meaning": "满足感可能只停留在表面。思考什么能带来更深层的喜悦。",
+    "wonderland_motif": "A contented rabbit seated before an arc of nine teacups, rendered in black and orange"
   },
   {
     "id": "ten_of_cups",
+    "slug": "ten-of-cups",
     "name_en": "Ten of Cups",
     "name_zh": "圣杯十",
     "arcana_type": "minor",
+    "number": 10,
     "suit": "cups",
-    "upright_keywords": ["家庭幸福", "和谐", "满足", "情感圆满"],
-    "upright_meaning": "圣杯十代表家庭和关系中的深度幸福和和谐。享受这美好的情感圆满时刻。",
-    "reversed_keywords": ["家庭冲突", "破裂关系", "失望", "不和谐"],
-    "reversed_meaning": "逆位的圣杯十可能表示家庭或关系中的冲突。努力修复和重建和谐。"
+    "element": "water",
+    "astro": "Mars in Pisces",
+    "upright_keywords": [
+      "和谐",
+      "家庭",
+      "圆满",
+      "情感满足"
+    ],
+    "upright_meaning": "情感的和谐与归属感充满生活。这张牌描绘与所爱之人共享的圆满。",
+    "reversed_keywords": [
+      "关系不和",
+      "期望落差",
+      "疏离"
+    ],
+    "reversed_meaning": "理想与现实之间也许有落差。以理解代替期待，有助于恢复和谐。",
+    "wonderland_motif": "A rabbit family beneath a rainbow of ten teacups, rendered in black and orange"
   },
   {
     "id": "page_of_cups",
+    "slug": "page-of-cups",
     "name_en": "Page of Cups",
     "name_zh": "圣杯侍从",
     "arcana_type": "minor",
+    "number": 11,
     "suit": "cups",
-    "upright_keywords": ["创造性信息", "直觉", "好奇", "温柔"],
-    "upright_meaning": "圣杯侍从带来创造性的新消息和情感的探索。保持开放的心态,倾听你的直觉。",
-    "reversed_keywords": ["情绪不成熟", "不切实际", "消息延迟", "敏感"],
-    "reversed_meaning": "逆位的圣杯侍从可能表示你在情感上不够成熟或过于敏感。学会平衡感受。"
+    "element": "water",
+    "astro": null,
+    "upright_keywords": [
+      "敏感",
+      "创意",
+      "情感讯息",
+      "好奇"
+    ],
+    "upright_meaning": "一份柔软的直觉或创意正在浮现。这张牌鼓励你以好奇心对待自己的感受。",
+    "reversed_keywords": [
+      "情绪化",
+      "不成熟",
+      "压抑创意"
+    ],
+    "reversed_meaning": "情绪可能来得突然。温柔地观察它们，而不是急着反应。",
+    "wonderland_motif": "A young rabbit page surprised by a fish peeking out of a teacup, rendered in black and orange"
   },
   {
     "id": "knight_of_cups",
+    "slug": "knight-of-cups",
     "name_en": "Knight of Cups",
     "name_zh": "圣杯骑士",
     "arcana_type": "minor",
+    "number": 12,
     "suit": "cups",
-    "upright_keywords": ["浪漫", "魅力", "理想主义", "邀请"],
-    "upright_meaning": "圣杯骑士带来浪漫的邀请和情感的追求。跟随你的心,但保持现实的视角。",
-    "reversed_keywords": ["不切实际", "喜怒无常", "嫉妒", "失望"],
-    "reversed_meaning": "逆位的圣杯骑士可能表示你有不切实际的期望或情绪起伏。保持平衡。"
+    "element": "water",
+    "astro": null,
+    "upright_keywords": [
+      "浪漫",
+      "理想",
+      "邀请",
+      "追随内心"
+    ],
+    "upright_meaning": "你正追随心之所向，带着浪漫与理想前进。这张牌鼓励你以真诚表达情感。",
+    "reversed_keywords": [
+      "不切实际",
+      "情绪起伏",
+      "失望"
+    ],
+    "reversed_meaning": "理想也许过于完美。让心与现实对话，会让感情更踏实。",
+    "wonderland_motif": "A rabbit knight on a slow white horse offering a teacup, rendered in black and orange"
   },
   {
     "id": "queen_of_cups",
+    "slug": "queen-of-cups",
     "name_en": "Queen of Cups",
-    "name_zh": "圣杯王后",
+    "name_zh": "圣杯皇后",
     "arcana_type": "minor",
+    "number": 13,
     "suit": "cups",
-    "upright_keywords": ["同理心", "直觉", "养育", "平静"],
-    "upright_meaning": "圣杯王后代表深刻的同理心和情感智慧。相信你的直觉,用爱和理解对待他人。",
-    "reversed_keywords": ["情绪不稳", "依赖", "过度敏感", "缺乏界限"],
-    "reversed_meaning": "逆位的圣杯王后可能表示你情绪不稳定或缺乏情感界限。照顾好自己。"
+    "element": "water",
+    "astro": null,
+    "upright_keywords": [
+      "同理心",
+      "关怀",
+      "直觉",
+      "情感成熟"
+    ],
+    "upright_meaning": "你拥有深厚的同理心与直觉。这张牌鼓励你温柔地照顾他人，也照顾自己。",
+    "reversed_keywords": [
+      "情感透支",
+      "依赖",
+      "界限模糊"
+    ],
+    "reversed_meaning": "你可能过度吸收他人的情绪。建立温和的界限是一种自我关怀。",
+    "wonderland_motif": "A rabbit queen on a seashore throne gazing into an ornate lidded teacup, rendered in black and orange"
   },
   {
     "id": "king_of_cups",
+    "slug": "king-of-cups",
     "name_en": "King of Cups",
     "name_zh": "圣杯国王",
     "arcana_type": "minor",
+    "number": 14,
     "suit": "cups",
-    "upright_keywords": ["情感平衡", "外交", "同情", "控制"],
-    "upright_meaning": "圣杯国王代表情感的成熟和平衡。你能够在保持冷静的同时,深刻理解他人的情感。",
-    "reversed_keywords": ["情绪操纵", "冷酷", "压抑情感", "失控"],
-    "reversed_meaning": "逆位的圣杯国王可能表示你压抑情感或过于操纵。重新连接你的真实感受。"
+    "element": "water",
+    "astro": null,
+    "upright_keywords": [
+      "情绪平衡",
+      "包容",
+      "沉稳",
+      "智慧"
+    ],
+    "upright_meaning": "你能在情绪的起伏中保持平衡。这张牌肯定你的成熟与包容。",
+    "reversed_keywords": [
+      "情绪压抑",
+      "冷漠",
+      "操控"
+    ],
+    "reversed_meaning": "平静的外表下可能压着未表达的情绪。允许感受流动，会带来真正的平衡。",
+    "wonderland_motif": "A rabbit king on a throne floating on a dark sea, holding a teacup, rendered in black and orange"
   },
   {
     "id": "ace_of_swords",
+    "slug": "ace-of-swords",
     "name_en": "Ace of Swords",
     "name_zh": "宝剑王牌",
     "arcana_type": "minor",
+    "number": 1,
     "suit": "swords",
-    "upright_keywords": ["清晰", "突破", "真理", "力量"],
-    "upright_meaning": "宝剑王牌代表思想的突破和清晰。这是切断混乱,看清真相的时刻。",
-    "reversed_keywords": ["混乱", "缺乏清晰", "误解", "滥用权力"],
-    "reversed_meaning": "逆位的宝剑王牌可能表示你感到困惑或误解了情况。寻求更多信息和清晰。"
+    "element": "air",
+    "astro": null,
+    "upright_keywords": [
+      "清晰",
+      "真相",
+      "突破",
+      "新想法"
+    ],
+    "upright_meaning": "一个清晰的想法正在穿透迷雾。这张牌鼓励你以诚实与理性面对问题。",
+    "reversed_keywords": [
+      "混乱",
+      "思绪不清",
+      "误判"
+    ],
+    "reversed_meaning": "思绪可能有些纷乱。先整理事实，清晰会随之而来。",
+    "wonderland_motif": "A hand from a cloud holding a playing-card blade crowned with an orange carrot wreath, rendered in black and orange"
   },
   {
     "id": "two_of_swords",
+    "slug": "two-of-swords",
     "name_en": "Two of Swords",
     "name_zh": "宝剑二",
     "arcana_type": "minor",
+    "number": 2,
     "suit": "swords",
-    "upright_keywords": ["僵局", "犹豫", "回避", "选择"],
-    "upright_meaning": "宝剑二代表困难的选择和僵局。虽然回避可以暂时缓解压力,但最终你需要做出决定。",
-    "reversed_keywords": ["决定", "突破僵局", "信息揭示", "行动"],
-    "reversed_meaning": "逆位的宝剑二可能表示僵局正在打破,或者新的信息帮助你做出决定。"
+    "element": "air",
+    "astro": "Moon in Libra",
+    "upright_keywords": [
+      "僵局",
+      "两难",
+      "回避",
+      "权衡"
+    ],
+    "upright_meaning": "你可能在两个选择之间犹豫不决。这张牌邀请你放下防备，诚实面对内心。",
+    "reversed_keywords": [
+      "信息浮现",
+      "做出决定",
+      "情绪释放"
+    ],
+    "reversed_meaning": "僵局正在松动。允许自己看清真相，决定会变得更容易。",
+    "wonderland_motif": "A blindfolded rabbit holding two crossed card-blades under a crescent moon, rendered in black and orange"
   },
   {
     "id": "three_of_swords",
+    "slug": "three-of-swords",
     "name_en": "Three of Swords",
     "name_zh": "宝剑三",
     "arcana_type": "minor",
+    "number": 3,
     "suit": "swords",
-    "upright_keywords": ["心碎", "悲伤", "痛苦", "失落"],
-    "upright_meaning": "宝剑三代表深刻的情感痛苦和心碎。虽然痛苦,但这也是治愈和成长的开始。",
-    "reversed_keywords": ["复原", "原谅", "释放痛苦", "向前看"],
-    "reversed_meaning": "逆位的宝剑三可能表示你正在从痛苦中复原,学会原谅和释放。"
+    "element": "air",
+    "astro": "Saturn in Libra",
+    "upright_keywords": [
+      "心痛",
+      "悲伤",
+      "释放",
+      "真相"
+    ],
+    "upright_meaning": "这张牌承认情感上的伤痛。允许悲伤被看见与表达，是疗愈的开始。",
+    "reversed_keywords": [
+      "疗愈",
+      "原谅",
+      "走出伤痛"
+    ],
+    "reversed_meaning": "伤口正在慢慢愈合。给自己时间与温柔，继续向前。",
+    "wonderland_motif": "A heart-shaped teacup pierced by three card-blades in a grey rain, rendered in black and orange"
   },
   {
     "id": "four_of_swords",
+    "slug": "four-of-swords",
     "name_en": "Four of Swords",
     "name_zh": "宝剑四",
     "arcana_type": "minor",
+    "number": 4,
     "suit": "swords",
-    "upright_keywords": ["休息", "恢复", "冥想", "暂停"],
-    "upright_meaning": "宝剑四鼓励你暂时退出,休息和恢复精力。这是必要的停顿,为未来做准备。",
-    "reversed_keywords": ["倦怠", "停滞", "不安", "缺乏休息"],
-    "reversed_meaning": "逆位的宝剑四可能表示你忽视了休息的需要或感到不安。允许自己放松。"
+    "element": "air",
+    "astro": "Jupiter in Libra",
+    "upright_keywords": [
+      "休息",
+      "恢复",
+      "沉思",
+      "静养"
+    ],
+    "upright_meaning": "这是一段需要休息与恢复的时期。这张牌邀请你暂停，让身心重新积蓄力量。",
+    "reversed_keywords": [
+      "重新出发",
+      "躁动",
+      "倦怠"
+    ],
+    "reversed_meaning": "你也许正准备重新出发，或休息不足。倾听身体的需要。",
+    "wonderland_motif": "A rabbit resting on a stone tomb, card-blades hung on the wall above, rendered in black and orange"
   },
   {
     "id": "five_of_swords",
+    "slug": "five-of-swords",
     "name_en": "Five of Swords",
     "name_zh": "宝剑五",
     "arcana_type": "minor",
+    "number": 5,
     "suit": "swords",
-    "upright_keywords": ["冲突", "失败", "不公", "代价"],
-    "upright_meaning": "宝剑五代表冲突和失败。虽然你可能赢了,但要思考胜利的代价是否值得。",
-    "reversed_keywords": ["和解", "原谅", "放下", "弥补"],
-    "reversed_meaning": "逆位的宝剑五可能表示你正在寻求和解或准备放下过去的冲突。"
+    "element": "air",
+    "astro": "Venus in Aquarius",
+    "upright_keywords": [
+      "冲突",
+      "输赢",
+      "自尊",
+      "代价"
+    ],
+    "upright_meaning": "这张牌映照出争执中的得失。思考胜负的代价，有助于选择更明智的方式。",
+    "reversed_keywords": [
+      "和解",
+      "放下",
+      "反省"
+    ],
+    "reversed_meaning": "你正在从冲突中抽身。和解或放手可能比赢更重要。",
+    "wonderland_motif": "A smirking rabbit gathering card-blades as two others walk away, rendered in black and orange"
   },
   {
     "id": "six_of_swords",
+    "slug": "six-of-swords",
     "name_en": "Six of Swords",
     "name_zh": "宝剑六",
     "arcana_type": "minor",
+    "number": 6,
     "suit": "swords",
-    "upright_keywords": ["过渡", "改变", "旅程", "离开"],
-    "upright_meaning": "宝剑六代表从困境中过渡到更平静的水域。这是必要的旅程,向更好的未来前进。",
-    "reversed_keywords": ["抗拒改变", "未解决的问题", "停滞", "延迟"],
-    "reversed_meaning": "逆位的宝剑六可能表示你抗拒必要的改变或被过去困住。勇敢向前。"
+    "element": "air",
+    "astro": "Mercury in Aquarius",
+    "upright_keywords": [
+      "过渡",
+      "前行",
+      "离开困境",
+      "平静"
+    ],
+    "upright_meaning": "你正从动荡走向较为平静的地方。这张牌支持你的过渡与前行。",
+    "reversed_keywords": [
+      "停滞",
+      "未解决的问题",
+      "抗拒前行"
+    ],
+    "reversed_meaning": "你可能感到难以离开旧处境。看清什么仍需处理，再继续前进。",
+    "wonderland_motif": "A ferry rabbit poling a boat of card-blades across dark water toward calm, rendered in black and orange"
   },
   {
     "id": "seven_of_swords",
+    "slug": "seven-of-swords",
     "name_en": "Seven of Swords",
     "name_zh": "宝剑七",
     "arcana_type": "minor",
+    "number": 7,
     "suit": "swords",
-    "upright_keywords": ["策略", "狡猾", "欺骗", "回避"],
-    "upright_meaning": "宝剑七代表策略和狡猾。有时需要聪明行事,但要小心欺骗和不诚实的行为。",
-    "reversed_keywords": ["暴露", "良心不安", "坦白", "后果"],
-    "reversed_meaning": "逆位的宝剑七可能表示欺骗被揭穿或你感到良心不安。诚实是最好的策略。"
+    "element": "air",
+    "astro": "Moon in Aquarius",
+    "upright_keywords": [
+      "策略",
+      "独行",
+      "谨慎",
+      "隐藏"
+    ],
+    "upright_meaning": "你可能在思考策略或独自行动。这张牌提醒你检视方法是否诚实与长远。",
+    "reversed_keywords": [
+      "坦白",
+      "良心",
+      "改变策略"
+    ],
+    "reversed_meaning": "你正在重新考虑自己的方式。诚实面对他人与自己会带来轻松。",
+    "wonderland_motif": "A sly rabbit tiptoeing away carrying five card-blades from a camp, rendered in black and orange"
   },
   {
     "id": "eight_of_swords",
+    "slug": "eight-of-swords",
     "name_en": "Eight of Swords",
     "name_zh": "宝剑八",
     "arcana_type": "minor",
+    "number": 8,
     "suit": "swords",
-    "upright_keywords": ["限制", "困境", "无助", "受困"],
-    "upright_meaning": "宝剑八代表感觉被困和限制。认识到许多限制是自我施加的,你有力量解放自己。",
-    "reversed_keywords": ["解放", "新视角", "突破", "自我接纳"],
-    "reversed_meaning": "逆位的宝剑八可能表示你正在打破限制,获得新的视角和自由。"
+    "element": "air",
+    "astro": "Jupiter in Gemini",
+    "upright_keywords": [
+      "受限",
+      "自我设限",
+      "无助感",
+      "困局"
+    ],
+    "upright_meaning": "你可能感到被困住，但许多限制来自想法本身。这张牌邀请你重新审视处境。",
+    "reversed_keywords": [
+      "解脱",
+      "新视角",
+      "释放"
+    ],
+    "reversed_meaning": "束缚正在松开。换个角度看，你会发现更多选择。",
+    "wonderland_motif": "A bound, blindfolded rabbit amid eight card-blades stuck in the ground, rendered in black and orange"
   },
   {
     "id": "nine_of_swords",
+    "slug": "nine-of-swords",
     "name_en": "Nine of Swords",
     "name_zh": "宝剑九",
     "arcana_type": "minor",
+    "number": 9,
     "suit": "swords",
-    "upright_keywords": ["焦虑", "担忧", "噩梦", "恐惧"],
-    "upright_meaning": "宝剑九代表深夜的焦虑和担忧。记住,许多恐惧是想象的,不要让它们控制你。",
-    "reversed_keywords": ["复原", "希望", "释放恐惧", "寻求帮助"],
-    "reversed_meaning": "逆位的宝剑九可能表示你正在从焦虑中复原,准备寻求帮助和释放恐惧。"
+    "element": "air",
+    "astro": "Mars in Gemini",
+    "upright_keywords": [
+      "焦虑",
+      "担忧",
+      "失眠",
+      "内心压力"
+    ],
+    "upright_meaning": "忧虑可能占据了你的思绪。这张牌提醒你，许多担心在被说出来后会变得轻一些。",
+    "reversed_keywords": [
+      "希望",
+      "释放焦虑",
+      "求助"
+    ],
+    "reversed_meaning": "焦虑正在缓解。与信任的人分享，会让心更轻。",
+    "wonderland_motif": "A rabbit sitting up in bed at night, nine card-blades on the dark wall, rendered in black and orange"
   },
   {
     "id": "ten_of_swords",
+    "slug": "ten-of-swords",
     "name_en": "Ten of Swords",
     "name_zh": "宝剑十",
     "arcana_type": "minor",
+    "number": 10,
     "suit": "swords",
-    "upright_keywords": ["结束", "痛苦", "背叛", "触底"],
-    "upright_meaning": "宝剑十代表痛苦的结束和触底。虽然这是最低点,但也是重新开始的机会。",
-    "reversed_keywords": ["复苏", "恢复", "重生", "向前看"],
-    "reversed_meaning": "逆位的宝剑十可能表示你正在从痛苦中复原,最坏的情况已经过去。"
+    "element": "air",
+    "astro": "Sun in Gemini",
+    "upright_keywords": [
+      "结束",
+      "触底",
+      "放下",
+      "终结"
+    ],
+    "upright_meaning": "某个艰难的阶段已经走到尽头。这张牌提醒你，结束也意味着可以重新开始。",
+    "reversed_keywords": [
+      "复原",
+      "重生",
+      "渐渐好转"
+    ],
+    "reversed_meaning": "最难的时刻已经过去。慢慢地，你正在站起来。",
+    "wonderland_motif": "Dawn breaking orange over a fallen rabbit and ten card-blades, rendered in black and orange"
   },
   {
     "id": "page_of_swords",
+    "slug": "page-of-swords",
     "name_en": "Page of Swords",
     "name_zh": "宝剑侍从",
     "arcana_type": "minor",
+    "number": 11,
     "suit": "swords",
-    "upright_keywords": ["好奇", "警觉", "信息", "学习"],
-    "upright_meaning": "宝剑侍从代表好奇心和学习的渴望。保持警觉,寻求真相和新的知识。",
-    "reversed_keywords": ["八卦", "间谍", "狡猾", "消息不准确"],
-    "reversed_meaning": "逆位的宝剑侍从可能表示你过于多管闲事或信息不准确。验证事实,避免八卦。"
+    "element": "air",
+    "astro": null,
+    "upright_keywords": [
+      "好奇",
+      "机敏",
+      "观察",
+      "求知"
+    ],
+    "upright_meaning": "你对新想法充满好奇。这张牌鼓励你保持警觉与求知欲。",
+    "reversed_keywords": [
+      "八卦",
+      "轻率",
+      "欠考虑"
+    ],
+    "reversed_meaning": "好奇可能变得急躁或零散。专注能让你的思考更深入。",
+    "wonderland_motif": "A young rabbit page on a windy hill holding a card-blade aloft, rendered in black and orange"
   },
   {
     "id": "knight_of_swords",
+    "slug": "knight-of-swords",
     "name_en": "Knight of Swords",
     "name_zh": "宝剑骑士",
     "arcana_type": "minor",
+    "number": 12,
     "suit": "swords",
-    "upright_keywords": ["行动", "冲动", "雄心", "直接"],
-    "upright_meaning": "宝剑骑士代表快速果断的行动。追求你的目标,但要小心过于冲动和不顾他人感受。",
-    "reversed_keywords": ["鲁莽", "攻击性", "缺乏计划", "不切实际"],
-    "reversed_meaning": "逆位的宝剑骑士可能表示你过于鲁莽或攻击性。减速,更加周到地行动。"
+    "element": "air",
+    "astro": null,
+    "upright_keywords": [
+      "果断",
+      "冲劲",
+      "直言",
+      "行动"
+    ],
+    "upright_meaning": "你迅速而果断地追求目标。这张牌肯定你的行动力，也提醒你留意他人的感受。",
+    "reversed_keywords": [
+      "鲁莽",
+      "急进",
+      "冲突"
+    ],
+    "reversed_meaning": "速度可能带来冲撞。放慢一步，可以让目标更顺利达成。",
+    "wonderland_motif": "A rabbit knight charging on a dark horse, card-blade forward, storm clouds behind, rendered in black and orange"
   },
   {
     "id": "queen_of_swords",
+    "slug": "queen-of-swords",
     "name_en": "Queen of Swords",
-    "name_zh": "宝剑王后",
+    "name_zh": "宝剑皇后",
     "arcana_type": "minor",
+    "number": 13,
     "suit": "swords",
-    "upright_keywords": ["独立", "清晰思考", "直接", "智慧"],
-    "upright_meaning": "宝剑王后代表清晰的思维和独立的判断。用智慧和诚实引导你的决策。",
-    "reversed_keywords": ["冷酷", "苛刻", "怨恨", "情绪化"],
-    "reversed_meaning": "逆位的宝剑王后可能表示你过于冷酷或怀有怨恨。平衡理性和同理心。"
+    "element": "air",
+    "astro": null,
+    "upright_keywords": [
+      "清明",
+      "独立",
+      "诚实",
+      "界限"
+    ],
+    "upright_meaning": "你以清晰与诚实看待事物。这张牌鼓励你坦率表达，并守护健康的界限。",
+    "reversed_keywords": [
+      "冷漠",
+      "尖刻",
+      "情感封闭"
+    ],
+    "reversed_meaning": "理性可能掩盖了感受。在清晰中加入一点温柔会更圆满。",
+    "wonderland_motif": "A rabbit queen on a cloud throne, card-blade upright, hand extended, rendered in black and orange"
   },
   {
     "id": "king_of_swords",
+    "slug": "king-of-swords",
     "name_en": "King of Swords",
     "name_zh": "宝剑国王",
     "arcana_type": "minor",
+    "number": 14,
     "suit": "swords",
-    "upright_keywords": ["智慧", "权威", "真理", "清晰"],
-    "upright_meaning": "宝剑国王代表智慧和公正的权威。用逻辑和清晰的思维做出公平的决策。",
-    "reversed_keywords": ["操纵", "残酷", "滥用权力", "不公正"],
-    "reversed_meaning": "逆位的宝剑国王可能表示你滥用权力或过于操纵。用同情心平衡你的权威。"
+    "element": "air",
+    "astro": null,
+    "upright_keywords": [
+      "理性",
+      "权威",
+      "公正",
+      "智识"
+    ],
+    "upright_meaning": "你能以理性与公正作出判断。这张牌鼓励你运用智慧与清晰的原则。",
+    "reversed_keywords": [
+      "操控",
+      "冷酷",
+      "滥用权力"
+    ],
+    "reversed_meaning": "理性可能变得过于冷硬。记得把同理心纳入判断之中。",
+    "wonderland_motif": "A rabbit king on a stone throne with butterflies, card-blade held straight, rendered in black and orange"
   },
   {
     "id": "ace_of_pentacles",
+    "slug": "ace-of-pentacles",
     "name_en": "Ace of Pentacles",
-    "name_zh": "金币王牌",
+    "name_zh": "星币王牌",
     "arcana_type": "minor",
+    "number": 1,
     "suit": "pentacles",
-    "upright_keywords": ["新机遇", "繁荣", "安全", "物质开始"],
-    "upright_meaning": "金币王牌代表新的物质或财务机会。这是建立稳固基础和长期繁荣的开始。",
-    "reversed_keywords": ["错失机会", "缺乏计划", "财务不稳", "延迟"],
-    "reversed_meaning": "逆位的金币王牌可能表示你错失了机会或缺乏稳固的计划。重新评估你的策略。"
+    "element": "earth",
+    "astro": null,
+    "upright_keywords": [
+      "新机会",
+      "富足",
+      "踏实",
+      "开端"
+    ],
+    "upright_meaning": "一个实在的机会出现在你面前。这张牌鼓励你播下种子，耐心地培育它。",
+    "reversed_keywords": [
+      "错失机会",
+      "规划不足",
+      "犹豫"
+    ],
+    "reversed_meaning": "机会可能还未成熟。完善计划，会让基础更稳固。",
+    "wonderland_motif": "A hand from a cloud holding a golden pocket-watch coin above a garden gate, rendered in black and orange"
   },
   {
     "id": "two_of_pentacles",
+    "slug": "two-of-pentacles",
     "name_en": "Two of Pentacles",
-    "name_zh": "金币二",
+    "name_zh": "星币二",
     "arcana_type": "minor",
+    "number": 2,
     "suit": "pentacles",
-    "upright_keywords": ["平衡", "适应", "时间管理", "灵活"],
-    "upright_meaning": "金币二代表在多个责任间保持平衡。保持灵活和适应能力,优先考虑重要事项。",
-    "reversed_keywords": ["失衡", "压倒性", "混乱", "优先级"],
-    "reversed_meaning": "逆位的金币二可能表示你难以平衡多个责任或感到不堪重负。简化你的生活。"
+    "element": "earth",
+    "astro": "Jupiter in Capricorn",
+    "upright_keywords": [
+      "平衡",
+      "适应",
+      "多任务",
+      "灵活"
+    ],
+    "upright_meaning": "你正在多项事务中寻找平衡。这张牌鼓励你保持灵活与轻松。",
+    "reversed_keywords": [
+      "失衡",
+      "过度承担",
+      "混乱"
+    ],
+    "reversed_meaning": "你可能承担太多事情。排列优先顺序有助于找回平衡。",
+    "wonderland_motif": "A juggling rabbit with two pocket-watch coins in an infinity loop, rendered in black and orange"
   },
   {
     "id": "three_of_pentacles",
+    "slug": "three-of-pentacles",
     "name_en": "Three of Pentacles",
-    "name_zh": "金币三",
+    "name_zh": "星币三",
     "arcana_type": "minor",
+    "number": 3,
     "suit": "pentacles",
-    "upright_keywords": ["团队合作", "技能", "协作", "学习"],
-    "upright_meaning": "金币三代表团队合作和技能的发展。通过合作和学习,你将实现高质量的成果。",
-    "reversed_keywords": ["缺乏团队合作", "质量差", "冲突", "学习困难"],
-    "reversed_meaning": "逆位的金币三可能表示团队合作出现问题或工作质量不佳。改善沟通和协作。"
+    "element": "earth",
+    "astro": "Mars in Capricorn",
+    "upright_keywords": [
+      "合作",
+      "技艺",
+      "团队",
+      "学习"
+    ],
+    "upright_meaning": "你的技能在合作中得到发挥。这张牌肯定团队与专业的价值。",
+    "reversed_keywords": [
+      "缺乏合作",
+      "质量不佳",
+      "分歧"
+    ],
+    "reversed_meaning": "合作可能出现不协调。厘清分工能帮助团队重回正轨。",
+    "wonderland_motif": "A rabbit mason carving three pocket-watch coins into a cathedral arch, rendered in black and orange"
   },
   {
     "id": "four_of_pentacles",
+    "slug": "four-of-pentacles",
     "name_en": "Four of Pentacles",
-    "name_zh": "金币四",
+    "name_zh": "星币四",
     "arcana_type": "minor",
+    "number": 4,
     "suit": "pentacles",
-    "upright_keywords": ["保守", "安全", "控制", "储蓄"],
-    "upright_meaning": "金币四代表财务的保守和安全感。虽然谨慎是好的,但不要过于紧抓不放,错失成长机会。",
-    "reversed_keywords": ["贪婪", "物质主义", "吝啬", "失控"],
-    "reversed_meaning": "逆位的金币四可能表示你过于贪婪或物质主义。学会慷慨和释放控制。"
+    "element": "earth",
+    "astro": "Sun in Capricorn",
+    "upright_keywords": [
+      "保守",
+      "安全感",
+      "积累",
+      "控制"
+    ],
+    "upright_meaning": "你重视稳定与安全。这张牌邀请你思考，怎样的守护是健康的。",
+    "reversed_keywords": [
+      "放手",
+      "慷慨",
+      "过度控制"
+    ],
+    "reversed_meaning": "你也许正学习放松对物质或控制的执着。适度分享会带来流动。",
+    "wonderland_motif": "A rabbit clutching four pocket-watch coins atop a city wall, rendered in black and orange"
   },
   {
     "id": "five_of_pentacles",
+    "slug": "five-of-pentacles",
     "name_en": "Five of Pentacles",
-    "name_zh": "金币五",
+    "name_zh": "星币五",
     "arcana_type": "minor",
+    "number": 5,
     "suit": "pentacles",
-    "upright_keywords": ["困境", "贫困", "孤立", "需要帮助"],
-    "upright_meaning": "金币五代表财务或健康上的困境。记住,即使在困难时期,帮助和希望仍然存在。",
-    "reversed_keywords": ["复苏", "改善", "接受帮助", "向前看"],
-    "reversed_meaning": "逆位的金币五可能表示情况正在改善或你正在接受帮助。最坏的时候已经过去。"
+    "element": "earth",
+    "astro": "Mercury in Taurus",
+    "upright_keywords": [
+      "困难",
+      "匮乏感",
+      "孤立",
+      "求助"
+    ],
+    "upright_meaning": "你可能感到资源或支持不足。这张牌提醒你，身边也许有尚未注意到的援助。",
+    "reversed_keywords": [
+      "复原",
+      "接受帮助",
+      "好转"
+    ],
+    "reversed_meaning": "处境正在逐渐好转。愿意接受帮助是复原的重要一步。",
+    "wonderland_motif": "Two rabbits trudging through snow past a glowing window of five pocket-watch coins, rendered in black and orange"
   },
   {
     "id": "six_of_pentacles",
+    "slug": "six-of-pentacles",
     "name_en": "Six of Pentacles",
-    "name_zh": "金币六",
+    "name_zh": "星币六",
     "arcana_type": "minor",
+    "number": 6,
     "suit": "pentacles",
-    "upright_keywords": ["慷慨", "给予", "接受", "平衡"],
-    "upright_meaning": "金币六代表慷慨和资源的分享。无论是给予还是接受,都要保持尊重和平衡。",
-    "reversed_keywords": ["自私", "债务", "不公平交换", "权力失衡"],
-    "reversed_meaning": "逆位的金币六可能表示不公平的交换或权力失衡。重新评估给予和接受的关系。"
+    "element": "earth",
+    "astro": "Moon in Taurus",
+    "upright_keywords": [
+      "给予",
+      "接受",
+      "慷慨",
+      "分享"
+    ],
+    "upright_meaning": "给予与接受在你的生活中流动。这张牌鼓励你以平衡的心态分享资源。",
+    "reversed_keywords": [
+      "不平衡",
+      "附带条件",
+      "债务"
+    ],
+    "reversed_meaning": "付出与回报可能失衡。思考怎样的交换让彼此都舒服。",
+    "wonderland_motif": "A merchant rabbit with scales sharing pocket-watch coins with others, rendered in black and orange"
   },
   {
     "id": "seven_of_pentacles",
+    "slug": "seven-of-pentacles",
     "name_en": "Seven of Pentacles",
-    "name_zh": "金币七",
+    "name_zh": "星币七",
     "arcana_type": "minor",
+    "number": 7,
     "suit": "pentacles",
-    "upright_keywords": ["耐心", "投资", "长远眼光", "评估"],
-    "upright_meaning": "金币七鼓励你保持耐心,评估你的进展。你的长期投资即将带来回报。",
-    "reversed_keywords": ["缺乏耐心", "浪费时间", "缺乏回报", "重新评估"],
-    "reversed_meaning": "逆位的金币七可能表示你的努力没有带来预期的回报。重新评估你的策略。"
+    "element": "earth",
+    "astro": "Saturn in Taurus",
+    "upright_keywords": [
+      "耐心",
+      "长期投资",
+      "评估",
+      "等待"
+    ],
+    "upright_meaning": "你的努力需要时间才能结果。这张牌邀请你耐心地评估进展。",
+    "reversed_keywords": [
+      "急躁",
+      "无效努力",
+      "重新评估"
+    ],
+    "reversed_meaning": "你可能对缓慢的进展感到不耐。检视方向是否值得继续投入。",
+    "wonderland_motif": "A rabbit leaning on a hoe, studying seven pocket-watch coins growing on a vine, rendered in black and orange"
   },
   {
     "id": "eight_of_pentacles",
+    "slug": "eight-of-pentacles",
     "name_en": "Eight of Pentacles",
-    "name_zh": "金币八",
+    "name_zh": "星币八",
     "arcana_type": "minor",
+    "number": 8,
     "suit": "pentacles",
-    "upright_keywords": ["技艺", "勤奋", "学习", "完善"],
-    "upright_meaning": "金币八代表对技艺的专注和勤奋。通过持续的练习和学习,你将达到精通的水平。",
-    "reversed_keywords": ["缺乏专注", "平庸", "完美主义", "学习困难"],
-    "reversed_meaning": "逆位的金币八可能表示你缺乏专注或过度追求完美。找到平衡,享受学习过程。"
+    "element": "earth",
+    "astro": "Sun in Virgo",
+    "upright_keywords": [
+      "专注",
+      "精进",
+      "勤奋",
+      "技艺"
+    ],
+    "upright_meaning": "你正专注于磨练技能。这张牌肯定你的投入与精进。",
+    "reversed_keywords": [
+      "重复乏味",
+      "完美主义",
+      "倦怠"
+    ],
+    "reversed_meaning": "重复工作可能让你倦怠。找回初衷能让技艺重新有趣。",
+    "wonderland_motif": "A rabbit craftsman at a bench engraving eight pocket-watch coins, rendered in black and orange"
   },
   {
     "id": "nine_of_pentacles",
+    "slug": "nine-of-pentacles",
     "name_en": "Nine of Pentacles",
-    "name_zh": "金币九",
+    "name_zh": "星币九",
     "arcana_type": "minor",
+    "number": 9,
     "suit": "pentacles",
-    "upright_keywords": ["独立", "丰盛", "自给自足", "享受"],
-    "upright_meaning": "金币九代表独立和自给自足的成就。享受你通过努力赢得的丰盛和舒适。",
-    "reversed_keywords": ["依赖", "财务不稳", "工作与生活失衡", "过度物质"],
-    "reversed_meaning": "逆位的金币九可能表示你过度依赖他人或过于物质主义。找回独立和平衡。"
+    "element": "earth",
+    "astro": "Venus in Virgo",
+    "upright_keywords": [
+      "独立",
+      "富足",
+      "自我价值",
+      "享受"
+    ],
+    "upright_meaning": "你通过努力获得独立与富足。这张牌邀请你享受成果，肯定自我价值。",
+    "reversed_keywords": [
+      "过度工作",
+      "依赖",
+      "表面富足"
+    ],
+    "reversed_meaning": "富足也许带来了新的压力。思考什么才是真正的自在。",
+    "wonderland_motif": "An elegant rabbit in a carrot vineyard with a falcon, nine pocket-watch coins, rendered in black and orange"
   },
   {
     "id": "ten_of_pentacles",
+    "slug": "ten-of-pentacles",
     "name_en": "Ten of Pentacles",
-    "name_zh": "金币十",
+    "name_zh": "星币十",
     "arcana_type": "minor",
+    "number": 10,
     "suit": "pentacles",
-    "upright_keywords": ["财富", "传承", "家庭", "稳定"],
-    "upright_meaning": "金币十代表长期的财务安全和家庭的繁荣。享受稳定和传承的祝福。",
-    "reversed_keywords": ["财务损失", "家庭冲突", "不稳定", "短期思维"],
-    "reversed_meaning": "逆位的金币十可能表示家庭财务冲突或不稳定。重新建立长期的安全感。"
+    "element": "earth",
+    "astro": "Mercury in Virgo",
+    "upright_keywords": [
+      "传承",
+      "家族",
+      "长期稳定",
+      "财富"
+    ],
+    "upright_meaning": "这张牌象征长久的稳定与传承。它邀请你重视家庭与长远的根基。",
+    "reversed_keywords": [
+      "家庭分歧",
+      "不稳定",
+      "短视"
+    ],
+    "reversed_meaning": "长远的基础可能有些动摇。关注根本，有助于重建稳定。",
+    "wonderland_motif": "An old rabbit with family and hounds beneath an archway of ten pocket-watch coins, rendered in black and orange"
   },
   {
     "id": "page_of_pentacles",
+    "slug": "page-of-pentacles",
     "name_en": "Page of Pentacles",
-    "name_zh": "金币侍从",
+    "name_zh": "星币侍从",
     "arcana_type": "minor",
+    "number": 11,
     "suit": "pentacles",
-    "upright_keywords": ["机会", "学习", "野心", "新目标"],
-    "upright_meaning": "金币侍从带来新的学习机会和实际的开始。保持勤奋和专注,奠定成功的基础。",
-    "reversed_keywords": ["拖延", "缺乏进展", "不切实际", "懒惰"],
-    "reversed_meaning": "逆位的金币侍从可能表示你拖延或缺乏实际行动。设定清晰的目标,开始行动。"
+    "element": "earth",
+    "astro": null,
+    "upright_keywords": [
+      "学习",
+      "规划",
+      "踏实",
+      "新目标"
+    ],
+    "upright_meaning": "你对学习与实际目标充满热忱。这张牌鼓励你一步一步打好基础。",
+    "reversed_keywords": [
+      "拖延",
+      "缺乏专注",
+      "不切实际"
+    ],
+    "reversed_meaning": "学习的热情可能被分散。设定小目标会让进展更明显。",
+    "wonderland_motif": "A young rabbit page gazing at a pocket-watch coin in a green-dark field, rendered in black and orange"
   },
   {
     "id": "knight_of_pentacles",
+    "slug": "knight-of-pentacles",
     "name_en": "Knight of Pentacles",
-    "name_zh": "金币骑士",
+    "name_zh": "星币骑士",
     "arcana_type": "minor",
+    "number": 12,
     "suit": "pentacles",
-    "upright_keywords": ["可靠", "勤奋", "责任", "稳定"],
-    "upright_meaning": "金币骑士代表可靠和稳健的进展。通过持续的努力和责任感,你将实现目标。",
-    "reversed_keywords": ["停滞", "完美主义", "懒惰", "缺乏野心"],
-    "reversed_meaning": "逆位的金币骑士可能表示你停滞不前或过于谨慎。重新点燃你的动力和野心。"
+    "element": "earth",
+    "astro": null,
+    "upright_keywords": [
+      "勤恳",
+      "可靠",
+      "稳步前进",
+      "耐心"
+    ],
+    "upright_meaning": "你以稳健与耐心推进目标。这张牌肯定持之以恒的力量。",
+    "reversed_keywords": [
+      "停滞",
+      "过于保守",
+      "乏味"
+    ],
+    "reversed_meaning": "稳定可能变成了停滞。适度的改变能带来新的活力。",
+    "wonderland_motif": "A rabbit knight on a heavy black horse, pocket-watch coin held still, rendered in black and orange"
   },
   {
     "id": "queen_of_pentacles",
+    "slug": "queen-of-pentacles",
     "name_en": "Queen of Pentacles",
-    "name_zh": "金币王后",
+    "name_zh": "星币皇后",
     "arcana_type": "minor",
+    "number": 13,
     "suit": "pentacles",
-    "upright_keywords": ["养育", "实际", "丰盛", "资源管理"],
-    "upright_meaning": "金币王后代表实际的养育和资源的管理。你能够创造舒适和安全,同时关爱他人。",
-    "reversed_keywords": ["自我忽视", "工作狂", "物质主义", "依赖"],
-    "reversed_meaning": "逆位的金币王后可能表示你忽视了自己的需求或过于物质主义。重新平衡照顾和自我关怀。"
+    "element": "earth",
+    "astro": null,
+    "upright_keywords": [
+      "滋养",
+      "务实",
+      "安稳",
+      "照顾"
+    ],
+    "upright_meaning": "你以务实与温暖照顾生活和他人。这张牌鼓励你在照顾中保持平衡。",
+    "reversed_keywords": [
+      "忽视自我",
+      "过度操劳",
+      "不安全感"
+    ],
+    "reversed_meaning": "你也许把精力都给了别人。别忘了照顾自己的需要。",
+    "wonderland_motif": "A rabbit queen in a garden with a hare at her feet, cradling a pocket-watch coin, rendered in black and orange"
   },
   {
     "id": "king_of_pentacles",
+    "slug": "king-of-pentacles",
     "name_en": "King of Pentacles",
-    "name_zh": "金币国王",
+    "name_zh": "星币国王",
     "arcana_type": "minor",
+    "number": 14,
     "suit": "pentacles",
-    "upright_keywords": ["成功", "丰盛", "领导力", "安全"],
-    "upright_meaning": "金币国王代表物质上的成功和领导力。你通过实际的智慧和努力,创造了长期的繁荣和稳定。",
-    "reversed_keywords": ["贪婪", "顽固", "工作狂", "财务不稳"],
-    "reversed_meaning": "逆位的金币国王可能表示你过于贪婪或顽固。平衡物质成功和生活的其他方面。"
+    "element": "earth",
+    "astro": null,
+    "upright_keywords": [
+      "稳定",
+      "成就",
+      "富足",
+      "可靠"
+    ],
+    "upright_meaning": "你已建立起稳定与成就。这张牌肯定你的努力，也提醒你慷慨分享。",
+    "reversed_keywords": [
+      "执着物质",
+      "固执",
+      "失衡"
+    ],
+    "reversed_meaning": "对成就的追求可能变得过度。记得成功之外还有其他重要的事。",
+    "wonderland_motif": "A rabbit king on a throne of carrot vines and bull heads, pocket-watch coin in hand, rendered in black and orange"
   }
 ]

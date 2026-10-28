@@ -1,119 +1,188 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
+import Icon, { type IconName } from './Icon';
 
-const navItems = [
-  { href: '/tarot', label: '塔罗占卜', icon: '🃏' },
-  { href: '/birth-chart', label: '星盘', icon: '✨' },
-  { href: '/profile', label: '我的资料', icon: '🐰' },
-  { href: '/combined', label: '综合解读', icon: '🔮' },
-  { href: '/about', label: '关于', icon: '🕐' }
+const navItems: { href: string; label: string; en: string; icon: IconName }[] = [
+  { href: '/tarot', label: '塔罗占卜', en: 'Tarot', icon: 'tarot_cards' },
+  { href: '/birth-chart', label: '出生星盘', en: 'Natal chart', icon: 'chart_wheel' },
+  { href: '/profile', label: '我的资料', en: 'Profile', icon: 'user' },
+  { href: '/combined', label: '综合解读', en: 'Combined', icon: 'crystal_ball' },
+  { href: '/about', label: '关于', en: 'About', icon: 'info' },
 ];
+
+const tarotTopics: { topic: string; label: string; desc: string; icon: IconName; tone: string }[] = [
+  { topic: 'love', label: '爱情', desc: '感情关系与心灵连接', icon: 'love', tone: 'text-primary' },
+  { topic: 'career', label: '事业', desc: '职业发展与工作机会', icon: 'career', tone: 'text-gold' },
+  { topic: 'personal_growth', label: '个人成长', desc: '自我探索与内在成长', icon: 'growth', tone: 'text-green' },
+];
+
+/** Desktop "塔罗占卜" link with a hover/focus dropdown of topics (ArrowDown opens, Escape closes). */
+function TarotNavItem({ active }: { active: boolean }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const show = () => { if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(true); };
+  const hide = () => { closeTimer.current = setTimeout(() => setOpen(false), 120); };
+  const focusItem = (i: number) => wrap.current?.querySelectorAll<HTMLAnchorElement>('[data-dd-item]')[i]?.focus();
+  return (
+    <div ref={wrap} className="relative flex items-stretch" onMouseEnter={show} onMouseLeave={hide}
+      onBlur={(e) => { if (!wrap.current?.contains(e.relatedTarget as Node)) setOpen(false); }}
+      onKeyDown={(e) => {
+        const items = Array.from(wrap.current?.querySelectorAll<HTMLAnchorElement>('[data-dd-item]') ?? []);
+        const idx = items.indexOf(document.activeElement as HTMLAnchorElement);
+        if (e.key === 'Escape') { setOpen(false); (wrap.current?.querySelector('a') as HTMLElement)?.focus(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); setOpen(true); requestAnimationFrame(() => focusItem(Math.min(idx + 1, items.length - 1))); }
+        else if (e.key === 'ArrowUp' && idx >= 0) { e.preventDefault(); if (idx === 0) (wrap.current?.querySelector('a') as HTMLElement)?.focus(); else focusItem(idx - 1); }
+      }}>
+      <Link href="/tarot" aria-current={active ? 'page' : undefined} aria-haspopup="true" aria-expanded={open}
+        className={`relative px-2 xl:px-4 inline-flex items-center gap-2 text-[14px] xl:text-[15px] transition-colors after:absolute after:left-2 after:right-2 xl:after:left-4 xl:after:right-4 after:bottom-0 after:h-0.5 after:bg-primary after:transition-opacity ${active ? 'text-primary font-medium after:opacity-100' : 'text-text-2 hover:text-text after:opacity-0'}`}>
+        <Icon name="tarot_cards" size={18} />塔罗占卜
+      </Link>
+      <div role="menu" aria-label="塔罗主题"
+        className={`absolute left-0 top-full w-[400px] bg-surface-1 border border-border rounded-[var(--r-card)] shadow-[var(--shadow-1)] p-3 transition-[opacity,transform] duration-150 motion-reduce:transition-none ${open ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-1 invisible pointer-events-none'}`}>
+        <p className="overline text-primary px-3 pt-1 pb-2">Tarot · 塔罗占卜</p>
+        {tarotTopics.map((t) => (
+          <Link key={t.topic} href={`/tarot?topic=${t.topic}`} role="menuitem" data-dd-item onClick={() => setOpen(false)}
+            className="group flex items-center gap-4 rounded-[12px] px-3 py-3 hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:outline-none">
+            <Icon name={t.icon} size={22} className={t.tone} />
+            <span className="flex-1">
+              <span className="block text-[15px] font-bold text-text">{t.label}</span>
+              <span className="block text-[13px] text-text-2">{t.desc}</span>
+            </span>
+            <Icon name="arrow_right" size={18} className="text-text-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function Wordmark({ className = '' }: { className?: string }) {
+  return (
+    <span className={`wordmark text-text ${className}`}>
+      C<span className="text-primary">-</span>arot
+    </span>
+  );
+}
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  // #site-menu is only in the DOM while open (kept mounted through the exit fade)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { if (isOpen) setMounted(true); }, [isOpen]);
+
+  // close on route change
+  useEffect(() => { setIsOpen(false); }, [pathname]);
 
   useEffect(() => {
-    if (isOpen) {
-      gsap.to('.nav-overlay', {
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out'
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    const el = overlayRef.current;
+    if (!el) return;
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      mm.add({ reduce: '(prefers-reduced-motion: reduce)', ok: '(prefers-reduced-motion: no-preference)' }, (c) => {
+        const reduce = c.conditions?.reduce;
+        if (isOpen) {
+          gsap.set(el, { visibility: 'visible' });
+          if (reduce) { gsap.set(el, { opacity: 1 }); gsap.set('.nav-item', { opacity: 1, y: 0 }); return; }
+          gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'expo.out' });
+          gsap.fromTo('.nav-item', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.05, ease: 'expo.out', delay: 0.05 });
+        } else {
+          if (reduce) { gsap.set(el, { opacity: 0, visibility: 'hidden' }); setMounted(false); return; }
+          gsap.to(el, { opacity: 0, duration: 0.2, ease: 'power2.in', onComplete: () => { gsap.set(el, { visibility: 'hidden' }); setMounted(false); } });
+        }
       });
-      gsap.to('.nav-menu', {
-        x: 0,
-        duration: 0.4,
-        ease: 'power3.out'
-      });
-      gsap.from('.nav-item', {
-        x: -30,
-        opacity: 0,
-        duration: 0.4,
-        stagger: 0.08,
-        ease: 'power2.out',
-        delay: 0.2
-      });
-    } else {
-      gsap.to('.nav-menu', {
-        x: '-100%',
-        duration: 0.3,
-        ease: 'power3.in'
-      });
-      gsap.to('.nav-overlay', {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in'
-      });
-    }
-  }, [isOpen]);
+    }, el);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false); };
+    if (isOpen) window.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); ctx.revert(); if (!isOpen) gsap.set(el, { visibility: 'hidden', opacity: 0 }); };
+  }, [isOpen, mounted]);
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-sm border-b border-[#ff6b35]/20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="text-2xl transition-transform group-hover:scale-110">🥕</div>
-            <h1 className="text-xl font-bold text-[#ff6b35]">C-arot</h1>
+      <header className="fixed top-0 inset-x-0 z-50 h-16 md:h-20 bg-bg border-b border-border">
+        <div className="mx-auto h-full max-w-[1312px] px-5 md:px-10 xl:px-16 flex items-center justify-between">
+          <Link href="/" className="text-[28px] leading-none" aria-label="C-arot 首页">
+            <Wordmark />
           </Link>
-
+          <nav aria-label="主导航" className="hidden md:flex items-stretch h-full gap-1 xl:gap-2">
+            {navItems.map((item) => {
+              const active = pathname?.startsWith(item.href);
+              if (item.href === '/tarot') return <TarotNavItem key={item.href} active={!!active} />;
+              return (
+                <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined}
+                  className={`relative px-2 xl:px-4 inline-flex items-center gap-2 text-[14px] xl:text-[15px] transition-colors after:absolute after:left-2 after:right-2 xl:after:left-4 xl:after:right-4 after:bottom-0 after:h-0.5 after:bg-primary after:transition-opacity ${active ? 'text-primary font-medium after:opacity-100' : 'text-text-2 hover:text-text after:opacity-0'}`}>
+                  <Icon name={item.icon} size={18} />{item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <Link href="/tarot" data-rabbit-hole="/tarot" className="hidden md:inline-flex btn btn-primary min-h-[44px] xl:min-h-[48px] px-3 xl:px-5 text-[15px]" aria-label="开始占卜">
+            <Icon name="sparkle" size={20} /><span className="hidden xl:inline">开始占卜</span>
+          </Link>
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="relative w-10 h-10 flex flex-col items-center justify-center space-y-1.5 group"
-            aria-label="Menu"
+            ref={btnRef}
+            type="button"
+            onClick={() => setIsOpen((o) => !o)}
+            className={`icon-btn w-11 h-11 md:hidden ${isOpen ? 'border-primary text-primary' : ''}`}
+            aria-label={isOpen ? '关闭菜单' : '打开菜单'}
+            aria-expanded={isOpen}
+            aria-controls="site-menu"
           >
-            <span className={`block w-6 h-0.5 bg-[#f5e6d3] transition-all duration-300 ${isOpen ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block w-6 h-0.5 bg-[#ff6b35] transition-all duration-300 ${isOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-6 h-0.5 bg-[#f5e6d3] transition-all duration-300 ${isOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+            <Icon name={isOpen ? 'close' : 'menu'} size={24} />
           </button>
         </div>
       </header>
 
-      {/* Overlay */}
-      <div
-        className={`nav-overlay fixed inset-0 bg-black/60 backdrop-blur-sm z-40 opacity-0 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
-        onClick={() => setIsOpen(false)}
-      />
-
-      {/* Slide-out menu */}
-      <nav className="nav-menu fixed top-0 left-0 h-full w-80 bg-[#1a1a1a] z-50 -translate-x-full shadow-2xl border-r border-[#ff6b35]/30">
-        <div className="p-6 border-b border-[#ff6b35]/20">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-[#ff6b35]/10 rounded-full flex items-center justify-center text-2xl border-2 border-[#ff6b35]/30">
-              🐰
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-[#ff6b35]">奇境之门</h2>
-              <p className="text-xs text-[#f5e6d3]/60">进入兔子洞</p>
-            </div>
+      {mounted && (<div
+        id="site-menu"
+        ref={overlayRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="网站目录"
+        className="md:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-bg checkerboard flex flex-col overflow-y-auto"
+        style={{ visibility: 'hidden', opacity: 0 }}
+      >
+        <nav className="mx-auto w-full max-w-[1200px] px-5 md:px-16 pt-8 flex-1">
+          <p className="overline text-primary mb-4">Contents · 目录</p>
+          <ul>
+            {navItems.map((item, i) => {
+              const active = pathname?.startsWith(item.href);
+              return (
+                <li key={item.href} className="nav-item border-b border-border">
+                  <Link
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`group flex items-center gap-5 py-5 min-h-[88px] ${active ? 'text-primary' : 'text-text hover:text-primary'} transition-colors`}
+                  >
+                    <span className="num italic text-gold text-[22px] w-8">{String(i + 1).padStart(2, '0')}</span>
+                    <Icon name={item.icon} size={24} className={active ? 'text-primary' : 'text-text-2 group-hover:text-primary'} />
+                    <span className="flex-1">
+                      <span className="block font-[family-name:var(--font-display-zh)] font-bold text-[28px] leading-tight">{item.label}</span>
+                      <span className="block font-display italic text-[15px] text-text-2">{item.en}</span>
+                    </span>
+                    <Icon name="arrow_right" size={24} className={`${active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="mx-auto w-full max-w-[1200px] px-5 md:px-16 py-8 flex items-center gap-4">
+          <Icon name="pocket_watch" size={48} className="text-primary" />
+          <div>
+            <p className="text-text font-bold text-[16px]">跟随白兔的脚步</p>
+            <p className="text-text-2 text-[15px]">时光兔洞 · v1.0</p>
           </div>
         </div>
-
-        <ul className="py-4">
-          {navItems.map((item, index) => (
-            <li key={item.href} className="nav-item">
-              <Link
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center space-x-4 px-6 py-4 text-[#f5e6d3] hover:bg-[#ff6b35]/10 hover:text-[#ff6b35] transition-all duration-200 border-l-4 border-transparent hover:border-[#ff6b35]"
-              >
-                <span className="text-2xl">{item.icon}</span>
-                <span className="text-base font-medium">{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[#ff6b35]/20">
-          <div className="text-center">
-            <div className="inline-block px-4 py-2 bg-[#ff6b35]/10 rounded-lg border border-[#ff6b35]/30">
-              <p className="text-xs text-[#f5e6d3]/60">🕐 时光兔洞</p>
-              <p className="text-sm text-[#ff6b35] font-semibold">跟随白兔的脚步</p>
-            </div>
-          </div>
-        </div>
-      </nav>
+      </div>)}
     </>
   );
 }

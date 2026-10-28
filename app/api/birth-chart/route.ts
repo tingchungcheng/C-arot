@@ -12,7 +12,8 @@ const BirthChartSchema = z.object({
   place: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  timezone: z.string()
+  timezone: z.string(),
+  deferInterpretation: z.boolean().optional()
 });
 
 export async function POST(request: NextRequest) {
@@ -31,7 +32,8 @@ export async function POST(request: NextRequest) {
     const chartSvg = renderBirthChartSVG(chartData);
     const summary = formatBirthChartSummary(chartData);
 
-    const interpretation = await interpretBirthChart(chartData, {
+    // Client streams the reading separately via /api/birth-chart/interpret
+    const interpretation = validated.deferInterpretation ? '' : await interpretBirthChart(chartData, {
       date: validated.date,
       time: validated.time,
       place: validated.place

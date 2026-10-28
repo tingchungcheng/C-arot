@@ -1,0 +1,510 @@
+{
+  "signs": [
+    {
+      "id": "aries",
+      "name_en": "Aries",
+      "name_zh": "白羊座",
+      "symbol": "♈",
+      "element": "fire",
+      "modality": "cardinal",
+      "ruler": "Mars",
+      "date_range": "Mar 21 – Apr 19",
+      "keywords_zh": [
+        "勇气",
+        "开创",
+        "直率",
+        "行动"
+      ],
+      "description_zh": "白羊座以开创精神与直率的热情著称，喜欢率先迈出第一步。",
+      "wonderland_motif": "A rabbit with ram horns charging headfirst into the rabbit hole"
+    },
+    {
+      "id": "taurus",
+      "name_en": "Taurus",
+      "name_zh": "金牛座",
+      "symbol": "♉",
+      "element": "earth",
+      "modality": "fixed",
+      "ruler": "Venus",
+      "date_range": "Apr 20 – May 20",
+      "keywords_zh": [
+        "稳定",
+        "感官",
+        "耐心",
+        "务实"
+      ],
+      "description_zh": "金牛座重视安稳与感官享受，以耐心慢慢积累所珍视的事物。",
+      "wonderland_motif": "A bull lounging in a dark garden of orange carrots, munching slowly"
+    },
+    {
+      "id": "gemini",
+      "name_en": "Gemini",
+      "name_zh": "双子座",
+      "symbol": "♊",
+      "element": "air",
+      "modality": "mutable",
+      "ruler": "Mercury",
+      "date_range": "May 21 – Jun 20",
+      "keywords_zh": [
+        "好奇",
+        "沟通",
+        "灵活",
+        "机智"
+      ],
+      "description_zh": "双子座思维敏捷、好奇心旺盛，善于在不同想法之间穿梭。",
+      "wonderland_motif": "Tweedledum and Tweedledee as twin rabbits trading riddles"
+    },
+    {
+      "id": "cancer",
+      "name_en": "Cancer",
+      "name_zh": "巨蟹座",
+      "symbol": "♋",
+      "element": "water",
+      "modality": "cardinal",
+      "ruler": "Moon",
+      "date_range": "Jun 21 – Jul 22",
+      "keywords_zh": [
+        "关怀",
+        "敏感",
+        "家庭",
+        "守护"
+      ],
+      "description_zh": "巨蟹座温柔而重感情，擅长营造让人安心的归属感。",
+      "wonderland_motif": "A crab carrying a tiny teacup house under an orange moon"
+    },
+    {
+      "id": "leo",
+      "name_en": "Leo",
+      "name_zh": "狮子座",
+      "symbol": "♌",
+      "element": "fire",
+      "modality": "fixed",
+      "ruler": "Sun",
+      "date_range": "Jul 23 – Aug 22",
+      "keywords_zh": [
+        "自信",
+        "创造",
+        "慷慨",
+        "表达"
+      ],
+      "description_zh": "狮子座热情大方，乐于在舞台中央展现自己的光芒。",
+      "wonderland_motif": "A lion-maned Cheshire Cat grinning on a sunlit throne"
+    },
+    {
+      "id": "virgo",
+      "name_en": "Virgo",
+      "name_zh": "处女座",
+      "symbol": "♍",
+      "element": "earth",
+      "modality": "mutable",
+      "ruler": "Mercury",
+      "date_range": "Aug 23 – Sep 22",
+      "keywords_zh": [
+        "细致",
+        "服务",
+        "分析",
+        "秩序"
+      ],
+      "description_zh": "处女座注重细节与实用，通过精进与服务表达关怀。",
+      "wonderland_motif": "A neat rabbit sorting carrots and pocket watches into perfect rows"
+    },
+    {
+      "id": "libra",
+      "name_en": "Libra",
+      "name_zh": "天秤座",
+      "symbol": "♎",
+      "element": "air",
+      "modality": "cardinal",
+      "ruler": "Venus",
+      "date_range": "Sep 23 – Oct 22",
+      "keywords_zh": [
+        "和谐",
+        "公平",
+        "审美",
+        "关系"
+      ],
+      "description_zh": "天秤座追求平衡与美感，重视关系中的公正与和谐。",
+      "wonderland_motif": "Scales balancing a teacup and a carrot at the Queen's croquet lawn"
+    },
+    {
+      "id": "scorpio",
+      "name_en": "Scorpio",
+      "name_zh": "天蝎座",
+      "symbol": "♏",
+      "element": "water",
+      "modality": "fixed",
+      "ruler": "Pluto (traditional: Mars)",
+      "date_range": "Oct 23 – Nov 21",
+      "keywords_zh": [
+        "深刻",
+        "专注",
+        "转化",
+        "洞察"
+      ],
+      "description_zh": "天蝎座情感深沉、洞察敏锐，常在转变中获得力量。",
+      "wonderland_motif": "A scorpion tail curling from the shadows of the rabbit hole"
+    },
+    {
+      "id": "sagittarius",
+      "name_en": "Sagittarius",
+      "name_zh": "射手座",
+      "symbol": "♐",
+      "element": "fire",
+      "modality": "mutable",
+      "ruler": "Jupiter",
+      "date_range": "Nov 22 – Dec 21",
+      "keywords_zh": [
+        "探索",
+        "乐观",
+        "自由",
+        "哲思"
+      ],
+      "description_zh": "射手座热爱自由与远方，以乐观探索世界与意义。",
+      "wonderland_motif": "A centaur-rabbit shooting a carrot arrow toward a distant star"
+    },
+    {
+      "id": "capricorn",
+      "name_en": "Capricorn",
+      "name_zh": "摩羯座",
+      "symbol": "♑",
+      "element": "earth",
+      "modality": "cardinal",
+      "ruler": "Saturn",
+      "date_range": "Dec 22 – Jan 19",
+      "keywords_zh": [
+        "责任",
+        "坚韧",
+        "目标",
+        "纪律"
+      ],
+      "description_zh": "摩羯座务实坚韧，愿意一步步攀登长远的目标。",
+      "wonderland_motif": "A sea-goat climbing a staircase of stacked pocket watches"
+    },
+    {
+      "id": "aquarius",
+      "name_en": "Aquarius",
+      "name_zh": "水瓶座",
+      "symbol": "♒",
+      "element": "air",
+      "modality": "fixed",
+      "ruler": "Uranus (traditional: Saturn)",
+      "date_range": "Jan 20 – Feb 18",
+      "keywords_zh": [
+        "独立",
+        "创新",
+        "理想",
+        "群体"
+      ],
+      "description_zh": "水瓶座思想独立、富有创见，关心群体与未来。",
+      "wonderland_motif": "A rabbit pouring starlight from a teacup into the night sky"
+    },
+    {
+      "id": "pisces",
+      "name_en": "Pisces",
+      "name_zh": "双鱼座",
+      "symbol": "♓",
+      "element": "water",
+      "modality": "mutable",
+      "ruler": "Neptune (traditional: Jupiter)",
+      "date_range": "Feb 19 – Mar 20",
+      "keywords_zh": [
+        "想象",
+        "共情",
+        "直觉",
+        "灵性"
+      ],
+      "description_zh": "双鱼座敏感而富有想象力，能与他人的情感深深共鸣。",
+      "wonderland_motif": "Two fish circling a sinking teacup in the Pool of Tears"
+    }
+  ],
+  "planets": [
+    {
+      "id": "sun",
+      "name_en": "Sun",
+      "name_zh": "太阳",
+      "symbol": "☉",
+      "governs_zh": "核心自我、生命力与意志",
+      "keywords_zh": [
+        "自我",
+        "活力",
+        "意志",
+        "创造"
+      ],
+      "wonderland_motif": "A blazing orange sun with a pocket-watch face"
+    },
+    {
+      "id": "moon",
+      "name_en": "Moon",
+      "name_zh": "月亮",
+      "symbol": "☽",
+      "governs_zh": "情绪、本能与安全感",
+      "keywords_zh": [
+        "情绪",
+        "直觉",
+        "安全感",
+        "滋养"
+      ],
+      "wonderland_motif": "A crescent moon cradling a sleeping Dormouse"
+    },
+    {
+      "id": "mercury",
+      "name_en": "Mercury",
+      "name_zh": "水星",
+      "symbol": "☿",
+      "governs_zh": "思维、沟通与学习",
+      "keywords_zh": [
+        "沟通",
+        "思考",
+        "学习",
+        "好奇"
+      ],
+      "wonderland_motif": "The White Rabbit sprinting with a sealed letter"
+    },
+    {
+      "id": "venus",
+      "name_en": "Venus",
+      "name_zh": "金星",
+      "symbol": "♀",
+      "governs_zh": "爱、美、价值与关系",
+      "keywords_zh": [
+        "爱",
+        "美感",
+        "价值",
+        "和谐"
+      ],
+      "wonderland_motif": "A rose garden painted half black, half orange"
+    },
+    {
+      "id": "mars",
+      "name_en": "Mars",
+      "name_zh": "火星",
+      "symbol": "♂",
+      "governs_zh": "行动、欲望与勇气",
+      "keywords_zh": [
+        "行动",
+        "勇气",
+        "欲望",
+        "竞争"
+      ],
+      "wonderland_motif": "A flamingo croquet mallet ablaze with orange fire"
+    },
+    {
+      "id": "jupiter",
+      "name_en": "Jupiter",
+      "name_zh": "木星",
+      "symbol": "♃",
+      "governs_zh": "成长、扩展与信念",
+      "keywords_zh": [
+        "扩展",
+        "幸运",
+        "智慧",
+        "信念"
+      ],
+      "wonderland_motif": "A giant mushroom growing ever larger"
+    },
+    {
+      "id": "saturn",
+      "name_en": "Saturn",
+      "name_zh": "土星",
+      "symbol": "♄",
+      "governs_zh": "结构、责任与时间",
+      "keywords_zh": [
+        "责任",
+        "纪律",
+        "界限",
+        "时间"
+      ],
+      "wonderland_motif": "A ringed planet made of a stopped clock"
+    },
+    {
+      "id": "uranus",
+      "name_en": "Uranus",
+      "name_zh": "天王星",
+      "symbol": "♅",
+      "governs_zh": "变革、独立与突破",
+      "keywords_zh": [
+        "变革",
+        "创新",
+        "独立",
+        "突破"
+      ],
+      "wonderland_motif": "The Mad Hatter's hat bursting with lightning"
+    },
+    {
+      "id": "neptune",
+      "name_en": "Neptune",
+      "name_zh": "海王星",
+      "symbol": "♆",
+      "governs_zh": "梦想、灵感与超越",
+      "keywords_zh": [
+        "梦想",
+        "灵感",
+        "共情",
+        "幻象"
+      ],
+      "wonderland_motif": "The Pool of Tears glimmering under mist"
+    },
+    {
+      "id": "pluto",
+      "name_en": "Pluto",
+      "name_zh": "冥王星",
+      "symbol": "♇",
+      "governs_zh": "转化、力量与重生",
+      "keywords_zh": [
+        "转化",
+        "深度",
+        "重生",
+        "力量"
+      ],
+      "wonderland_motif": "A dark rabbit hole spiraling to the core"
+    },
+    {
+      "id": "ascendant",
+      "name_en": "Ascendant",
+      "name_zh": "上升点",
+      "symbol": "AC",
+      "governs_zh": "外在形象、第一印象与人生态度",
+      "keywords_zh": [
+        "外在",
+        "第一印象",
+        "态度",
+        "出发点"
+      ],
+      "wonderland_motif": "A looking-glass doorway reflecting a rabbit silhouette"
+    }
+  ],
+  "houses": [
+    {
+      "number": 1,
+      "name_zh": "第一宫 命宫",
+      "theme_en": "Self & identity",
+      "theme_zh": "自我与外在形象",
+      "keywords_zh": [
+        "自我",
+        "外表",
+        "开端"
+      ]
+    },
+    {
+      "number": 2,
+      "name_zh": "第二宫 财帛宫",
+      "theme_en": "Resources & values",
+      "theme_zh": "财富与价值观",
+      "keywords_zh": [
+        "金钱",
+        "资源",
+        "价值"
+      ]
+    },
+    {
+      "number": 3,
+      "name_zh": "第三宫 兄弟宫",
+      "theme_en": "Communication & learning",
+      "theme_zh": "沟通与学习",
+      "keywords_zh": [
+        "沟通",
+        "兄弟姐妹",
+        "短途"
+      ]
+    },
+    {
+      "number": 4,
+      "name_zh": "第四宫 田宅宫",
+      "theme_en": "Home & roots",
+      "theme_zh": "家庭与根基",
+      "keywords_zh": [
+        "家庭",
+        "根源",
+        "安全感"
+      ]
+    },
+    {
+      "number": 5,
+      "name_zh": "第五宫 子女宫",
+      "theme_en": "Creativity & pleasure",
+      "theme_zh": "创造与娱乐",
+      "keywords_zh": [
+        "创造",
+        "恋爱",
+        "玩乐"
+      ]
+    },
+    {
+      "number": 6,
+      "name_zh": "第六宫 奴仆宫",
+      "theme_en": "Work & health",
+      "theme_zh": "工作与健康",
+      "keywords_zh": [
+        "日常",
+        "健康",
+        "服务"
+      ]
+    },
+    {
+      "number": 7,
+      "name_zh": "第七宫 夫妻宫",
+      "theme_en": "Partnerships",
+      "theme_zh": "伙伴与婚姻",
+      "keywords_zh": [
+        "伴侣",
+        "合作",
+        "契约"
+      ]
+    },
+    {
+      "number": 8,
+      "name_zh": "第八宫 疾厄宫",
+      "theme_en": "Transformation & shared resources",
+      "theme_zh": "转化与共享资源",
+      "keywords_zh": [
+        "共享",
+        "亲密",
+        "转化"
+      ]
+    },
+    {
+      "number": 9,
+      "name_zh": "第九宫 迁移宫",
+      "theme_en": "Philosophy & travel",
+      "theme_zh": "信念与远行",
+      "keywords_zh": [
+        "远行",
+        "哲学",
+        "高等教育"
+      ]
+    },
+    {
+      "number": 10,
+      "name_zh": "第十宫 官禄宫",
+      "theme_en": "Career & public life",
+      "theme_zh": "事业与社会地位",
+      "keywords_zh": [
+        "事业",
+        "声誉",
+        "目标"
+      ]
+    },
+    {
+      "number": 11,
+      "name_zh": "第十一宫 福德宫",
+      "theme_en": "Friends & hopes",
+      "theme_zh": "朋友与愿景",
+      "keywords_zh": [
+        "朋友",
+        "社群",
+        "理想"
+      ]
+    },
+    {
+      "number": 12,
+      "name_zh": "第十二宫 玄秘宫",
+      "theme_en": "Subconscious & solitude",
+      "theme_zh": "潜意识与内在",
+      "keywords_zh": [
+        "潜意识",
+        "独处",
+        "灵性"
+      ]
+    }
+  ]
+}

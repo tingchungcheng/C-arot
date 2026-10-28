@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Icon from '../components/Icon';
 
 const LocationPicker = dynamic(() => import('../components/LocationPicker'), {
   ssr: false,
   loading: () => (
-    <div className="text-[#f5e6d3]/60 py-4">加载地图...</div>
+    <div className="text-text/60 py-4">加载地图...</div>
   )
 });
 
@@ -41,62 +42,62 @@ export default function ProfilePage() {
   const handleSave = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('birthData', JSON.stringify(birthData));
-      alert('资料已保存 ✓');
+      alert('资料已保存');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-bg pt-20 pb-12 px-4">
       <div className="container mx-auto max-w-2xl">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🐰</div>
-          <h1 className="text-4xl font-bold text-[#f5e6d3] mb-2">我的资料</h1>
-          <p className="text-[#f5e6d3]/60">更新你的出生信息</p>
+          <Icon name="rabbit" size={48} className="mx-auto mb-4 text-primary" />
+          <h1 className="text-4xl font-bold text-text mb-2">我的资料</h1>
+          <p className="text-text/60">更新你的出生信息</p>
         </div>
 
-        <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-[#ff6b35]/20 space-y-6">
+        <div className="bg-surface-1 p-8 rounded-2xl border border-primary/20 space-y-6">
           <div>
-            <label className="block text-[#f5e6d3] mb-2">昵称</label>
+            <label className="block text-text mb-2">昵称</label>
             <input
               type="text"
               value={birthData.nickname}
               onChange={(e) => setBirthData({ ...birthData, nickname: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0a] text-[#f5e6d3] rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none"
+              className="w-full px-4 py-3 bg-bg text-text rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-[#f5e6d3] mb-2">出生日期</label>
+            <label className="block text-text mb-2">出生日期</label>
             <input
               type="date"
               value={birthData.date}
               onChange={(e) => setBirthData({ ...birthData, date: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0a] text-[#f5e6d3] rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none"
+              className="w-full px-4 py-3 bg-bg text-text rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-[#f5e6d3] mb-2">出生时间</label>
+            <label className="block text-text mb-2">出生时间</label>
             <input
               type="time"
               value={birthData.time}
               onChange={(e) => setBirthData({ ...birthData, time: e.target.value })}
               disabled={birthData.timeUnknown}
-              className="w-full px-4 py-3 bg-[#0a0a0a] text-[#f5e6d3] rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none disabled:opacity-40"
+              className="w-full px-4 py-3 bg-bg text-text rounded-xl border-2 border-primary/30 focus:border-primary focus:outline-none disabled:opacity-40"
             />
             <label className="flex items-center mt-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={birthData.timeUnknown}
                 onChange={(e) => setBirthData({ ...birthData, timeUnknown: e.target.checked, time: '' })}
-                className="w-5 h-5 mr-3 accent-[#ff6b35]"
+                className="w-5 h-5 mr-3 accent-primary"
               />
-              <span className="text-[#f5e6d3]/80">不知道出生时间</span>
+              <span className="text-text/80">不知道出生时间</span>
             </label>
           </div>
 
           <div>
-            <label className="block text-[#f5e6d3] mb-2">出生地点</label>
+            <label className="block text-text mb-2">出生地点</label>
             <LocationPicker
               value={birthData.place ? {
                 place: birthData.place,
@@ -118,9 +119,9 @@ export default function ProfilePage() {
 
           <button
             onClick={handleSave}
-            className="w-full px-6 py-4 bg-[#ff6b35] text-[#0a0a0a] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,107,53,0.6)] transition-all"
+            className="w-full px-6 py-4 bg-primary text-on-primary font-bold rounded-xl hover:shadow-[0_0_20px_rgba(242,118,46,0.6)] transition-all"
           >
-            保存资料 ✓
+            保存资料 <Icon name="check" size={20} className="inline align-[-4px]" />
           </button>
         </div>
       </div>

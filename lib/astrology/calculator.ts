@@ -72,6 +72,22 @@ function getZodiacSign(longitude: number): { sign: string; sign_en: string; degr
   };
 }
 
+/**
+ * Ecliptic longitude of the Ascendant (degrees, 0-360).
+ * RAMC = local sidereal time; ε = mean obliquity of the ecliptic.
+ * λ_asc = atan2(cos RAMC, -(sin RAMC·cos ε + tan φ·sin ε))
+ */
+export function calculateAscendant(date: Date, latitude: number, longitude: number): number {
+  const rad = Math.PI / 180;
+  const gstHours = Astronomy.SiderealTime(date);
+  const ramc = (((gstHours * 15 + longitude) % 360) + 360) % 360;
+  const T = Astronomy.MakeTime(date).tt / 36525;
+  const eps = 23.439291 - 0.0130042 * T;
+  const y = Math.cos(ramc * rad);
+  const x = -(Math.sin(ramc * rad) * Math.cos(eps * rad) + Math.tan(latitude * rad) * Math.sin(eps * rad));
+  return ((Math.atan2(y, x) / rad) % 360 + 360) % 360;
+}
+
 function calculateHouseNumber(longitude: number, ascendant: number): number {
   let diff = ((longitude - ascendant) % 360 + 360) % 360;
   return Math.floor(diff / 30) + 1;
@@ -172,9 +188,7 @@ export function calculateBirthChart(birthData: BirthData): BirthChartData {
 
   if (time) {
     try {
-      const observer = new Astronomy.Observer(latitude, longitude, 0);
-      const hourAngle = Astronomy.HourAngle(Astronomy.Body.Sun, birthDate, observer);
-      const ascendantLon = ((hourAngle * 15 + 90) % 360 + 360) % 360;
+      const ascendantLon = calculateAscendant(birthDate, latitude, longitude);
 
       const zodiacInfo = getZodiacSign(ascendantLon);
       risingSign = {

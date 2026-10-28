@@ -1,23 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
+import Icon, { type IconName } from '../components/Icon';
+import BirthDatePicker, { parseISO } from '../components/BirthDatePicker';
+import BirthTimePicker from '../components/BirthTimePicker';
+import ZodiacPanel from '../components/ZodiacPanel';
+import { zodiacFor } from '../components/zodiac';
 
 const LocationPicker = dynamic(() => import('../components/LocationPicker'), {
   ssr: false,
-  loading: () => (
-    <div className="text-[#f5e6d3]/60 py-4 text-center">加载地图...</div>
-  )
+  loading: () => <div className="text-text-ob-2 py-4 text-center text-[15px]">加载地图...</div>,
 });
 
-interface LocationData {
-  place: string;
-  latitude: number;
-  longitude: number;
-  timezone: string;
-}
+interface LocationData { place: string; latitude: number; longitude: number; timezone: string }
 
 interface BirthData {
   nickname: string;
@@ -30,49 +28,41 @@ interface BirthData {
   timezone?: string;
 }
 
+const STEPS: { label: string; title: string; sub: string; icon: IconName }[] = [
+  { label: '名字', title: '你的名字?', sub: '让我们认识你', icon: 'rabbit' },
+  { label: '日期', title: '你的出生日期?', sub: '用于计算你的出生星盘', icon: 'calendar' },
+  { label: '时间', title: '你的出生时间?', sub: '精确的时刻让星盘更准确', icon: 'clock' },
+  { label: '地点', title: '你的出生地点?', sub: '奇境入口的坐标', icon: 'globe' },
+];
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [birthData, setBirthData] = useState<BirthData>({
-    nickname: '',
-    date: '',
-    time: '',
-    timeUnknown: false,
-    place: ''
-  });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [birthData, setBirthData] = useState<BirthData>({ nickname: '', date: '', time: '', timeUnknown: false, place: '' });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dir = useRef(1);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.step-card', {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        ease: 'power2.out'
+      const mm = gsap.matchMedia();
+      mm.add({ ok: '(prefers-reduced-motion: no-preference)' }, () => {
+        gsap.fromTo('.step-body', { x: 40 * dir.current, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: 'power2.inOut' });
       });
-    }, containerRef);
-
+    }, rootRef);
     return () => ctx.revert();
   }, [step]);
 
-  const handleNext = () => {
-    if (step < 4) {
-      gsap.to('.step-card', {
-        x: -50,
-        opacity: 0,
-        duration: 0.3,
-        onComplete: () => {
-          setStep(step + 1);
-          gsap.fromTo('.step-card', { x: 50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3 });
-        }
-      });
-    }
+  const go = (next: number) => {
+    dir.current = next > step ? 1 : -1;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setStep(next); return; }
+    gsap.to('.step-body', { x: -40 * dir.current, opacity: 0, duration: 0.2, ease: 'power2.in', onComplete: () => setStep(next) });
   };
 
   const handleComplete = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('birthData', JSON.stringify(birthData));
-    }
+    localStorage.setItem('birthData', JSON.stringify(birthData));
     router.push('/tarot');
   };
 
@@ -86,154 +76,156 @@ export default function OnboardingPage() {
     }
   };
 
+  const summaries: { label: string; value: string }[] = [];
+  if (step > 1) summaries.push({ label: '名字', value: birthData.nickname });
+  if (step > 2) { const p = parseISO(birthData.date); summaries.push({ label: '出生日期', value: p ? `${p.y}年${p.m}月${p.d}日` : '' }); }
+  if (step > 3) summaries.push({ label: '出生时间', value: birthData.timeUnknown ? '未知' : birthData.time });
+  const lastSummary = summaries[summaries.length - 1];
+
+  const current = STEPS[step - 1];
+
+  const sign = step === 2 ? (() => { const p = parseISO(birthData.date); return p ? zodiacFor(p.m, p.d) : null; })() : null;
+
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] pt-20 pb-12 px-4">
-      <div className="container mx-auto max-w-2xl">
-        {/* Progress indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
-                  s === step
-                    ? 'bg-[#ff6b35] text-[#0a0a0a] scale-110 shadow-[0_0_20px_rgba(255,107,53,0.6)]'
-                    : s < step
-                    ? 'bg-[#4a5f4f] text-[#f5e6d3]'
-                    : 'bg-[#1a1a1a] text-[#f5e6d3]/40 border-2 border-[#f5e6d3]/20'
-                }`}
-              >
-                {s < step ? '✓' : s}
-              </div>
-            ))}
+    <div ref={rootRef} className="ob min-h-screen pt-16 md:pt-20">
+      <div className="mx-auto max-w-[560px] md:max-w-[1312px] px-5 md:px-10 xl:px-16 pt-6 md:py-10 xl:py-12 md:grid md:grid-cols-12 md:gap-6 md:items-stretch min-h-[calc(100vh-64px)] md:min-h-0 flex flex-col">
+        <section className="md:col-span-6 xl:col-span-7 flex-1 flex flex-col md:bg-ob-sheet md:border md:border-ob-border md:rounded-[20px] md:p-8 md:shadow-[0_12px_32px_rgba(0,0,0,.3)]">
+          {/* Step header */}
+          <div className="flex items-baseline justify-between">
+            <p className="overline text-text">Onboarding</p>
+            <p className="num italic text-[24px] text-text" aria-label={`第 ${step} 步,共 4 步`}>{pad(step)} / 04</p>
           </div>
-          <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#ff6b35] transition-all duration-500 ease-out"
-              style={{ width: `${(step / 4) * 100}%` }}
-            />
-          </div>
-        </div>
+          <ol className="grid grid-cols-4 gap-3 mt-4" aria-label="进度">
+            {STEPS.map((s, i) => {
+              const n = i + 1;
+              const state = n < step ? 'done' : n === step ? 'current' : 'upcoming';
+              return (
+                <li key={s.label} aria-current={state === 'current' ? 'step' : undefined}>
+                  <span className={`block h-1 rounded-full ${state === 'upcoming' ? 'bg-ob-border' : 'bg-primary'}`} />
+                  <span className={`mt-2 flex items-center gap-1 text-[13px] ${state === 'current' ? 'text-text font-semibold' : state === 'done' ? 'text-text' : 'text-text-ob-2'}`}>
+                    {state === 'done' && <Icon name="check" size={14} className="text-leaf" />}
+                    {s.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
 
-        {/* Step card */}
-        <div className="step-card bg-[#1a1a1a] rounded-2xl p-8 shadow-2xl border border-[#ff6b35]/20">
-          {/* Step 1: Nickname */}
-          {step === 1 && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4">🐰</div>
-                <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">你的名字?</h2>
-                <p className="text-[#f5e6d3]/60">让我们认识你</p>
+          <div className="step-body flex-1 flex flex-col">
+            {lastSummary && (
+              <div className="ob-field rounded-[14px] px-4 py-3 mt-6 flex items-center gap-4 md:hidden">
+                <Icon name="check" size={20} className="text-leaf" />
+                <div>
+                  <p className="text-[13px] text-text-ob-2">{lastSummary.label}</p>
+                  <p className="text-[16px] text-text">{lastSummary.value}</p>
+                </div>
               </div>
-              <input
-                type="text"
-                value={birthData.nickname}
-                onChange={(e) => setBirthData({ ...birthData, nickname: e.target.value })}
-                placeholder="昵称或名字"
-                className="w-full px-6 py-4 bg-[#0a0a0a] text-[#f5e6d3] text-lg rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none transition-colors"
-                autoFocus
-              />
-            </div>
-          )}
-
-          {/* Step 2: Birth date */}
-          {step === 2 && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4">🕐</div>
-                <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">出生日期</h2>
-                <p className="text-[#f5e6d3]/60">时光兔洞的起点</p>
-              </div>
-              <input
-                type="date"
-                value={birthData.date}
-                onChange={(e) => setBirthData({ ...birthData, date: e.target.value })}
-                className="w-full px-6 py-4 bg-[#0a0a0a] text-[#f5e6d3] text-lg rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none transition-colors"
-                autoFocus
-              />
-            </div>
-          )}
-
-          {/* Step 3: Birth time */}
-          {step === 3 && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4">⏰</div>
-                <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">出生时间</h2>
-                <p className="text-[#f5e6d3]/60">精确的时刻让星盘更准确</p>
-              </div>
-              <input
-                type="time"
-                value={birthData.time}
-                onChange={(e) => setBirthData({ ...birthData, time: e.target.value })}
-                disabled={birthData.timeUnknown}
-                className="w-full px-6 py-4 bg-[#0a0a0a] text-[#f5e6d3] text-lg rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none transition-colors disabled:opacity-40"
-                autoFocus={!birthData.timeUnknown}
-              />
-              <label className="flex items-center mt-6 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={birthData.timeUnknown}
-                  onChange={(e) => setBirthData({ ...birthData, timeUnknown: e.target.checked, time: '' })}
-                  className="w-5 h-5 mr-3 accent-[#ff6b35]"
-                />
-                <span className="text-[#f5e6d3]/80">不知道出生时间</span>
-              </label>
-            </div>
-          )}
-
-          {/* Step 4: Birth place */}
-          {step === 4 && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4">🌍</div>
-                <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">出生地点</h2>
-                <p className="text-[#f5e6d3]/60">奇境入口的坐标</p>
-              </div>
-              <LocationPicker
-                value={birthData.place ? {
-                  place: birthData.place,
-                  latitude: birthData.latitude || 3.139,
-                  longitude: birthData.longitude || 101.687,
-                  timezone: birthData.timezone || 'Asia/Kuala_Lumpur'
-                } : null}
-                onChange={(location: LocationData) => {
-                  setBirthData({
-                    ...birthData,
-                    place: location.place,
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    timezone: location.timezone
-                  });
-                }}
-              />
-            </div>
-          )}
-
-          {/* Navigation buttons */}
-          <div className="flex space-x-4 mt-8">
-            {step > 1 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                className="flex-1 px-6 py-4 bg-[#1a1a1a] text-[#f5e6d3] rounded-xl border-2 border-[#f5e6d3]/20 hover:border-[#f5e6d3]/40 transition-all"
-              >
-                ← 上一步
-              </button>
             )}
-            <button
-              onClick={step === 4 ? handleComplete : handleNext}
-              disabled={!canProceed()}
-              className="flex-1 px-6 py-4 bg-[#ff6b35] text-[#0a0a0a] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,107,53,0.6)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              {step === 4 ? '完成 ✓' : '下一步 →'}
-            </button>
-          </div>
-        </div>
 
-        {/* Decorative elements */}
-        <div className="mt-8 text-center text-[#f5e6d3]/40 text-sm">
-          <p>🥕 你的资料将安全保存在本地</p>
-        </div>
+            <div className="flex items-center gap-4 mt-6 md:mt-8">
+              <span className="w-14 h-14 rounded-[14px] ob-field flex items-center justify-center text-primary shrink-0">
+                <Icon name={current.icon} size={28} />
+              </span>
+              <div>
+                <h1 className="text-[24px] md:text-[28px] leading-[1.3] text-text">{current.title}</h1>
+                <p className="text-[15px] text-text-ob-2">
+                  {current.sub}
+                  {lastSummary && <span className="hidden md:inline"> · {lastSummary.label}:{lastSummary.value} <Icon name="check" size={14} className="inline text-leaf align-[-2px]" /></span>}
+                </p>
+              </div>
+            </div>
+
+            {/* Sheet (mobile) / inline (desktop card) */}
+            <div className="mt-6 flex-1 md:flex-none -mx-5 md:mx-0 bg-ob-sheet md:bg-transparent border-t md:border-0 border-ob-border rounded-t-[20px] md:rounded-none px-5 md:px-0 pt-3 md:pt-0 pb-6 md:pb-0 shadow-[0_-8px_24px_rgba(0,0,0,.3)] md:shadow-none flex flex-col">
+              <span className="mx-auto mb-4 block w-10 h-1 rounded-full bg-ob-border md:hidden" aria-hidden="true" />
+
+              <div className="flex-1">
+                {step === 1 && (
+                  <div>
+                    <label htmlFor="nickname" className="block text-[13px] font-medium text-text-ob-2 mb-2">昵称或名字</label>
+                    <input id="nickname" type="text" className="ob-input" value={birthData.nickname} autoFocus placeholder="例如:爱丽丝"
+                      onChange={(e) => setBirthData({ ...birthData, nickname: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && canProceed()) go(2); }} />
+                    <p className="mt-2 text-[13px] text-text-ob-2">只用于在解读中称呼你。</p>
+                  </div>
+                )}
+                {step === 2 && (
+                  <BirthDatePicker value={birthData.date} onChange={(date) => setBirthData((b) => ({ ...b, date }))} />
+                )}
+                {step === 3 && (
+                  <BirthTimePicker
+                    value={birthData.time}
+                    unknown={birthData.timeUnknown}
+                    onChange={(time) => setBirthData((b) => ({ ...b, time }))}
+                    onUnknownChange={(timeUnknown) => setBirthData((b) => ({ ...b, timeUnknown, time: timeUnknown ? '' : b.time }))}
+                  />
+                )}
+                {step === 4 && (
+                  <LocationPicker
+                    value={birthData.place ? {
+                      place: birthData.place,
+                      latitude: birthData.latitude || 3.139,
+                      longitude: birthData.longitude || 101.687,
+                      timezone: birthData.timezone || 'Asia/Kuala_Lumpur',
+                    } : null}
+                    onChange={(l: LocationData) => setBirthData((b) => ({ ...b, place: l.place, latitude: l.latitude, longitude: l.longitude, timezone: l.timezone }))}
+                  />
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6 md:justify-end">
+                {step > 1 && (
+                  <button type="button" onClick={() => go(step - 1)} className="btn btn-secondary flex-1 md:flex-none md:w-[160px]"><Icon name="arrow_left" size={20} className="hidden md:inline" />上一步</button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => (step < 4 ? go(step + 1) : handleComplete())}
+                  disabled={!canProceed()}
+                  className="btn btn-primary flex-[1.6] md:flex-none md:w-[260px]"
+                >
+                  {step < 4 ? '确定 · 下一步' : '完成 · 进入兔子洞'}
+                  <Icon name={step < 4 ? 'arrow_right' : 'check'} size={20} />
+                </button>
+              </div>
+              {step === 4 && (
+                <p className="mt-4 flex items-center gap-2 text-[15px] text-text-ob-2"><Icon name="lock" size={16} />你的资料仅用于生成星盘与解读。</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Right panel (tablet/desktop) */}
+        <aside className="hidden md:flex md:col-span-6 xl:col-span-5 flex-col bg-ob-sheet border border-ob-border rounded-[20px] p-6 xl:p-8">
+          {step === 2 ? <ZodiacPanel sign={sign} /> : (
+            <>
+              <p className="overline text-text">Your details · 你的资料</p>
+              <dl className="mt-6 space-y-3">
+                {summaries.length === 0 && <p className="text-[15px] text-text-ob-2">完成每一步后,你填写的内容会在这里汇总。</p>}
+                {summaries.map((s) => (
+                  <div key={s.label} className="ob-field rounded-[14px] px-4 py-3 flex items-center gap-4">
+                    <Icon name="check" size={20} className="text-leaf" />
+                    <div><dt className="text-[13px] text-text-ob-2">{s.label}</dt><dd className="text-[16px] text-text">{s.value}</dd></div>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-auto pt-8 flex items-center gap-3 text-text-ob-2 text-[15px]"><Icon name="rabbit" size={24} className="text-primary" />跟随白兔,一步步走进你的星盘。</div>
+            </>
+          )}
+        </aside>
+
+        {/* Reassurance row (tablet/desktop) */}
+        <ul className="hidden md:grid md:col-span-12 grid-cols-3 gap-6">
+          {([
+            { icon: 'lock', t: '资料仅用于生成解读', d: '不会公开或出售' },
+            { icon: 'clock', t: '不知道出生时间?', d: '下一步可以跳过,仍能生成星盘' },
+            { icon: 'info', t: '可随时修改', d: '在「我的资料」中更新' },
+          ] as const).map((c) => (
+            <li key={c.t} className="ob-field rounded-[16px] px-5 py-4 flex items-center gap-4">
+              <Icon name={c.icon} size={22} className="text-gold" />
+              <div><p className="text-[15px] font-bold text-text">{c.t}</p><p className="text-[15px] text-text-ob-2">{c.d}</p></div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
