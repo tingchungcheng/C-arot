@@ -1,6 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('../components/LocationPicker'), {
+  ssr: false,
+  loading: () => (
+    <div className="text-[#f5e6d3]/60 py-4">加载地图...</div>
+  )
+});
+
+interface LocationData {
+  place: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+}
 
 export default function ProfilePage() {
   const [birthData, setBirthData] = useState({
@@ -82,12 +97,22 @@ export default function ProfilePage() {
 
           <div>
             <label className="block text-[#f5e6d3] mb-2">出生地点</label>
-            <input
-              type="text"
-              value={birthData.place}
-              onChange={(e) => setBirthData({ ...birthData, place: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0a0a0a] text-[#f5e6d3] rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none"
-              placeholder="城市名称"
+            <LocationPicker
+              value={birthData.place ? {
+                place: birthData.place,
+                latitude: birthData.latitude,
+                longitude: birthData.longitude,
+                timezone: birthData.timezone
+              } : null}
+              onChange={(location: LocationData) => {
+                setBirthData({
+                  ...birthData,
+                  place: location.place,
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  timezone: location.timezone
+                });
+              }}
             />
           </div>
 

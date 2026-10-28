@@ -17,6 +17,8 @@ C-arot 是一个以爱丽丝梦游仙境为灵感的 AI 塔罗与星盘解读网
 **主要特色:**
 - 🃏 **塔罗占卜**: 使用 CSPRNG 确保公平的三卡抽牌系统
 - ✨ **出生星盘**: 基于真实天文历表计算太阳、月亮、行星位置
+- 🗺️ **交互式地图**: Leaflet + Nominatim 地理编码,精确定位出生地点
+- 🕐 **智能时区**: tz-lookup 自动推断 IANA 时区,确保星盘精确
 - 🔮 **综合解读**: AI 结合塔罗与星盘,提供深度反思
 - 🐰 **奇境主题**: 兔子、胡萝卜、怀表等爱丽丝元素的优雅设计
 - 🌙 **深色主题**: 黑色背景 + 胡萝卜橙主色调 + 奶油色文字
@@ -47,17 +49,18 @@ C-arot 是一个以爱丽丝梦游仙境为灵感的 AI 塔罗与星盘解读网
 
 ## 🚀 快速开始 (Quick Start)
 
-### 1. 克隆/下载项目到本地 Mac 文件夹
+### 1. 克隆项目到本地 Mac 文件夹
 
-如果项目已在云端或 GitHub:
 ```bash
-git clone <repository-url>
-cd <project-folder>
-```
+# 创建项目文件夹(例如在桌面的学习目录)
+mkdir -p ~/Desktop/TestProj\(self-learn\)
+cd ~/Desktop/TestProj\(self-learn\)
 
-如果已有项目文件夹,直接进入:
-```bash
-cd /path/to/c-arot
+# 克隆仓库
+git clone https://origin.cursor.com/git/tingcc/tmp-eed2f801c6714aa2.git c-arot
+
+# 进入项目目录
+cd c-arot
 ```
 
 ### 2. 安装依赖
@@ -227,11 +230,12 @@ npm start
 - [x] 深色 Wonderland 主题
 - [x] 怀表加载动画
 - [x] 免责声明页面
+- [x] **Leaflet + OpenStreetMap 地图集成**(点击定位 + 搜索)
+- [x] **Nominatim 地理编码**(debounced 搜索,结果列表)
+- [x] **tz-lookup 时区自动推断**(根据经纬度获取 IANA 时区)
+- [x] **精确坐标用于星盘计算**(houses/rising 计算)
 
 ### 🚧 TODO (待实现)
-- [ ] Leaflet 地图集成(精确出生地点选择)
-- [ ] Nominatim 地理编码(搜索城市)
-- [ ] 时区自动推断(tz-lookup)
 - [ ] Supabase 集成(替换 SQLite)
 - [ ] 支付集成(Billplz 或其他)
 - [ ] 阅读历史与账户系统
@@ -243,10 +247,8 @@ npm start
 ## 🐛 已知问题与限制 (Known Issues)
 
 ### 当前版本限制
-1. **地图未集成**: 出生地点目前只能手动输入文本,尚未集成 Leaflet 地图和 Nominatim 地理编码
-2. **固定坐标**: 星盘计算暂时使用默认坐标(吉隆坡 3.139°N, 101.687°E)
-3. **无账户系统**: 所有数据存储在本地,换设备后不保留
-4. **无支付功能**: 当前版本所有解读免费,支付集成在 Supabase 版本中实现
+1. **无账户系统**: 所有数据存储在本地,换设备后不保留
+2. **无支付功能**: 当前版本所有解读免费,支付集成在 Supabase 版本中实现
 
 ### 模拟模式说明
 在未配置 `OPENAI_API_KEY` 时,应用使用模拟数据:

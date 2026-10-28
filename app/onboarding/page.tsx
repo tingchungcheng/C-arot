@@ -3,6 +3,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('../components/LocationPicker'), {
+  ssr: false,
+  loading: () => (
+    <div className="text-[#f5e6d3]/60 py-4 text-center">加载地图...</div>
+  )
+});
+
+interface LocationData {
+  place: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+}
 
 interface BirthData {
   nickname: string;
@@ -175,17 +190,23 @@ export default function OnboardingPage() {
                 <h2 className="text-3xl font-bold text-[#f5e6d3] mb-2">出生地点</h2>
                 <p className="text-[#f5e6d3]/60">奇境入口的坐标</p>
               </div>
-              <input
-                type="text"
-                value={birthData.place}
-                onChange={(e) => setBirthData({ ...birthData, place: e.target.value })}
-                placeholder="城市名称"
-                className="w-full px-6 py-4 bg-[#0a0a0a] text-[#f5e6d3] text-lg rounded-xl border-2 border-[#ff6b35]/30 focus:border-[#ff6b35] focus:outline-none transition-colors"
-                autoFocus
+              <LocationPicker
+                value={birthData.place ? {
+                  place: birthData.place,
+                  latitude: birthData.latitude || 3.139,
+                  longitude: birthData.longitude || 101.687,
+                  timezone: birthData.timezone || 'Asia/Kuala_Lumpur'
+                } : null}
+                onChange={(location: LocationData) => {
+                  setBirthData({
+                    ...birthData,
+                    place: location.place,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    timezone: location.timezone
+                  });
+                }}
               />
-              <p className="mt-4 text-sm text-[#f5e6d3]/50 text-center">
-                稍后可以在地图上精确定位
-              </p>
             </div>
           )}
 
