@@ -11,8 +11,17 @@ import LoadingWatch from "../components/LoadingWatch";
 import Modal from "../components/Modal";
 import Icon, { type IconName } from "../components/Icon";
 import Link from "next/link";
-import { CarrotCost, RefusalCaption, RefusalModal, useAfford } from "../components/Carrots";
-import { creditsStore, readRefusal, type Refusal } from "../components/credits-store";
+import {
+  CarrotCost,
+  RefusalCaption,
+  RefusalModal,
+  useAfford,
+} from "../components/Carrots";
+import {
+  creditsStore,
+  readRefusal,
+  type Refusal,
+} from "../components/credits-store";
 import { useAuthGate } from "../components/AuthGateProvider";
 import {
   readProfile,
@@ -363,13 +372,19 @@ function TarotPageInner() {
     const refused = await readRefusal(r);
     if (refused) return refused;
     if (!r.ok) throw new Error(`readings ${r.status}`);
-    const result = (await r.json()) as { readingId: string; cards: DrawnCard[] };
+    const result = (await r.json()) as {
+      readingId: string;
+      cards: DrawnCard[];
+    };
     if (demo && typeof window !== "undefined") {
-      sessionStorage.setItem(`carot-demo-reading:${result.readingId}`, JSON.stringify({
-        topic,
-        question,
-        cards: result.cards,
-      }));
+      sessionStorage.setItem(
+        `carot-demo-reading:${result.readingId}`,
+        JSON.stringify({
+          topic,
+          question,
+          cards: result.cards,
+        }),
+      );
     }
     return result;
   };
@@ -528,8 +543,13 @@ function TarotPageInner() {
   useEffect(() => {
     if (!allPicked || flipped) return;
     const id = window.setTimeout(() => {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      actionsRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      actionsRef.current?.scrollIntoView({
+        behavior: reduce ? "auto" : "smooth",
+        block: "nearest",
+      });
     }, 350);
     return () => window.clearTimeout(id);
   }, [allPicked, flipped]);
@@ -564,8 +584,14 @@ function TarotPageInner() {
                     type="button"
                     role="radio"
                     aria-checked={sel}
-                    onClick={() => { if (demo || requireAuth(`/tarot?topic=${x.value}`)) setTopic(x.value); }}
-                    onDoubleClick={() => { if (demo || requireAuth(`/tarot?topic=${x.value}`)) setStep("question"); }}
+                    onClick={() => {
+                      if (demo || requireAuth(`/tarot?topic=${x.value}`))
+                        setTopic(x.value);
+                    }}
+                    onDoubleClick={() => {
+                      if (demo || requireAuth(`/tarot?topic=${x.value}`))
+                        setStep("question");
+                    }}
                     className={`step-in relative text-center rounded-[var(--r-card)] border p-6 md:p-8 transition-[border-color,box-shadow,background-color] ${sel ? "border-primary bg-primary-soft shadow-[var(--glow-primary)]" : "border-border bg-surface-1 hover:border-border-strong"}`}
                   >
                     {sel && (
@@ -605,7 +631,9 @@ function TarotPageInner() {
               </p>
               <button
                 type="button"
-                onClick={() => { if (demo || requireAuth("/tarot")) setStep("question"); }}
+                onClick={() => {
+                  if (demo || requireAuth("/tarot")) setStep("question");
+                }}
                 className="btn btn-primary w-full md:w-auto"
               >
                 {tx("下一步:写下你的问题")}{" "}
@@ -718,12 +746,24 @@ function TarotPageInner() {
                       tx("洗牌中…")
                     ) : (
                       <>
-                        {tx("开始抽牌")} <CarrotCost cost={blocked && tarotAfford?.reason === "daily_limit" ? 0 : tarotAfford?.cost} /> <Icon name="tarot_cards" size={20} />
+                        {tx("开始抽牌")}{" "}
+                        <CarrotCost
+                          cost={
+                            blocked && tarotAfford?.reason === "daily_limit"
+                              ? 0
+                              : tarotAfford?.cost
+                          }
+                        />{" "}
+                        <Icon name="tarot_cards" size={20} />
                       </>
                     )}
                   </button>
                 </div>
-                <RefusalCaption a={tarotAfford} state={credits} className="sm:text-right" />
+                <RefusalCaption
+                  a={tarotAfford}
+                  state={credits}
+                  className="sm:text-right"
+                />
               </div>
             </div>
           </section>
@@ -946,7 +986,7 @@ function TarotPageInner() {
               {isLoading || shuffling ? (
                 <LoadingWatch
                   message={
-                    shuffling ? tx("重新洗牌中…") : tx("AI 正在解读你的牌...")
+                    shuffling ? tx("重新洗牌中…") : tx("白兔 正在解读你的牌...")
                   }
                 />
               ) : (
@@ -963,7 +1003,9 @@ function TarotPageInner() {
                     <button
                       type="button"
                       onClick={flip}
-                      disabled={!allPicked || revealing || (!readingId && blocked)}
+                      disabled={
+                        !allPicked || revealing || (!readingId && blocked)
+                      }
                       className="btn btn-primary disabled:opacity-50"
                     >
                       {revealing
@@ -971,7 +1013,15 @@ function TarotPageInner() {
                         : allPicked
                           ? tx("翻开牌面")
                           : tx("再选 {0} 张", [3 - picked.length])}{" "}
-                      {!readingId && <CarrotCost cost={blocked && tarotAfford?.reason === "daily_limit" ? 0 : tarotAfford?.cost} />}
+                      {!readingId && (
+                        <CarrotCost
+                          cost={
+                            blocked && tarotAfford?.reason === "daily_limit"
+                              ? 0
+                              : tarotAfford?.cost
+                          }
+                        />
+                      )}
                       <Icon name="sparkle" size={20} />
                     </button>
                   ) : (
