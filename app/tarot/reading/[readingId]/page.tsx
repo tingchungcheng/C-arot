@@ -15,6 +15,7 @@ import { stripDevNotes } from '../../../components/Markdown';
 
 interface MetaCard { id: string; position: number; position_label: string; orientation: 'upright' | 'reversed'; name_zh: string; name_en: string; number?: number; arcana?: string }
 interface Meta { readingId: string; topic: string; question: string; cards: MetaCard[] }
+interface DemoPayload { topic: string; question: string; cards: MetaCard[] }
 type Phase = 'waiting' | 'streaming' | 'done' | 'stopped' | 'error';
 
 const TOPIC = (): Record<string, { label: string; icon: IconName; tone: string }> => ({
@@ -48,14 +49,15 @@ function ReadingResultContent() {
   const [shared, setShared] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const run = useCallback(async (regenerate = false) => {
+  const run = useCallback(async (regenerate = false, demo?: DemoPayload) => {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
     setText('');
     setPhase('waiting');
     try {
-      const res = await fetch(`/api/readings/${readingId}/stream${regenerate ? '?regenerate=1' : ''}`, { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ locale: getLocale() }), signal: ac.signal });
+      const query = regenerate ? '?regenerate=1' : '';
+      const res = await fetch(`/api/readings/${readingId}/stream${query}`, { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ locale: getLocale(), ...(demo ? { demo } : {}) }), signal: ac.signal });
       if (!res.ok || !res.body) throw new Error(`status ${res.status}`);
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -76,8 +78,22 @@ function ReadingResultContent() {
 
   useEffect(() => {
     if (!readingId) return;
+    if (readingId.startsWith('demo_')) {
+      try {
+        const raw = sessionStorage.getItem(`carot-demo-reading:${readingId}`);
+        const demo = raw ? JSON.parse(raw) as DemoPayload : null;
+        if (!demo?.question || !Array.isArray(demo.cards) || demo.cards.length !== 3) throw new Error('missing demo reading');
+        queueMicrotask(() => {
+          setMeta({ readingId, topic: demo.topic, question: demo.question, cards: demo.cards });
+          void run(false, demo);
+        });
+      } catch {
+        queueMicrotask(() => setMetaError(true));
+      }
+      return () => abortRef.current?.abort();
+    }
     fetch(`/api/readings/${readingId}`, { headers: localeHeaders(false) }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then(setMeta).catch(() => setMetaError(true));
-    run();
+    queueMicrotask(() => void run());
     return () => abortRef.current?.abort();
   }, [readingId, run]);
 

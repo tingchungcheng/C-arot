@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { drawThreeCards, drawAt } from '@/lib/tarot/draw';
 import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
 import { consumeDrawSession } from '@/lib/tarot/draw-session';
-import { createReading } from '@/lib/store/db';
+import { consumeCloudDrawSession, createCloudReading, isDynamoReadingsEnabled } from '@/lib/store/dynamo';
 
 const CreateReadingSchema = z.object({
   topic: z.enum(['love', 'career', 'personal_growth']),
@@ -24,15 +25,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = CreateReadingSchema.parse(body);
+    const demo = request.nextUrl.searchParams.get('demo') === '1';
+    const useCloud = !demo && isDynamoReadingsEnabled();
 
     const charge = await chargeOrDeny(request, 'tarot', validated.drawId);
     if (charge.denied) return charge.denied;
     let drawResult;
-    if (validated.drawId || validated.positions) {
+    if (demo) {
+      // Vercel functions do not share the in-memory draw-session map. Demo mode is
+      // intentionally stateless and only needs a temporary, guest-safe reading.
+      drawResult = drawThreeCards();
+    } else if (validated.drawId || validated.positions) {
       if (!validated.drawId || !validated.positions) {
         return NextResponse.json({ error: 'drawId and positions must be sent together' }, { status: 400 });
       }
-      const deck = consumeDrawSession(validated.drawId);
+      const deck = useCloud ? await consumeCloudDrawSession(validated.drawId) : consumeDrawSession(validated.drawId);
       if (!deck) { charge.refund(); return NextResponse.json({ error: 'Draw expired or already used' }, { status: 410 }); }
       try {
         drawResult = { cards: drawAt(deck, validated.positions), timestamp: Date.now() };
@@ -44,12 +51,26 @@ export async function POST(request: NextRequest) {
       drawResult = drawThreeCards();
     }
     
-    const readingId = createReading(
-      validated.topic,
-      validated.question,
-      drawResult.cards,
-      validated.birthData
-    );
+    const readingId = demo ? `demo_${randomUUID()}` : randomUUID();
+    const cards = drawResult.cards.map((dc) => ({
+      id: dc.card.id,
+      position: dc.position,
+      position_label: dc.position_label,
+      orientation: dc.orientation,
+    }));
+    if (useCloud) {
+      await createCloudReading({
+        id: readingId,
+        ownerKey: charge.ident.key,
+        topic: validated.topic,
+        question: validated.question,
+        cards,
+        birthData: validated.birthData,
+      });
+    } else if (!demo) {
+      const { createReading } = await import('@/lib/store/db');
+      createReading(validated.topic, validated.question, drawResult.cards, validated.birthData);
+    }
 
     return withCreditCookie(NextResponse.json({
       readingId,

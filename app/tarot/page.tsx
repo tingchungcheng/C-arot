@@ -111,6 +111,7 @@ function TarotPageInner() {
   const fanRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const ghostRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     i: number;
     sx: number;
@@ -344,7 +345,7 @@ function TarotPageInner() {
   // 410 (expired/used draw): reshuffle once and retry the same positions; still 410 → ask to re-pick.
   const submitPicks = async (positions: number[]) => {
     const post = (id: string) =>
-      creditsStore.fetch("/api/readings", {
+      creditsStore.fetch(demo ? "/api/readings?demo=1" : "/api/readings", {
         method: "POST",
         headers: localeHeaders(),
         body: JSON.stringify({
@@ -362,7 +363,15 @@ function TarotPageInner() {
     const refused = await readRefusal(r);
     if (refused) return refused;
     if (!r.ok) throw new Error(`readings ${r.status}`);
-    return (await r.json()) as { readingId: string; cards: DrawnCard[] };
+    const result = (await r.json()) as { readingId: string; cards: DrawnCard[] };
+    if (demo && typeof window !== "undefined") {
+      sessionStorage.setItem(`carot-demo-reading:${result.readingId}`, JSON.stringify({
+        topic,
+        question,
+        cards: result.cards,
+      }));
+    }
+    return result;
   };
   const resetSlots = () => {
     setSlots([null, null, null]);
@@ -515,6 +524,15 @@ function TarotPageInner() {
     </p>
   );
   const allPicked = picked.length === 3;
+  // once all positions are filled, bring the actions into view (phones: they sit below the arc)
+  useEffect(() => {
+    if (!allPicked || flipped) return;
+    const id = window.setTimeout(() => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      actionsRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [allPicked, flipped]);
 
   return (
     <div ref={rootRef} className="min-h-screen bg-bg pt-16 md:pt-20 pb-16">
@@ -821,7 +839,7 @@ function TarotPageInner() {
                 <div
                   data-testid="fan-scroller"
                   ref={scrollerRef}
-                  className="step-in relative mt-6 md:mt-4 -mx-5 md:mx-0 overflow-x-auto lg:overflow-visible overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className={`step-in relative mt-6 md:mt-4 -mx-5 md:mx-0 ${allPicked ? "pointer-events-none touch-pan-y" : ""} overflow-x-auto lg:overflow-visible overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
                 >
                   <div
                     className="relative mx-auto w-[1000px] lg:w-full h-[270px] md:h-[300px] xl:h-[320px]"
@@ -856,7 +874,7 @@ function TarotPageInner() {
                           onPointerCancel={(e) => endDrag(e, true)}
                           aria-label={tx("第 {0} 张牌", [i + 1])}
                           data-fan={i}
-                          className="fan-card group touch-pan-x select-none cursor-grab active:cursor-grabbing absolute left-1/2 top-[18px] w-[52px] -ml-[26px] md:w-[60px] md:-ml-[30px] xl:w-[66px] xl:-ml-[33px] origin-[50%_420%] focus-visible:outline-none disabled:cursor-default hover:z-10 focus-visible:z-10"
+                          className={`fan-card group ${allPicked ? "touch-pan-y" : "touch-pan-x"} select-none cursor-grab active:cursor-grabbing absolute left-1/2 top-[18px] w-[52px] -ml-[26px] md:w-[60px] md:-ml-[30px] xl:w-[66px] xl:-ml-[33px] origin-[50%_420%] focus-visible:outline-none disabled:cursor-default hover:z-10 focus-visible:z-10`}
                           style={{
                             rotate: `${deg}deg`,
                             opacity: taken ? 0 : 1,
@@ -922,7 +940,8 @@ function TarotPageInner() {
             )}
 
             <div
-              className={`${flipped ? "mt-6" : "mt-0"} flex flex-col-reverse sm:flex-row gap-3 justify-center`}
+              ref={actionsRef}
+              className={`${flipped ? "mt-6" : "mt-0"} scroll-mb-6 flex flex-col-reverse sm:flex-row gap-3 justify-center`}
             >
               {isLoading || shuffling ? (
                 <LoadingWatch

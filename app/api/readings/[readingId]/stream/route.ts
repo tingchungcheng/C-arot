@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
-import { getReading, getReadingCards, getInterpretation, saveInterpretation } from '@/lib/store/db';
-import { getCardById } from '@/lib/tarot/deck';
+import { getCardById, type TarotCard } from '@/lib/tarot/deck';
 import { type Locale, resolveLocale, languageDirective, LABELS } from '@/lib/ai/locale';
+import { creditIdentity } from '@/lib/credits/request';
+import { getCloudReading, isDynamoReadingsEnabled, saveCloudReadingInterpretation } from '@/lib/store/dynamo';
 import { cachedFor, mergeFor } from '../../../_locale-cache';
 
 // Streams the tarot reading as markdown (## one section per card + ## 综合解读).
@@ -51,19 +52,59 @@ function legacyToMarkdown(j: Record<string, string>, cards: { name_zh: string; n
 const textResponse = (body: ReadableStream<Uint8Array> | string, extra: Record<string, string> = {}) =>
   new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', ...extra } });
 
+type ReadingCard = { position: number; orientation: 'upright' | 'reversed'; card: TarotCard };
+type DemoReading = { topic: 'love' | 'career' | 'personal_growth'; question: string; cards: ReadingCard[] };
+
+function parseDemoReading(value: unknown): DemoReading | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as { topic?: unknown; question?: unknown; cards?: unknown };
+  if (!['love', 'career', 'personal_growth'].includes(String(raw.topic))) return null;
+  if (typeof raw.question !== 'string' || raw.question.trim().length < 1 || raw.question.length > 500) return null;
+  if (!Array.isArray(raw.cards) || raw.cards.length !== 3) return null;
+  const cards: Array<ReadingCard | null> = raw.cards.map((item): ReadingCard | null => {
+    if (!item || typeof item !== 'object') return null;
+    const c = item as { id?: unknown; position?: unknown; orientation?: unknown };
+    const card = typeof c.id === 'string' ? getCardById(c.id) : undefined;
+    if (!card || typeof c.position !== 'number' || !Number.isInteger(c.position) || c.position < 1 || c.position > 3) return null;
+    if (c.orientation !== 'upright' && c.orientation !== 'reversed') return null;
+    return { position: c.position, orientation: c.orientation, card } as ReadingCard;
+  });
+  if (cards.some((c) => !c) || new Set(cards.map((c) => c?.position)).size !== 3) return null;
+  return { topic: raw.topic as DemoReading['topic'], question: raw.question, cards: cards as ReadingCard[] };
+}
+
 export async function POST(request: NextRequest, context: { params: Promise<{ readingId: string }> }) {
   const { readingId } = await context.params;
-  const reading = getReading(readingId);
-  if (!reading) return new Response('Reading not found', { status: 404 });
-  const cards = getReadingCards(readingId).sort((a, b) => a.position - b.position).map((rc) => ({ ...rc, card: getCardById(rc.card_id) }));
-  if (cards.length !== 3 || cards.some((c) => !c.card)) return new Response('Invalid reading cards', { status: 400 });
-  const flat = cards.map((c) => ({ name_zh: c.card!.name_zh, name_en: c.card!.name_en, orientation: c.orientation }));
-
+  const isDemo = readingId.startsWith('demo_');
+  const useCloud = !isDemo && isDynamoReadingsEnabled();
   const regenerate = new URL(request.url).searchParams.get('regenerate') === '1';
   const body = await request.json().catch(() => null);
   const locale = resolveLocale(body?.locale, request.headers.get('x-locale'));
   const L = LABELS[locale];
-  const existingRaw = getInterpretation(readingId)?.full_interpretation;
+  const demoReading = isDemo ? parseDemoReading(body?.demo) : null;
+  if (isDemo && !demoReading) return new Response('Invalid demo reading', { status: 400 });
+  const owner = useCloud ? await creditIdentity(request) : null;
+  const cloudReading = useCloud ? await getCloudReading(owner!.key, readingId) : null;
+  const store = isDemo || useCloud ? null : await import('@/lib/store/db');
+  const reading = isDemo ? demoReading : cloudReading ?? store?.getReading(readingId);
+  if (!reading) return new Response('Reading not found', { status: 404 });
+  const cards: ReadingCard[] = isDemo
+    ? demoReading!.cards.sort((a, b) => a.position - b.position)
+    : useCloud
+      ? (cloudReading?.cards ?? []).sort((a, b) => a.position - b.position).map((rc) => ({
+        position: rc.position,
+        orientation: rc.orientation,
+        card: getCardById(rc.id),
+      })).filter((c): c is ReadingCard => !!c.card)
+      : (store?.getReadingCards(readingId) ?? []).sort((a, b) => a.position - b.position).map((rc) => ({
+      position: rc.position,
+      orientation: rc.orientation,
+      card: getCardById(rc.card_id),
+      })).filter((c): c is ReadingCard => !!c.card);
+  if (cards.length !== 3) return new Response('Invalid reading cards', { status: 400 });
+  const flat = cards.map((c) => ({ name_zh: c.card.name_zh, name_en: c.card.name_en, orientation: c.orientation }));
+
+  const existingRaw = useCloud ? cloudReading?.interpretation : store?.getInterpretation(readingId)?.full_interpretation;
   const cached = regenerate ? undefined : cachedFor(existingRaw, locale) as Record<string, string> | undefined;
   if (cached) return textResponse(cached.markdown ?? legacyToMarkdown(cached, flat, locale), { 'X-Reading-Cached': '1', 'Content-Language': locale });
 
@@ -73,7 +114,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ re
   let user = `主题: ${L.topics[reading.topic] ?? reading.topic}\n问题: ${reading.question}\n\n抽到的牌:\n`;
   cards.forEach((c, i) => {
     const up = c.orientation === 'upright';
-    user += `\n${i + 1}. 位置: ${L.positions[i]}\n   牌名: ${c.card!.name_zh} (${c.card!.name_en})\n   方向: ${up ? L.upright : L.reversed}\n   关键词: ${(up ? c.card!.upright_keywords : c.card!.reversed_keywords).join('、')}\n   含义: ${up ? c.card!.upright_meaning : c.card!.reversed_meaning}\n`;
+    user += `\n${i + 1}. 位置: ${L.positions[i]}\n   牌名: ${c.card.name_zh} (${c.card.name_en})\n   方向: ${up ? L.upright : L.reversed}\n   关键词: ${(up ? c.card.upright_keywords : c.card.reversed_keywords).join('、')}\n   含义: ${up ? c.card.upright_meaning : c.card.reversed_meaning}\n`;
   });
 
   // Card keywords/meanings come from the zh-only deck data: tell the model to translate, never copy, them.
@@ -106,12 +147,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ re
         const s = sections(full);
         const synth = s[3]?.body ?? '';
         const reflection = REFLECT_RE.exec(full)?.[1] ?? '';
-        saveInterpretation(readingId, mergeFor(getInterpretation(readingId)?.full_interpretation, locale, {
-          markdown: full,
-          overall_theme: synth.replace(REFLECT_RE, '').trim(),
-          past_interpretation: s[0]?.body ?? '', present_interpretation: s[1]?.body ?? '', future_interpretation: s[2]?.body ?? '',
-          relationship: '', practical_suggestions: '', reflection_question: reflection,
-        }));
+        const merged = mergeFor(existingRaw, locale, {
+            markdown: full,
+            overall_theme: synth.replace(REFLECT_RE, '').trim(),
+            past_interpretation: s[0]?.body ?? '', present_interpretation: s[1]?.body ?? '', future_interpretation: s[2]?.body ?? '',
+            relationship: '', practical_suggestions: '', reflection_question: reflection,
+          });
+        if (useCloud && owner) await saveCloudReadingInterpretation(owner.key, readingId, merged);
+        else if (store) store.saveInterpretation(readingId, merged);
         controller.close();
       } catch (err) {
         if (request.signal.aborted) { try { controller.close(); } catch { /* closed */ } return; }
