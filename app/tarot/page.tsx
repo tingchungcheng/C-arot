@@ -1,12 +1,16 @@
 'use client';
+import { t as tx, cardName, getLocale, localeHeaders } from '../i18n';
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { gsap } from 'gsap';
 import TarotCardBack from '../components/TarotCardBack';
 import TarotArt, { artSrc, TarotNamedBack } from '../components/TarotArt';
 import LoadingWatch from '../components/LoadingWatch';
 import Icon, { type IconName } from '../components/Icon';
+import Link from 'next/link';
+import { readProfile, profileToBirthData, useProfilePrefill, type StoredProfile } from '../components/profile-store';
 
 type Topic = 'love' | 'career' | 'personal_growth';
 
@@ -20,22 +24,22 @@ interface DrawnCard {
   keywords: string[];
 }
 
-const TOPICS: { value: Topic; label: string; en: string; icon: IconName; desc: string; tone: string; ring: string }[] = [
-  { value: 'love', label: '爱情', en: 'Love', icon: 'love', desc: '感情关系与心灵连接', tone: 'text-primary', ring: 'border-primary/40' },
-  { value: 'career', label: '事业', en: 'Career', icon: 'career', desc: '职业发展与工作机会', tone: 'text-gold', ring: 'border-gold/40' },
-  { value: 'personal_growth', label: '个人成长', en: 'Growth', icon: 'growth', desc: '自我探索与内在成长', tone: 'text-green', ring: 'border-green/40' },
-];
-const SLOTS: { label: string; icon: IconName }[] = [
-  { label: '过去', icon: 'past' },
-  { label: '现在', icon: 'present' },
-  { label: '未来', icon: 'future' },
-];
+const TOPICS = (): { value: Topic; label: string; en: string; icon: IconName; desc: string; tone: string; ring: string }[] => ([
+  { value: 'love', label: tx('爱情'), en: 'Love', icon: 'love', desc: tx('感情关系与心灵连接'), tone: 'text-primary', ring: 'border-primary/40' },
+  { value: 'career', label: tx('事业'), en: 'Career', icon: 'career', desc: tx('职业发展与工作机会'), tone: 'text-gold', ring: 'border-gold/40' },
+  { value: 'personal_growth', label: tx('个人成长'), en: 'Growth', icon: 'growth', desc: tx('自我探索与内在成长'), tone: 'text-green', ring: 'border-green/40' },
+]);
+const SLOTS = (): { label: string; icon: IconName }[] => ([
+  { label: tx('过去'), icon: 'past' },
+  { label: tx('现在'), icon: 'present' },
+  { label: tx('未来'), icon: 'future' },
+]);
 const FAN = 15;
-const NUM_ZH = ['一', '二', '三'];
+const NUM_ZH = ['一', '二', '三']; // zh ordinal; en/ms use {1}
 
 const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function TarotPage() {
+function TarotPageInner() {
   const router = useRouter();
   const [step, setStep] = useState<'topic' | 'question' | 'draw'>('topic');
   const [topic, setTopic] = useState<Topic>('love');
@@ -44,6 +48,8 @@ export default function TarotPage() {
   const [readingId, setReadingId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [shuffling, setShuffling] = useState(false);
+  const [profile, setProfile] = useState<StoredProfile | null>(null);
+  useProfilePrefill(setProfile);
   const [error, setError] = useState('');
   const [slots, setSlots] = useState<(number | null)[]>([null, null, null]); // fan index placed in each slot
   const [revealed, setRevealed] = useState([false, false, false]);
@@ -61,11 +67,20 @@ export default function TarotPage() {
   const picked = slots.filter((x): x is number => x !== null);
   const nextEmpty = slots.indexOf(null);
 
-  // deep link from the nav dropdown: /tarot?topic=career
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get('topic');
-    if (t && TOPICS.some((x) => x.value === t)) setTopic(t as Topic);
-  }, []);
+  // deep link from the nav dropdown: /tarot?topic=career&go=<nonce>.
+  // Reacts to searchParams changes without a remount (Next keeps this page mounted); the nonce
+  // makes re-picking the same topic count as a new pick. Adjust-state-during-render, no effect.
+  const params = useSearchParams();
+  const linkTopic = params.get('topic');
+  const linkKey = `${linkTopic ?? ''}|${params.get('go') ?? ''}`;
+  const [seenLink, setSeenLink] = useState<string | null>(null);
+  if (linkKey !== seenLink) {
+    setSeenLink(linkKey);
+    if (linkTopic && TOPICS().some((x) => x.value === linkTopic)) {
+      setTopic(linkTopic as Topic);
+      setStep('question'); // an explicit nav pick always lands on 2/2
+    }
+  }
 
   // step entrance
   useEffect(() => {
@@ -141,15 +156,14 @@ export default function TarotPage() {
   // POST /api/readings → a fresh server-side draw (new readingId). The AI interpretation is not
   // generated here; the result page streams it after 查看解读.
   const createDraw = async (avoid?: string) => {
-    const birthDataStr = localStorage.getItem('birthData');
-    const birthData = birthDataStr ? JSON.parse(birthDataStr) : undefined;
+    const birthData = profileToBirthData(readProfile());
     let data: { readingId: string; cards: DrawnCard[] } | null = null;
     // a reshuffle must change the cards: redraw (max 3 tries) if the server repeats the same set
     for (let tries = 0; tries < 3; tries++) {
       const response = await fetch('/api/readings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, question, birthData }),
+        headers: localeHeaders(),
+        body: JSON.stringify({ topic, question, birthData, locale: getLocale() }),
       });
       if (!response.ok) throw new Error('Failed to create reading');
       data = await response.json();
@@ -174,7 +188,7 @@ export default function TarotPage() {
       }
     } catch (e) {
       console.error('Error reshuffling:', e);
-      setError('洗牌时出现问题,请重试。');
+      setError(tx('洗牌时出现问题,请重试。'));
     } finally {
       setShuffling(false);
     }
@@ -212,7 +226,7 @@ export default function TarotPage() {
       setStep('draw');
     } catch (e) {
       console.error('Error drawing cards:', e);
-      setError('抽牌时出现问题,请重试。');
+      setError(tx('抽牌时出现问题,请重试。'));
     } finally {
       setIsLoading(false);
     }
@@ -221,7 +235,7 @@ export default function TarotPage() {
   // the result page streams the reading itself
   const handleInterpret = () => { setIsLoading(true); router.push(`/tarot/reading/${readingId}`); };
 
-  const t = TOPICS.find((x) => x.value === topic)!;
+  const t = TOPICS().find((x) => x.value === topic)!;
   const questionChip = (
     <p className="step-in mt-4 flex gap-3 items-center bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text text-left">
       <Icon name={t.icon} size={18} className={`${t.tone} shrink-0`} />“{question}”
@@ -236,11 +250,11 @@ export default function TarotPage() {
         {step === 'topic' && (
           <section aria-labelledby="topic-title">
             <p className="step-in overline text-primary">Tarot · Step 1 / 2</p>
-            <h1 id="topic-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">选择占卜主题</h1>
-            <p className="step-in text-[16px] text-text-2 mt-2">牌灵在等待你的问题</p>
+            <h1 id="topic-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">{tx('选择占卜主题')}</h1>
+            <p className="step-in text-[16px] text-text-2 mt-2">{tx('牌灵在等待你的问题')}</p>
 
-            <div role="radiogroup" aria-label="占卜主题" className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
-              {TOPICS.map((x) => {
+            <div role="radiogroup" aria-label={tx('占卜主题')} className="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
+              {TOPICS().map((x) => {
                 const sel = topic === x.value;
                 return (
                   <button key={x.value} type="button" role="radio" aria-checked={sel} onClick={() => setTopic(x.value)}
@@ -260,10 +274,10 @@ export default function TarotPage() {
 
             <div className="step-in mt-8 flex flex-col-reverse md:flex-row gap-4 md:items-center md:justify-between">
               <p className="flex gap-2 items-center bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text-3 md:max-w-md">
-                <Icon name="lock" size={18} className="text-gold shrink-0" />请勿输入身份证号、地址等敏感个人资料。
+                <Icon name="lock" size={18} className="text-gold shrink-0" />{tx('请勿输入身份证号、地址等敏感个人资料。')}
               </p>
               <button type="button" onClick={() => setStep('question')} className="btn btn-primary w-full md:w-auto">
-                下一步:写下你的问题 <Icon name="arrow_right" size={20} />
+                {tx('下一步:写下你的问题')} <Icon name="arrow_right" size={20} />
               </button>
             </div>
           </section>
@@ -274,24 +288,35 @@ export default function TarotPage() {
           <section aria-labelledby="q-title" className="md:grid md:grid-cols-12 md:gap-6">
             <div className="md:col-span-8 xl:col-span-7">
               <p className="step-in overline text-primary">Tarot · Step 2 / 2</p>
-              <h1 id="q-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">你的问题是?</h1>
+              <h1 id="q-title" className="step-in text-[32px] md:text-[40px] leading-[1.2] tracking-[0.04em] text-text mt-3">{tx('你的问题是?')}</h1>
               <p className="step-in text-[16px] text-text-2 mt-2 flex items-center gap-2">
-                <Icon name={t.icon} size={18} className={t.tone} />{t.label} · 诚心提问,牌灵会给予指引
+                <Icon name={t.icon} size={18} className={t.tone} />{t.label} {tx('· 诚心提问,牌灵会给予指引')}
               </p>
+              {profile && (
+                <p className="step-in mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text-2" data-testid="profile-chip">
+                  <Icon name="user" size={18} className="text-primary shrink-0" />
+                  <span className="text-text">{profile.nickname || tx('你的资料')}</span>
+                  {profile.date && <span>· {profile.date}</span>}
+                  <span>· {profile.timeUnknown ? tx('时间未知') : profile.time || tx('时间未填')}</span>
+                  {profile.place && <span>· {profile.place}</span>}
+                  {profile.timezone && <span className="text-text-3">({profile.timezone})</span>}
+                  <Link href="/settings" className="ml-auto text-primary underline-offset-4 hover:underline">{tx('修改')}</Link>
+                </p>
+              )}
               <div className="step-in mt-8 bg-surface-1 border border-border rounded-[var(--r-card)] p-5 md:p-6">
-                <label htmlFor="question" className="block text-[15px] text-text mb-2">写下你的问题</label>
+                <label htmlFor="question" className="block text-[15px] text-text mb-2">{tx('写下你的问题')}</label>
                 <textarea id="question" value={question} onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="例如:我和他的关系接下来会怎样?" maxLength={500} autoFocus
+                  placeholder={tx('例如:我和他的关系接下来会怎样?')} maxLength={500} autoFocus
                   className="w-full h-36 px-4 py-3 bg-bg text-text text-[16px] rounded-[12px] border border-border-strong focus:border-primary focus:outline-none focus:shadow-[var(--focus-ring)] resize-none placeholder:text-text-3" />
                 <div className="mt-2 flex justify-between text-[15px] text-text-3">
-                  <span className="flex items-center gap-2"><Icon name="lock" size={18} className="text-gold" />问题仅用于生成解读</span>
+                  <span className="flex items-center gap-2"><Icon name="lock" size={18} className="text-gold" />{tx('问题仅用于生成解读')}</span>
                   <span className="num">{question.length}/500</span>
                 </div>
                 {error && <p role="alert" className="mt-3 flex items-center gap-2 text-[15px] text-danger"><Icon name="warning" size={18} />{error}</p>}
                 <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
-                  <button type="button" onClick={() => setStep('topic')} className="btn btn-secondary"><Icon name="arrow_left" size={20} />上一步</button>
+                  <button type="button" onClick={() => setStep('topic')} className="btn btn-secondary"><Icon name="arrow_left" size={20} />{tx('上一步')}</button>
                   <button type="button" onClick={handleDrawCards} disabled={!question.trim() || isLoading} className="btn btn-primary">
-                    {isLoading ? '洗牌中…' : <>开始抽牌 <Icon name="tarot_cards" size={20} /></>}
+                    {isLoading ? tx('洗牌中…') : <>{tx('开始抽牌')} <Icon name="tarot_cards" size={20} /></>}
                   </button>
                 </div>
               </div>
@@ -304,15 +329,15 @@ export default function TarotPage() {
           <section aria-labelledby="draw-title">
             <div className={flipped ? 'flex flex-col items-center text-center' : 'md:grid md:grid-cols-12 md:gap-6 md:items-start'}>
               <div className={flipped ? '' : 'md:col-span-6 xl:col-span-5 md:pt-6'}>
-                <p className="step-in overline text-primary">Tarot · 抽牌 · {Math.min(picked.length + 1, 3)} / 3</p>
+                <p className="step-in overline text-primary">{tx('Tarot · 抽牌 ·')} {Math.min(picked.length + 1, 3)} / 3</p>
                 <h1 id="draw-title" className="step-in text-[28px] md:text-[36px] leading-[1.2] tracking-[0.04em] text-text mt-3" aria-live="polite">
-                  {allPicked ? (flipped ? '你的牌阵' : '牌阵已就位') : `凭直觉,选出第${NUM_ZH[picked.length]}张牌`}
+                  {allPicked ? (flipped ? tx('你的牌阵') : tx('牌阵已就位')) : tx('凭直觉,选出第{0}张牌', [NUM_ZH[picked.length], picked.length + 1])}
                 </h1>
                 {!flipped && questionChip}
               </div>
 
-              <ol className={`step-in grid grid-cols-3 ${flipped ? 'mt-8 gap-3 md:gap-8 w-full md:w-auto md:grid-cols-[repeat(3,206px)]' : 'mt-6 md:mt-0 md:col-span-6 xl:col-span-5 xl:col-start-8 gap-3 md:gap-5'}`} aria-label="牌阵">
-                {SLOTS.map((s, i) => {
+              <ol className={`step-in grid grid-cols-3 ${flipped ? 'mt-8 gap-3 md:gap-8 w-full md:w-auto md:grid-cols-[repeat(3,206px)]' : 'mt-6 md:mt-0 md:col-span-6 xl:col-span-5 xl:col-start-8 gap-3 md:gap-5'}`} aria-label={tx('牌阵')}>
+                {SLOTS().map((s, i) => {
                   const filled = slots[i] !== null;
                   const c = cards[i];
                   const art = artSrc(c?.id);
@@ -325,15 +350,15 @@ export default function TarotPage() {
                         {filled && (
                           <div className="slot-card absolute inset-0 [transform-style:preserve-3d]">
                             {!revealed[i] ? <TarotCardBack className="shadow-[var(--shadow-1)]" />
-                              : c && art ? <TarotArt src={art} alt={`${s.label}:${c.name_zh}${c.orientation === 'reversed' ? '(逆位)' : ''}`} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />
-                              : c && <TarotNamedBack nameZh={c.name_zh} nameEn={c.name_en} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />}
+                              : c && art ? <TarotArt src={art} alt={`${s.label}: ${cardName(c)}${c.orientation === 'reversed' ? tx('(逆位)') : ''}`} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />
+                              : c && <TarotNamedBack nameZh={cardName(c)} nameEn={c.name_en} reversed={c.orientation === 'reversed'} className="shadow-[var(--shadow-1)]" />}
                           </div>
                         )}
                       </div>
                       <span className="flex items-center gap-1.5 text-[15px] text-text-2"><Icon name={s.icon} size={16} />{s.label}
                         {/* reversed: art stays rotated; the upright chip lives in the label row */}
                         {revealed[i] && c?.orientation === 'reversed' && (
-                          <><span aria-hidden="true">·</span><span className="rounded-full border border-gold px-2 py-px text-[12px] md:text-[13px] leading-[18px] font-bold text-gold whitespace-nowrap">逆位</span></>
+                          <><span aria-hidden="true">·</span><span className="rounded-full border border-gold px-2 py-px text-[12px] md:text-[13px] leading-[18px] font-bold text-gold whitespace-nowrap">{tx('逆位')}</span></>
                         )}
                       </span>
                     </li>
@@ -344,7 +369,7 @@ export default function TarotPage() {
 
             {/* fan */}
             {!flipped && (
-              <div className="relative mt-6 md:mt-4 h-[160px] md:h-[200px] xl:h-[210px] mb-[calc(var(--fan-overhang)_+_32px)] [--fan-overhang:67px] md:[--fan-overhang:110px] xl:[--fan-overhang:118px]" role="group" aria-label="牌堆,选择三张:点击或拖到牌阵">
+              <div className="relative mt-6 md:mt-4 h-[160px] md:h-[200px] xl:h-[210px] mb-[calc(var(--fan-overhang)_+_32px)] [--fan-overhang:67px] md:[--fan-overhang:110px] xl:[--fan-overhang:118px]" role="group" aria-label={tx('牌堆,选择三张:点击或拖到牌阵')}>
                 <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[min(1000px,140vw)] h-[560px] bg-[radial-gradient(closest-side,var(--c-ob-bg),transparent)]" />
                 {Array.from({ length: FAN }, (_, i) => {
                   const mid = (FAN - 1) / 2;
@@ -355,7 +380,7 @@ export default function TarotPage() {
                       onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } pick(i); }}
                       onPointerDown={(e) => onFanDown(e, i)} onPointerMove={onFanMove}
                       onPointerUp={(e) => endDrag(e, false)} onPointerCancel={(e) => endDrag(e, true)}
-                      aria-label={`第 ${i + 1} 张牌`}
+                      aria-label={tx('第 {0} 张牌', [i + 1])}
                       className="fan-card touch-none select-none cursor-grab active:cursor-grabbing absolute left-1/2 bottom-0 w-[64px] -ml-[32px] md:w-[104px] md:-ml-[52px] xl:w-[112px] xl:-ml-[56px] origin-[50%_260%] transition-[translate,opacity] duration-200 hover:-translate-y-4 focus-visible:-translate-y-4 focus-visible:outline-none disabled:hover:translate-y-0 disabled:cursor-default"
                       style={{ rotate: `${off * 6}deg`, opacity: taken ? 0 : 1 }}>
                       <TarotCardBack className="shadow-[var(--shadow-1)]" />
@@ -376,16 +401,16 @@ export default function TarotPage() {
 
             <div className={`${flipped ? 'mt-6' : 'mt-0'} flex flex-col-reverse sm:flex-row gap-3 justify-center`}>
               {isLoading || shuffling ? (
-                <LoadingWatch message={shuffling ? '重新洗牌中…' : 'AI 正在解读你的牌...'} />
+                <LoadingWatch message={shuffling ? tx('重新洗牌中…') : tx('AI 正在解读你的牌...')} />
               ) : (
                 <>
-                  <button type="button" onClick={shuffle} className="btn btn-secondary"><Icon name="reversed" size={20} />重新洗牌</button>
+                  <button type="button" onClick={shuffle} className="btn btn-secondary"><Icon name="reversed" size={20} />{tx('重新洗牌')}</button>
                   {!flipped ? (
                     <button type="button" onClick={flip} disabled={!allPicked} className="btn btn-primary">
-                      {allPicked ? '翻开牌面' : `再选 ${3 - picked.length} 张`} <Icon name="sparkle" size={20} />
+                      {allPicked ? tx('翻开牌面') : tx('再选 {0} 张', [3 - picked.length])} <Icon name="sparkle" size={20} />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleInterpret} className="btn btn-primary">查看解读 <Icon name="crystal_ball" size={20} /></button>
+                    <button type="button" onClick={handleInterpret} className="btn btn-primary">{tx('查看解读')} <Icon name="crystal_ball" size={20} /></button>
                   )}
                 </>
               )}
@@ -395,4 +420,8 @@ export default function TarotPage() {
       </div>
     </div>
   );
+}
+
+export default function TarotPage() {
+  return <Suspense fallback={null}><TarotPageInner /></Suspense>;
 }

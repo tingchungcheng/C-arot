@@ -1,4 +1,6 @@
 'use client';
+import { t as tx, cardName, getLocale, localeHeaders } from '../../../i18n';
+import { setLastReadingId } from '../../../components/history-store';
 
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
@@ -13,12 +15,12 @@ interface MetaCard { id: string; position: number; position_label: string; orien
 interface Meta { readingId: string; topic: string; question: string; cards: MetaCard[] }
 type Phase = 'waiting' | 'streaming' | 'done' | 'stopped' | 'error';
 
-const TOPIC: Record<string, { label: string; icon: IconName; tone: string }> = {
-  love: { label: '爱情', icon: 'love', tone: 'text-primary' },
-  career: { label: '事业', icon: 'career', tone: 'text-gold' },
-  personal_growth: { label: '个人成长', icon: 'growth', tone: 'text-green' },
-};
-const POS: { label: string; icon: IconName }[] = [{ label: '过去', icon: 'past' }, { label: '现在', icon: 'present' }, { label: '未来', icon: 'future' }];
+const TOPIC = (): Record<string, { label: string; icon: IconName; tone: string }> => ({
+  love: { label: tx('爱情'), icon: 'love', tone: 'text-primary' },
+  career: { label: tx('事业'), icon: 'career', tone: 'text-gold' },
+  personal_growth: { label: tx('个人成长'), icon: 'growth', tone: 'text-green' },
+});
+const POS = (): { label: string; icon: IconName }[] => ([{ label: tx('过去'), icon: 'past' }, { label: tx('现在'), icon: 'present' }, { label: tx('未来'), icon: 'future' }]);
 const TOTAL_SECTIONS = 4;
 
 
@@ -26,8 +28,9 @@ const TOTAL_SECTIONS = 4;
 function CardFace({ c }: { c: MetaCard }) {
   const rev = c.orientation === 'reversed';
   const art = artSrc(c.id);
-  if (art) return <TarotArt src={art} alt={`${c.name_zh}${rev ? '(逆位)' : ''}`} reversed={rev} className="shadow-[var(--shadow-1)]" />;
-  return <TarotNamedBack nameZh={c.name_zh} nameEn={c.name_en} reversed={rev} className="shadow-[var(--shadow-1)]" />;
+  if (art) return <TarotArt src={art} alt={`${cardName(c)}${rev ? tx('(逆位)') : ''}`} reversed={rev} className="shadow-[var(--shadow-1)]" />;
+  // art only: the name/orientation are in the label rows below the card
+  return <TarotNamedBack nameZh={c.name_zh} nameEn={c.name_en} reversed={rev} showName={false} className="shadow-[var(--shadow-1)]" />;
 }
 
 function ReadingResultContent() {
@@ -49,7 +52,7 @@ function ReadingResultContent() {
     setText('');
     setPhase('waiting');
     try {
-      const res = await fetch(`/api/readings/${readingId}/stream${regenerate ? '?regenerate=1' : ''}`, { method: 'POST', signal: ac.signal });
+      const res = await fetch(`/api/readings/${readingId}/stream${regenerate ? '?regenerate=1' : ''}`, { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ locale: getLocale() }), signal: ac.signal });
       if (!res.ok || !res.body) throw new Error(`status ${res.status}`);
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -60,6 +63,7 @@ function ReadingResultContent() {
         if (t) { setText((s) => s + t); setPhase('streaming'); }
       }
       setPhase('done');
+      setLastReadingId(readingId);
     } catch (e) {
       if (ac.signal.aborted) { setPhase('stopped'); return; }
       console.error('Reading stream failed:', e);
@@ -69,7 +73,7 @@ function ReadingResultContent() {
 
   useEffect(() => {
     if (!readingId) return;
-    fetch(`/api/readings/${readingId}`).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then(setMeta).catch(() => setMetaError(true));
+    fetch(`/api/readings/${readingId}`, { headers: localeHeaders(false) }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then(setMeta).catch(() => setMetaError(true));
     run();
     return () => abortRef.current?.abort();
   }, [readingId, run]);
@@ -93,7 +97,7 @@ function ReadingResultContent() {
     if (busy) return;
     const url = window.location.href;
     try {
-      if (navigator.share) await navigator.share({ title: 'C-arot 塔罗解读', url });
+      if (navigator.share) await navigator.share({ title: tx('C-arot 塔罗解读'), url });
       else { await navigator.clipboard.writeText(url); }
       setShared(true);
     } catch { /* cancelled */ }
@@ -102,13 +106,13 @@ function ReadingResultContent() {
   if (metaError) {
     return (
       <div className="min-h-screen bg-bg pt-24 px-5 text-center">
-        <p className="text-[16px] text-text-2 mb-6">找不到这次占卜。</p>
-        <Link href="/tarot" className="btn btn-primary">重新开始 <Icon name="arrow_right" size={20} /></Link>
+        <p className="text-[16px] text-text-2 mb-6">{tx('找不到这次占卜。')}</p>
+        <Link href="/tarot" className="btn btn-primary">{tx('重新开始')} <Icon name="arrow_right" size={20} /></Link>
       </div>
     );
   }
 
-  const topic = TOPIC[meta?.topic ?? ''] ?? TOPIC.love;
+  const topic = TOPIC()[meta?.topic ?? ''] ?? TOPIC().love;
   const actionCls = (extra = '') => `btn ${extra} aria-disabled:opacity-45 aria-disabled:pointer-events-none`;
 
   return (
@@ -116,31 +120,33 @@ function ReadingResultContent() {
       <div className="mx-auto max-w-[1312px] px-5 md:px-10 xl:px-16 pt-8 md:grid md:grid-cols-12 md:gap-6 xl:gap-x-12">
         {/* left: question, cards, actions (sticky on desktop) */}
         <aside className="md:col-span-5 md:self-start md:sticky md:top-28">
-          <p className="overline text-primary">Tarot · Reading · 解读</p>
-          <h1 className="text-[32px] md:text-[36px] leading-[1.2] tracking-[0.04em] text-text mt-2">你的三张牌</h1>
+          <p className="overline text-primary">{tx('Tarot · Reading · 解读')}</p>
+          <h1 className="text-[32px] md:text-[36px] leading-[1.2] tracking-[0.04em] text-text mt-2">{tx('你的三张牌')}</h1>
           <p className="mt-4 flex gap-3 items-center bg-surface-1 border border-border rounded-[12px] px-4 py-3 text-[15px] text-text">
             <Icon name={topic.icon} size={18} className={`${topic.tone} shrink-0`} />
             <span className="text-text-2 shrink-0">{topic.label} ·</span>
             <span className="truncate">“{meta?.question ?? '…'}”</span>
           </p>
 
-          <ol className="mt-6 grid grid-cols-3 gap-3 md:gap-4" aria-label="牌阵">
+          <ol className="mt-6 grid grid-cols-3 gap-3 md:gap-4" aria-label={tx('牌阵')}>
             {(meta?.cards ?? []).map((c, i) => (
-              <li key={c.id + i} className="text-center">
-                <CardFace c={c} />
-                <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-gold"><Icon name={POS[i].icon} size={16} />{POS[i].label}</p>
-                <p className="mt-1 text-[15px] font-bold text-text leading-tight">{c.name_zh} <span className="hidden md:inline font-display italic font-normal text-text-2">{c.name_en}</span></p>
+              <li key={c.id + i} className="text-center flex flex-col items-stretch">
+                {/* sized box so the card's h-full resolves and the labels flow below it (they used to overflow the row) */}
+                <div className="relative w-full aspect-[2/3.5] shrink-0"><div className="absolute inset-0"><CardFace c={c} /></div></div>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-gold"><Icon name={POS()[i].icon} size={16} />{POS()[i].label}</p>
+                <p className="mt-1 text-[15px] font-bold text-text leading-tight">{cardName(c)} <span className={`${getLocale() === 'zh' ? 'hidden md:inline' : 'hidden'} font-display italic font-normal text-text-2`}>{c.name_en}</span></p>
                 <span className={`inline-block mt-2 rounded-full border px-2.5 py-0.5 text-[12px] ${c.orientation === 'reversed' ? 'border-danger/50 bg-danger/15 text-danger' : 'border-green/50 bg-green/15 text-green'}`}>
-                  {c.orientation === 'reversed' ? '逆位' : '正位'}<span className="hidden md:inline"> · {c.orientation === 'reversed' ? 'Reversed' : 'Upright'}</span>
+                  {c.orientation === 'reversed' ? tx('逆位') : tx('正位')}<span className="hidden md:inline"> · {c.orientation === 'reversed' ? 'Reversed' : 'Upright'}</span>
                 </span>
               </li>
             ))}
           </ol>
 
-          <div className="hidden md:flex mt-8 gap-3 flex-wrap">
-            <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? '已保存' : '保存'}</button>
-            <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? '已复制链接' : '分享'}</button>
-            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary')}><Icon name="tarot_cards" size={20} />再抽一次</button>
+          <div className="hidden md:flex mt-10 pt-6 border-t border-border gap-3 flex-wrap">
+            <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? tx('已保存') : tx('保存')}</button>
+            <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? tx('已复制链接') : tx('分享')}</button>
+            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
+            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined" className={actionCls('btn-secondary')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}</button>
           </div>
         </aside>
 
@@ -150,25 +156,25 @@ function ReadingResultContent() {
             <div className="bg-surface-1 border border-border rounded-[var(--r-card)] px-4 py-3 flex items-center gap-4" role="status">
               <span className="w-11 h-11 rounded-full border border-border-strong flex items-center justify-center text-gold shrink-0"><Icon name="pocket_watch" size={26} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-[15px] text-text"><span className="font-bold">白兔正在书写…</span> <span className="text-text-2">第 <span className="num">{current}</span> / {TOTAL_SECTIONS} 段</span></p>
+                <p className="text-[15px] text-text"><span className="font-bold">{tx('白兔正在书写…')}</span> <span className="text-text-2">{tx('第 {0} / {1} 段', [current, TOTAL_SECTIONS])}</span></p>
                 <div className="mt-2 h-[3px] rounded-full bg-surface-3 overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-primary to-gold transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${(Math.max(doneCount, 0.4) / TOTAL_SECTIONS) * 100}%` }} />
                 </div>
               </div>
-              <button type="button" onClick={stop} className="text-[15px] text-text-2 underline underline-offset-4 hover:text-text min-h-[44px] px-2">停止</button>
+              <button type="button" onClick={stop} className="text-[15px] text-text-2 underline underline-offset-4 hover:text-text min-h-[44px] px-2">{tx('停止')}</button>
             </div>
           ) : phase === 'done' ? (
-            <p className="flex items-center gap-2 text-[15px] text-green" role="status"><Icon name="check" size={18} />解读完成</p>
+            <p className="flex items-center gap-2 text-[15px] text-green" role="status"><Icon name="check" size={18} />{tx('解读完成')}</p>
           ) : phase === 'stopped' ? (
-            <p className="flex items-center gap-3 text-[15px] text-text-2" role="status">已停止书写
-              <button type="button" onClick={() => run(true)} className="underline underline-offset-4 text-primary min-h-[44px]">重新生成</button></p>
+            <p className="flex items-center gap-3 text-[15px] text-text-2" role="status">{tx('已停止书写')}
+              <button type="button" onClick={() => run(true)} className="underline underline-offset-4 text-primary min-h-[44px]">{tx('重新生成')}</button></p>
           ) : (
-            <p className="flex items-center gap-3 text-[15px] text-text-2" role="alert"><Icon name="warning" size={18} className="text-danger" />AI 解读暂时不可用,请稍后再试。
-              <button type="button" onClick={() => run(true)} className="underline underline-offset-4 text-primary min-h-[44px]">重试</button></p>
+            <p className="flex items-center gap-3 text-[15px] text-text-2" role="alert"><Icon name="warning" size={18} className="text-danger" />{tx('AI 解读暂时不可用,请稍后再试。')}
+              <button type="button" onClick={() => run(true)} className="underline underline-offset-4 text-primary min-h-[44px]">{tx('重试')}</button></p>
           )}
 
           <article className="reading mt-8" aria-busy={busy}>
-            {phase === 'waiting' && <div className="py-6 flex justify-center"><LoadingWatch message="白兔正在翻开你的牌…" /></div>}
+            {phase === 'waiting' && <div className="py-6 flex justify-center"><LoadingWatch message={tx('白兔正在翻开你的牌…')} /></div>}
             {/* completed sections are announced one at a time; the section being typed is hidden from AT until it completes */}
             <div aria-live="polite" aria-atomic="false">
               {completed.map((s, i) => <Section key={i} {...s} />)}
@@ -181,16 +187,16 @@ function ReadingResultContent() {
           </article>
 
           <p className="mt-10 flex gap-3 items-start bg-surface-1 border border-border rounded-[var(--r-card)] p-4 text-[15px] leading-[1.6] text-text-3 max-w-[68ch]">
-            <Icon name="info" size={20} className="text-gold mt-0.5 shrink-0" />塔罗与星盘是探索与反思的工具,非预测或专业建议。
+            <Icon name="info" size={20} className="text-gold mt-0.5 shrink-0" />{tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}
           </p>
 
           <div className="md:hidden mt-6 grid gap-3">
-            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary w-full')}><Icon name="tarot_cards" size={20} />再抽一次</button>
+            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary w-full')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
             <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? '已保存' : '保存'}</button>
-              <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? '已复制' : '分享'}</button>
+              <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? tx('已保存') : tx('保存')}</button>
+              <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? tx('已复制') : tx('分享')}</button>
             </div>
-            <Link href="/combined" className="btn btn-secondary w-full"><Icon name="crystal_ball" size={20} />查看综合解读</Link>
+            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined-m" className={actionCls('btn-secondary w-full')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}</button>
           </div>
         </div>
       </div>
@@ -200,7 +206,7 @@ function ReadingResultContent() {
 
 export default function ReadingResultPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-bg pt-20 flex items-center justify-center"><LoadingWatch message="加载中..." /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-bg pt-20 flex items-center justify-center"><LoadingWatch message={tx('加载中...')} /></div>}>
       <ReadingResultContent />
     </Suspense>
   );
