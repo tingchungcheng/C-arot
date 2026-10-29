@@ -59,6 +59,23 @@ export function drawThreeCards(): ThreeCardDrawResult {
   };
 }
 
+export interface ShuffledCard { card: TarotCard; orientation: 'upright' | 'reversed'; }
+
+/** Full 78-card secure shuffle; each card gets its own orientation. */
+export function shuffleDeck(): ShuffledCard[] {
+  return fisherYatesShuffle(TAROT_DECK).map(card => ({ card, orientation: getSecureOrientation() }));
+}
+
+/** Build the 3-card spread (past/present/future, in click order) from chosen positions in a shuffled deck. */
+export function drawAt(deck: ShuffledCard[], positions: number[]): DrawnCard[] {
+  if (positions.length !== 3) throw new Error('Exactly 3 positions required');
+  if (new Set(positions).size !== 3) throw new Error('Positions must be distinct');
+  return positions.map((p, i) => {
+    if (!Number.isInteger(p) || p < 0 || p >= deck.length) throw new Error(`Invalid position: ${p}`);
+    return { card: deck[p].card, position: i + 1, position_label: POSITION_LABELS[i], orientation: deck[p].orientation };
+  });
+}
+
 export function formatPositionLabel(label: string, language: 'en' | 'zh' = 'zh'): string {
   if (language === 'zh') {
     const index = POSITION_LABELS.indexOf(label as typeof POSITION_LABELS[number]);

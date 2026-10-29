@@ -1,5 +1,5 @@
 // Pure layout logic for the landing-hero card shuffle (no DOM), so it can be checked over many seeds.
-import { MAJOR, CARD_BACK_SRC } from './tarot-art-data';
+import { MAJOR, MINOR, CARD_BACK_SRC } from './tarot-art-data';
 
 export type Rect = { l: number; t: number; r: number; b: number };
 export type Geo = {
@@ -41,7 +41,7 @@ export const PROTECT: Rect[] = [
   { l: 0.78, t: 0.38, r: 0.88, b: 0.5 },  // raised foot
   { l: 0.6, t: 0.64, r: 0.84, b: 0.75 },  // lower foot
 ];
-const SLUGS = [...MAJOR];
+const SLUGS = [...MAJOR, ...MINOR];
 export const MOTION_PAD = 18; // float ±6 + parallax 12
 export const NAV_GAP = 24;
 const MAX_OVERLAP = 0.3, XL_MAX_OVERLAP = 1, MIN_OVERLAP = 0.2, AIM = 0.25;

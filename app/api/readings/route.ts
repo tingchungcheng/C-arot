@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { drawThreeCards } from '@/lib/tarot/draw';
+import { drawThreeCards, drawAt } from '@/lib/tarot/draw';
+import { consumeDrawSession } from '@/lib/tarot/draw-session';
 import { createReading } from '@/lib/store/db';
 
 const CreateReadingSchema = z.object({
@@ -13,7 +14,9 @@ const CreateReadingSchema = z.object({
     latitude: z.number(),
     longitude: z.number(),
     timezone: z.string()
-  }).optional()
+  }).optional(),
+  drawId: z.string().uuid().optional(),
+  positions: z.array(z.number().int().min(0).max(77)).length(3).optional()
 });
 
 export async function POST(request: NextRequest) {
@@ -21,7 +24,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = CreateReadingSchema.parse(body);
 
-    const drawResult = drawThreeCards();
+    let drawResult;
+    if (validated.drawId || validated.positions) {
+      if (!validated.drawId || !validated.positions) {
+        return NextResponse.json({ error: 'drawId and positions must be sent together' }, { status: 400 });
+      }
+      const deck = consumeDrawSession(validated.drawId);
+      if (!deck) return NextResponse.json({ error: 'Draw expired or already used' }, { status: 410 });
+      try {
+        drawResult = { cards: drawAt(deck, validated.positions), timestamp: Date.now() };
+      } catch (e) {
+        return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+      }
+    } else {
+      drawResult = drawThreeCards();
+    }
     
     const readingId = createReading(
       validated.topic,

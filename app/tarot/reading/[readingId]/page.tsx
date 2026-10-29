@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import LoadingWatch from '@/app/components/LoadingWatch';
+import CardTitle from '@/app/components/CardTitle';
 import TarotArt, { artSrc, TarotNamedBack } from '@/app/components/TarotArt';
 import Icon, { type IconName } from '../../../components/Icon';
 import { Section, splitSections } from '../../../components/ReadingProse';
@@ -134,8 +135,8 @@ function ReadingResultContent() {
                 {/* sized box so the card's h-full resolves and the labels flow below it (they used to overflow the row) */}
                 <div className="relative w-full aspect-[2/3.5] shrink-0"><div className="absolute inset-0"><CardFace c={c} /></div></div>
                 <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-gold"><Icon name={POS()[i].icon} size={16} />{POS()[i].label}</p>
-                <p className="mt-1 text-[15px] font-bold text-text leading-tight">{cardName(c)} <span className={`${getLocale() === 'zh' ? 'hidden md:inline' : 'hidden'} font-display italic font-normal text-text-2`}>{c.name_en}</span></p>
-                <span className={`inline-block mt-2 rounded-full border px-2.5 py-0.5 text-[12px] ${c.orientation === 'reversed' ? 'border-danger/50 bg-danger/15 text-danger' : 'border-green/50 bg-green/15 text-green'}`}>
+                <CardTitle primary={cardName(c)} secondary={getLocale() === 'zh' ? c.name_en : undefined} />
+                <span className={`inline-block mt-3 rounded-full border px-2.5 py-0.5 text-[12px] ${c.orientation === 'reversed' ? 'border-gold/50 bg-gold/15 text-gold' : 'border-green/50 bg-green/15 text-green'}`}>
                   {c.orientation === 'reversed' ? tx('逆位') : tx('正位')}<span className="hidden md:inline"> · {c.orientation === 'reversed' ? 'Reversed' : 'Upright'}</span>
                 </span>
               </li>

@@ -97,3 +97,34 @@ describe('Tarot Draw', () => {
     expect(uprightCount / total).toBeLessThan(0.65);
   });
 });
+
+import { shuffleDeck, drawAt } from '../lib/tarot/draw';
+import { createDrawSession, consumeDrawSession } from '../lib/tarot/draw-session';
+
+describe('shuffleDeck / drawAt', () => {
+  it('shuffles all 78 unique cards with orientations', () => {
+    const d = shuffleDeck();
+    expect(d).toHaveLength(78);
+    expect(new Set(d.map(c => c.card.id)).size).toBe(78);
+    d.forEach(c => expect(['upright', 'reversed']).toContain(c.orientation));
+  });
+  it('maps chosen positions to past/present/future in click order', () => {
+    const d = shuffleDeck();
+    const r = drawAt(d, [40, 2, 77]);
+    expect(r.map(c => c.card.id)).toEqual([d[40].card.id, d[2].card.id, d[77].card.id]);
+    expect(r.map(c => c.position_label)).toEqual(['past', 'present', 'future']);
+    expect(r[0].orientation).toBe(d[40].orientation);
+  });
+  it('rejects bad positions', () => {
+    const d = shuffleDeck();
+    expect(() => drawAt(d, [1, 1, 2])).toThrow();
+    expect(() => drawAt(d, [1, 2, 78])).toThrow();
+    expect(() => drawAt(d, [1, 2])).toThrow();
+  });
+  it('draw sessions are single use', () => {
+    const { drawId, deckSize } = createDrawSession();
+    expect(deckSize).toBe(78);
+    expect(consumeDrawSession(drawId)).toHaveLength(78);
+    expect(consumeDrawSession(drawId)).toBeUndefined();
+  });
+});

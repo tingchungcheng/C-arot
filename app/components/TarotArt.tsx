@@ -1,19 +1,21 @@
 import { t as tx } from '../i18n';
 import TarotCardBack from './TarotCardBack';
 
-import { MAJOR } from './tarot-art-data';
+import { MAJOR, MINOR } from './tarot-art-data';
 
 export const artSrc = (id?: string) => {
   const slug = id?.replace(/_/g, '-');
-  return slug && MAJOR.has(slug) ? `/cards/${slug}.webp` : null;
+  return slug && (MAJOR.has(slug) || MINOR.has(slug)) ? `/cards/${slug}.webp` : null;
 };
 
 /** Face-up illustrated card: 2:3.5, 12px radius, 1px ob-border. Name is printed on the art, so no overlay. */
 export default function TarotArt({ src, alt, reversed = false, className = '' }: { src: string; alt: string; reversed?: boolean; className?: string }) {
+  // Minor art ships as a transparent, rounded-corner card contained in a 400×700 canvas: no box border/bg, so corners stay clean.
+  const minor = MINOR.has(src.replace(/^.*\/|\.webp$/g, ''));
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} draggable={false} decoding="async"
-      className={`block w-full h-full aspect-[2/3.5] rounded-[12px] border border-ob-border object-cover bg-bg ${reversed ? 'rotate-180' : ''} ${className}`} />
+      className={`block w-full h-full aspect-[2/3.5] ${minor ? 'object-contain' : 'rounded-[12px] border border-ob-border object-cover bg-bg'} ${reversed ? 'rotate-180' : ''} ${className}`} />
   );
 }
 
