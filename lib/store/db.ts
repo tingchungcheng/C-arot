@@ -3,16 +3,16 @@ import path from 'path';
 import fs from 'fs';
 import type { DrawnCard } from '@/lib/tarot/deck';
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'carot.db');
-
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
-}
-
-const db = new Database(DB_PATH);
-
-db.exec(`
+// Opened lazily on first use: importing this module must never touch the filesystem,
+// because Vercel's filesystem is read-only (prod uses DATA_STORE=dynamodb instead).
+let _db: Database.Database | undefined;
+function getDb(): Database.Database {
+  if (_db) return _db;
+  const DB_DIR = path.join(process.cwd(), 'data');
+  const DB_PATH = path.join(DB_DIR, 'carot.db');
+  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+  const conn = new Database(DB_PATH);
+  conn.exec(`
   CREATE TABLE IF NOT EXISTS readings (
     id TEXT PRIMARY KEY,
     topic TEXT NOT NULL,
@@ -57,6 +57,16 @@ db.exec(`
     updated_at INTEGER NOT NULL
   );
 `);
+  _db = conn;
+  return conn;
+}
+const db = new Proxy({} as Database.Database, {
+  get(_t, prop) {
+    const real = getDb();
+    const v = Reflect.get(real, prop, real);
+    return typeof v === 'function' ? v.bind(real) : v;
+  },
+});
 
 export interface Reading {
   id: string;

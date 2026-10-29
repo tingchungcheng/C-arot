@@ -1,6 +1,8 @@
-import { db } from '@/lib/store/db';
+import { GetCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { dynamoDoc, dynamoTable, isDynamoHistoryEnabled } from '@/lib/store/dynamo';
 
 // Carrot ledger. Amounts are stored in half-carrot units (integers) to avoid float drift.
+// Backend: DynamoDB when DATA_STORE=dynamodb (prod), else local SQLite (opened lazily).
 export type Feature = 'tarot' | 'combined' | 'chart_summary' | 'chat';
 export type Tier = 'free' | 'paid';
 
@@ -9,20 +11,8 @@ export const DAILY_ALLOWANCE: Record<Tier, number> = { free: 5, paid: 15 };
 export const TAROT_PER_DAY = 1;
 export const DEFAULT_TZ = 'Asia/Kuala_Lumpur';
 
-const units = (carrots: number) => Math.round(carrots * 2);
+const units = (c: number) => Math.round(c * 2);
 const carrots = (u: number) => u / 2;
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS credit_spend (
-    user_key TEXT NOT NULL, day TEXT NOT NULL, feature TEXT NOT NULL, ref TEXT NOT NULL,
-    units INTEGER NOT NULL, created_at INTEGER NOT NULL,
-    PRIMARY KEY (user_key, day, feature, ref)
-  );
-  CREATE TABLE IF NOT EXISTS credit_once (
-    user_key TEXT NOT NULL, feature TEXT NOT NULL, ref TEXT NOT NULL, created_at INTEGER NOT NULL,
-    PRIMARY KEY (user_key, feature, ref)
-  );
-`);
 
 export function safeTimeZone(tz?: string | null): string {
   if (!tz) return DEFAULT_TZ;
@@ -48,52 +38,145 @@ export interface CreditState {
   tarotUsedToday: number; tarotPerDay: number;
   resetsAt: number; costs: Record<Feature, number>;
 }
+export type Receipt = { day: string; feature: Feature; ref: string };
+type DenyBody = { error: 'insufficient_carrots' | 'tarot_daily_limit'; feature: Feature; cost: number; balance: number; resetsAt: number };
+export type SpendResult =
+  | { ok: true; charged: boolean; cost: number; state: CreditState; receipt: Receipt }
+  | { ok: false; status: 402 | 429; body: DenyBody };
 
-export function getCreditState(userKey: string, tier: Tier, tz: string): CreditState {
-  const day = dayIn(tz);
-  const row = db.prepare(`SELECT COALESCE(SUM(units),0) AS u, COALESCE(SUM(feature='tarot'),0) AS t FROM credit_spend WHERE user_key=? AND day=?`).get(userKey, day) as { u: number; t: number };
+function buildState(tier: Tier, tz: string, day: string, spentUnits: number, tarot: number): CreditState {
   const allowance = DAILY_ALLOWANCE[tier];
-  const spent = carrots(row.u);
-  return {
-    tier, day, timeZone: tz, allowance, spent, balance: Math.max(0, allowance - spent),
-    tarotUsedToday: row.t, tarotPerDay: TAROT_PER_DAY, resetsAt: nextResetAt(tz), costs: COSTS,
-  };
+  const spent = carrots(spentUnits);
+  return { tier, day, timeZone: tz, allowance, spent, balance: Math.max(0, allowance - spent),
+    tarotUsedToday: tarot, tarotPerDay: TAROT_PER_DAY, resetsAt: nextResetAt(tz), costs: COSTS };
 }
 
-export type SpendResult =
-  | { ok: true; charged: boolean; cost: number; state: CreditState; receipt: { day: string; feature: Feature; ref: string } }
-  | { ok: false; status: 402 | 429; body: { error: 'insufficient_carrots' | 'tarot_daily_limit'; feature: Feature; cost: number; balance: number; resetsAt: number } };
+function denyFor(feature: Feature, s: CreditState): SpendResult {
+  const cost = COSTS[feature];
+  const tarotOut = feature === 'tarot' && s.tarotUsedToday >= TAROT_PER_DAY;
+  return { ok: false, status: tarotOut ? 429 : 402,
+    body: { error: tarotOut ? 'tarot_daily_limit' : 'insufficient_carrots', feature, cost, balance: s.balance, resetsAt: s.resetsAt } };
+}
+
+// ---------------- DynamoDB backend ----------------
+// Items (single table, PK/SK):
+//   CREDIT#<userKey> / DAY#<day>                    { units, tarot }          running day total
+//   CREDIT#<userKey> / SPEND#<day>#<feature>#<ref>  { units }                 one per charge (idempotency)
+//   CREDIT#<userKey> / ONCE#<feature>#<ref>                                   chart_summary paid-once marker
+const pk = (userKey: string) => `CREDIT#${userKey}`;
+const ttl = (days: number) => Math.floor(Date.now() / 1000) + days * 86400;
+
+async function dynState(userKey: string, tier: Tier, tz: string): Promise<CreditState> {
+  const day = dayIn(tz);
+  const r = await dynamoDoc().send(new GetCommand({ TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `DAY#${day}` }, ConsistentRead: true }));
+  return buildState(tier, tz, day, Number(r.Item?.units ?? 0), Number(r.Item?.tarot ?? 0));
+}
+
+async function dynSpend(userKey: string, tier: Tier, tz: string, feature: Feature, ref: string): Promise<SpendResult> {
+  const day = dayIn(tz);
+  const cost = units(COSTS[feature]);
+  const maxBefore = units(DAILY_ALLOWANCE[tier]) - cost;
+  const receipt: Receipt = { day, feature, ref };
+  const isTarot = feature === 'tarot';
+  const items: NonNullable<ConstructorParameters<typeof TransactWriteCommand>[0]['TransactItems']> = [
+    { Put: { TableName: dynamoTable(), Item: { PK: pk(userKey), SK: `SPEND#${day}#${feature}#${ref}`, entity: 'credit_spend', units: cost, createdAt: Date.now(), expiresAt: ttl(7) },
+      ConditionExpression: 'attribute_not_exists(PK)' } },
+    { Update: { TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `DAY#${day}` },
+      UpdateExpression: 'ADD #u :c, #t :tc SET entity = :e, expiresAt = :x',
+      ConditionExpression: isTarot
+        ? '(attribute_not_exists(#u) OR #u <= :max) AND (attribute_not_exists(#t) OR #t < :tl)'
+        : 'attribute_not_exists(#u) OR #u <= :max',
+      ExpressionAttributeNames: { '#u': 'units', '#t': 'tarot' },
+      ExpressionAttributeValues: { ':c': cost, ':tc': isTarot ? 1 : 0, ':max': maxBefore, ':e': 'credit_day', ':x': ttl(7), ...(isTarot ? { ':tl': TAROT_PER_DAY } : {}) } } },
+  ];
+  if (feature === 'chart_summary') {
+    items.push({ Put: { TableName: dynamoTable(), Item: { PK: pk(userKey), SK: `ONCE#${feature}#${ref}`, entity: 'credit_once', createdAt: Date.now() },
+      ConditionExpression: 'attribute_not_exists(PK)' } });
+  }
+  try {
+    await dynamoDoc().send(new TransactWriteCommand({ TransactItems: items }));
+  } catch (err) {
+    const e = err as { name?: string; CancellationReasons?: { Code?: string }[] };
+    if (e.name !== 'TransactionCanceledException') throw err;
+    const failed = (i: number) => e.CancellationReasons?.[i]?.Code === 'ConditionalCheckFailed';
+    const state = await dynState(userKey, tier, tz);
+    if (failed(2) || failed(0)) return { ok: true, charged: false, cost: 0, state, receipt }; // already paid
+    if (failed(1)) return denyFor(feature, state);
+    throw err;
+  }
+  return { ok: true, charged: true, cost: COSTS[feature], state: await dynState(userKey, tier, tz), receipt };
+}
+
+async function dynRefund(userKey: string, r: Receipt): Promise<void> {
+  const cost = units(COSTS[r.feature]);
+  const items: NonNullable<ConstructorParameters<typeof TransactWriteCommand>[0]['TransactItems']> = [
+    { Delete: { TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `SPEND#${r.day}#${r.feature}#${r.ref}` }, ConditionExpression: 'attribute_exists(PK)' } },
+    { Update: { TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `DAY#${r.day}` }, UpdateExpression: 'ADD #u :c, #t :tc',
+      ExpressionAttributeNames: { '#u': 'units', '#t': 'tarot' }, ExpressionAttributeValues: { ':c': -cost, ':tc': r.feature === 'tarot' ? -1 : 0 } } },
+  ];
+  if (r.feature === 'chart_summary') items.push({ Delete: { TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `ONCE#${r.feature}#${r.ref}` } } });
+  try { await dynamoDoc().send(new TransactWriteCommand({ TransactItems: items })); }
+  catch (err) { if ((err as { name?: string }).name !== 'TransactionCanceledException') throw err; } // nothing to refund
+}
+
+// ---------------- SQLite backend (local dev) ----------------
+async function sql() {
+  const { db } = await import('@/lib/store/db');
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS credit_spend (user_key TEXT NOT NULL, day TEXT NOT NULL, feature TEXT NOT NULL, ref TEXT NOT NULL,
+      units INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_key, day, feature, ref));
+    CREATE TABLE IF NOT EXISTS credit_once (user_key TEXT NOT NULL, feature TEXT NOT NULL, ref TEXT NOT NULL, created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_key, feature, ref));`);
+  return db;
+}
+
+async function sqlState(userKey: string, tier: Tier, tz: string): Promise<CreditState> {
+  const db = await sql();
+  const day = dayIn(tz);
+  const row = db.prepare(`SELECT COALESCE(SUM(units),0) AS u, COALESCE(SUM(feature='tarot'),0) AS t FROM credit_spend WHERE user_key=? AND day=?`).get(userKey, day) as { u: number; t: number };
+  return buildState(tier, tz, day, row.u, row.t);
+}
+
+async function sqlSpend(userKey: string, tier: Tier, tz: string, feature: Feature, ref: string): Promise<SpendResult> {
+  const db = await sql();
+  const day = dayIn(tz);
+  const receipt: Receipt = { day, feature, ref };
+  const read = () => { const r = db.prepare(`SELECT COALESCE(SUM(units),0) AS u, COALESCE(SUM(feature='tarot'),0) AS t FROM credit_spend WHERE user_key=? AND day=?`).get(userKey, day) as { u: number; t: number }; return buildState(tier, tz, day, r.u, r.t); };
+  return db.transaction((): SpendResult => {
+    const state = read();
+    if (feature === 'chart_summary' && db.prepare(`SELECT 1 FROM credit_once WHERE user_key=? AND feature=? AND ref=?`).get(userKey, feature, ref))
+      return { ok: true, charged: false, cost: 0, state, receipt };
+    if (db.prepare(`SELECT 1 FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).get(userKey, day, feature, ref))
+      return { ok: true, charged: false, cost: 0, state, receipt };
+    if ((feature === 'tarot' && state.tarotUsedToday >= TAROT_PER_DAY) || units(state.balance) < units(COSTS[feature])) return denyFor(feature, state);
+    db.prepare(`INSERT INTO credit_spend VALUES (?,?,?,?,?,?)`).run(userKey, day, feature, ref, units(COSTS[feature]), Date.now());
+    if (feature === 'chart_summary') db.prepare(`INSERT OR IGNORE INTO credit_once VALUES (?,?,?,?)`).run(userKey, feature, ref, Date.now());
+    return { ok: true, charged: true, cost: COSTS[feature], state: read(), receipt };
+  })();
+}
+
+async function sqlRefund(userKey: string, r: Receipt): Promise<void> {
+  const db = await sql();
+  db.prepare(`DELETE FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).run(userKey, r.day, r.feature, r.ref);
+  if (r.feature === 'chart_summary') db.prepare(`DELETE FROM credit_once WHERE user_key=? AND feature=? AND ref=?`).run(userKey, r.feature, r.ref);
+}
+
+// ---------------- Public API (async) ----------------
+const cloud = () => isDynamoHistoryEnabled();
+
+export function getCreditState(userKey: string, tier: Tier, tz: string): Promise<CreditState> {
+  return cloud() ? dynState(userKey, tier, tz) : sqlState(userKey, tier, tz);
+}
 
 /**
  * Atomically charge a feature. `ref` makes it idempotent: the same (day, feature, ref) is charged once.
  * chart_summary is charged once per chart for good (ref = chart key), not once per day.
  */
-export function spendCredits(userKey: string, tier: Tier, tz: string, feature: Feature, ref = `${Date.now()}-${Math.random()}`): SpendResult {
-  return db.transaction((): SpendResult => {
-    const state = getCreditState(userKey, tier, tz);
-    const cost = COSTS[feature];
-    const receipt = { day: state.day, feature, ref };
-    const deny = (status: 402 | 429, error: 'insufficient_carrots' | 'tarot_daily_limit'): SpendResult =>
-      ({ ok: false, status, body: { error, feature, cost, balance: state.balance, resetsAt: state.resetsAt } });
-
-    if (feature === 'chart_summary') {
-      const paid = db.prepare(`SELECT 1 FROM credit_once WHERE user_key=? AND feature=? AND ref=?`).get(userKey, feature, ref);
-      if (paid) return { ok: true, charged: false, cost: 0, state, receipt };
-    }
-    const dup = db.prepare(`SELECT 1 FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).get(userKey, state.day, feature, ref);
-    if (dup) return { ok: true, charged: false, cost: 0, state, receipt };
-
-    if (feature === 'tarot' && state.tarotUsedToday >= TAROT_PER_DAY) return deny(429, 'tarot_daily_limit');
-    if (units(state.balance) < units(cost)) return deny(402, 'insufficient_carrots');
-
-    db.prepare(`INSERT INTO credit_spend VALUES (?,?,?,?,?,?)`).run(userKey, state.day, feature, ref, units(cost), Date.now());
-    if (feature === 'chart_summary') db.prepare(`INSERT OR IGNORE INTO credit_once VALUES (?,?,?,?)`).run(userKey, feature, ref, Date.now());
-    return { ok: true, charged: true, cost, state: getCreditState(userKey, tier, tz), receipt };
-  })();
+export function spendCredits(userKey: string, tier: Tier, tz: string, feature: Feature, ref = `${Date.now()}-${Math.random().toString(36).slice(2)}`): Promise<SpendResult> {
+  return cloud() ? dynSpend(userKey, tier, tz, feature, ref) : sqlSpend(userKey, tier, tz, feature, ref);
 }
 
 /** Undo a charge when the paid-for work failed (e.g. upstream AI error). */
-export function refundCredits(userKey: string, receipt: { day: string; feature: Feature; ref: string }): void {
-  db.prepare(`DELETE FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).run(userKey, receipt.day, receipt.feature, receipt.ref);
-  if (receipt.feature === 'chart_summary') db.prepare(`DELETE FROM credit_once WHERE user_key=? AND feature=? AND ref=?`).run(userKey, receipt.feature, receipt.ref);
+export function refundCredits(userKey: string, receipt: Receipt): Promise<void> {
+  return cloud() ? dynRefund(userKey, receipt) : sqlRefund(userKey, receipt);
 }

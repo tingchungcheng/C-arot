@@ -34,9 +34,9 @@ export function creditHeaders(r: Extract<SpendResult, { ok: true }>): Record<str
 /** Charge or return a ready-made 402/429 Response. */
 export async function chargeOrDeny(request: NextRequest, feature: Feature, ref?: string) {
   const ident = await creditIdentity(request);
-  const result = spendCredits(ident.key, ident.tier, ident.tz, feature, ref);
+  const result = await spendCredits(ident.key, ident.tier, ident.tz, feature, ref);
   if (!result.ok) return { ident, denied: withCreditCookie(Response.json(result.body, { status: result.status }), ident) };
-  return { ident, result, refund: () => refundCredits(ident.key, result.receipt) };
+  return { ident, result, refund: () => { refundCredits(ident.key, result.receipt).catch((e) => console.error('credits: refund failed', e)); } };
 }
 
 export { getCreditState };

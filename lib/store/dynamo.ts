@@ -76,6 +76,10 @@ function documentClient() {
   return client;
 }
 
+/** Shared low-level access for other lib/ stores (e.g. the carrot ledger). */
+export const dynamoDoc = () => documentClient();
+export const dynamoTable = () => tableName();
+
 const partition = (userId: string) => `USER#${userId}`;
 const sortKey = (id: string) => `HISTORY#${id}`;
 const profileKey = (userId: string) => ({ PK: partition(userId), SK: 'PROFILE' });
