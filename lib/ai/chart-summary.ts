@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { type Locale, languageDirective } from '@/lib/ai/locale';
 import { z } from 'zod';
 
 /** Fixed-format chart summary. The UI owns layout; the model only fills these fields. */
@@ -23,7 +24,7 @@ const SYSTEM = `你是简洁的占星师。只输出 JSON，不要 Markdown、�
 
 export async function generateChartSummary(
   chart: unknown,
-  opts: { apiKey: string; model?: string; today?: Date },
+  opts: { apiKey: string; model?: string; locale?: Locale; today?: Date },
 ): Promise<ChartSummary> {
   const openai = new OpenAI({ apiKey: opts.apiKey });
     const res = await openai.chat.completions.create({
@@ -32,7 +33,7 @@ export async function generateChartSummary(
     max_tokens: 350,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: SYSTEM },
+      { role: 'system', content: SYSTEM + languageDirective(opts.locale ?? 'zh') },
       { role: 'user', content: `星盘数据：${JSON.stringify(chart)}` },
     ],
   });

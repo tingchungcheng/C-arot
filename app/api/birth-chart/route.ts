@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { calculateBirthChart, formatBirthChartSummary } from '@/lib/astrology/calculator';
 import { renderBirthChartSVG } from '@/lib/astrology/chart-renderer';
 import { interpretBirthChart } from '@/lib/ai/interpreter';
+import { resolveLocale } from '@/lib/ai/locale';
 import { saveBirthChart, updateBirthChartInterpretation } from '@/lib/store/db';
 
 const BirthChartSchema = z.object({
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = BirthChartSchema.parse(body);
+    const locale = resolveLocale(body?.locale, request.headers.get('x-locale'));
 
     const chartData = calculateBirthChart({
       date: validated.date,
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
       date: validated.date,
       time: validated.time,
       place: validated.place
-    });
+    }, locale);
 
     const chartId = saveBirthChart({
       user_nickname: validated.nickname,

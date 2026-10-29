@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { calculateBirthChart } from '@/lib/astrology/calculator';
 import { generateChartSummary } from '@/lib/ai/chart-summary';
+import { resolveLocale } from '@/lib/ai/locale';
 import { updateBirthChartInterpretation } from '@/lib/store/db';
 
 // Chart summary (strict JSON) via lib/ai/chart-summary. The API key is read here only (server-side).
@@ -45,10 +46,12 @@ const g = globalThis as unknown as { __chartSummaryCache?: Map<string, ChartSumm
 const cache = (g.__chartSummaryCache ??= new Map());
 
 export async function POST(request: NextRequest) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const rawBody = await request.json().catch(() => null);
+  const parsed = Body.safeParse(rawBody);
+  const locale = resolveLocale(rawBody?.locale, request.headers.get('x-locale'));
   if (!parsed.success) return Response.json({ error: 'Invalid input' }, { status: 400 });
   const b = parsed.data;
-  const key = [b.date, b.time || '-', b.latitude.toFixed(4), b.longitude.toFixed(4)].join('|');
+  const key = [b.date, b.time || '-', b.latitude.toFixed(4), b.longitude.toFixed(4), locale].join('|');
   const headers = { 'Cache-Control': 'no-store' };
 
   if (!b.regenerate && cache.has(key)) return Response.json({ summary: cache.get(key), cached: true }, { headers });
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
   const chart = calculateBirthChart({ date: b.date, time: b.time, latitude: b.latitude, longitude: b.longitude, timezone: b.timezone });
   let view: ChartSummaryView | null = null;
   try {
-    const raw = await generateChartSummary(chart, { apiKey, model: process.env.OPENAI_MODEL || 'gpt-4o-mini' });
+    const raw = await generateChartSummary(chart, { apiKey, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', locale });
     view = normalise(raw as unknown as Record<string, unknown>);
   } catch (err) {
     const status = (err as { status?: number }).status;

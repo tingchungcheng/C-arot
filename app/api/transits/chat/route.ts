@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { askTransitChat } from '@/lib/ai/transit-chat';
+import { resolveLocale } from '@/lib/ai/locale';
 import { BirthBody, computeBoth } from '../_shared';
 
 // 问问白兔: streams a plain-text answer. Wraps lib's askTransitChat; the API key is read only here (server).
@@ -10,14 +11,16 @@ const Body = BirthBody.extend({
 });
 
 export async function POST(request: NextRequest) {
-  const parsed = Body.safeParse(await request.json().catch(() => null));
+  const rawBody = await request.json().catch(() => null);
+  const parsed = Body.safeParse(rawBody);
+  const locale = resolveLocale(rawBody?.locale, request.headers.get('x-locale'));
   if (!parsed.success) return new Response('Invalid input', { status: 400 });
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey?.trim()) return new Response('AI unavailable', { status: 503 });
 
   const b = parsed.data;
   const { natal, transit } = computeBoth(b);
-  const gen = askTransitChat(natal, transit, b.question, b.history.slice(-6), { apiKey, model: process.env.OPENAI_MODEL || 'gpt-4o-mini' });
+  const gen = askTransitChat(natal, transit, b.question, b.history.slice(-6), { apiKey, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', locale });
 
   // Pull the first chunk before responding so upstream errors map to a status.
   let first: IteratorResult<string>;

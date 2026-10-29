@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getInterpretation, getLatestBirthChart, getReading, getReadingCards } from '@/lib/store/db';
 import { getCardById } from '@/lib/tarot/deck';
 import { interpretCombinedReading } from '@/lib/ai/interpreter';
+import { resolveLocale } from '@/lib/ai/locale';
+import { cachedFor } from '../_locale-cache';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { readingId } = body;
+    const locale = resolveLocale(body?.locale, request.headers.get('x-locale'));
 
     if (!readingId) {
       return NextResponse.json({ error: 'Reading ID required' }, { status: 400 });
@@ -40,13 +43,15 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const tarotData = JSON.parse(tarotInterpretation.full_interpretation);
+    // prefer the tarot reading in the same language; fall back to whichever exists
+    const tarotData = cachedFor(tarotInterpretation.full_interpretation, locale) ?? JSON.parse(tarotInterpretation.full_interpretation);
     const chartData = JSON.parse(birthChart.chart_data);
 
     const combinedInterpretation = await interpretCombinedReading(
       tarotData,
       chartData,
-      drawnCards
+      drawnCards,
+      locale
     );
 
     return NextResponse.json({

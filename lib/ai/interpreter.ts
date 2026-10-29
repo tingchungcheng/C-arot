@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
 import type { DrawnCard } from '@/lib/tarot/deck';
+import { type Locale, DEFAULT_LOCALE, languageDirective, LABELS } from '@/lib/ai/locale';
 
 const InterpretationSchema = z.object({
   overall_theme: z.string(),
@@ -44,21 +45,19 @@ const SYSTEM_PROMPT = `你是一位经验丰富的塔罗解读师,专门为马�
 function buildUserPrompt(
   question: string,
   topic: string,
-  cards: DrawnCard[]
+  cards: DrawnCard[],
+  locale: Locale = DEFAULT_LOCALE
 ): string {
-  const topicMap: Record<string, string> = {
-    love: '爱情',
-    career: '事业',
-    personal_growth: '个人成长'
-  };
+  const L = LABELS[locale];
+  const topicMap = L.topics;
 
   let prompt = `主题: ${topicMap[topic] || topic}\n`;
   prompt += `问题: ${question}\n\n`;
   prompt += `抽到的牌:\n`;
 
   cards.forEach((drawnCard, index) => {
-    const posLabels = ['过去', '现在', '未来'];
-    const orientation = drawnCard.orientation === 'upright' ? '正位' : '逆位';
+    const posLabels = L.positions;
+    const orientation = drawnCard.orientation === 'upright' ? L.upright : L.reversed;
     const meaning = drawnCard.orientation === 'upright'
       ? drawnCard.card.upright_meaning
       : drawnCard.card.reversed_meaning;
@@ -79,7 +78,8 @@ function buildUserPrompt(
 export async function interpretTarotReading(
   question: string,
   topic: string,
-  cards: DrawnCard[]
+  cards: DrawnCard[],
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<TarotInterpretation> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -90,12 +90,12 @@ export async function interpretTarotReading(
 
   try {
     const openai = new OpenAI({ apiKey });
-    const userPrompt = buildUserPrompt(question, topic, cards);
+    const userPrompt = buildUserPrompt(question, topic, cards, locale);
 
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: SYSTEM_PROMPT + languageDirective(locale) },
         { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
@@ -131,7 +131,8 @@ function generateMockInterpretation(cards: DrawnCard[]): TarotInterpretation {
 
 export async function interpretBirthChart(
   chartData: any,
-  birthInfo: { date: string; time?: string; place: string }
+  birthInfo: { date: string; time?: string; place: string },
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -164,7 +165,7 @@ ${JSON.stringify(chartData, null, 2)}
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: 'system', content: '你是一位专业的占星师,擅长解读出生星盘。' },
+        { role: 'system', content: '你是一位专业的占星师,擅长解读出生星盘。' + languageDirective(locale) },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7
@@ -195,7 +196,8 @@ function generateMockBirthChartInterpretation(chartData: any, birthInfo: any): s
 export async function interpretCombinedReading(
   tarotInterpretation: TarotInterpretation,
   birthChart: any,
-  cards: DrawnCard[]
+  cards: DrawnCard[],
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -225,7 +227,7 @@ ${JSON.stringify(birthChart, null, 2)}
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: 'system', content: '你是一位同时精通塔罗和占星的导师,擅长综合解读。' },
+        { role: 'system', content: '你是一位同时精通塔罗和占星的导师,擅长综合解读。' + languageDirective(locale) },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7

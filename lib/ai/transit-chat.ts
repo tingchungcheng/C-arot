@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { type Locale, languageDirective } from '@/lib/ai/locale';
 import type { BirthChartData } from '../astrology/calculator';
 import type { TransitResult } from '../astrology/transits';
 
@@ -22,7 +23,7 @@ const SYSTEM = `你是 C-arot 的占星师白兔，用自然的马来西亚华�
 /** Streams the answer. Pass prior turns (keep last ~6) for follow-ups. */
 export async function* askTransitChat(
   natal: BirthChartData, transit: TransitResult, question: string, history: ChatTurn[],
-  opts: { apiKey: string; model?: string },
+  opts: { apiKey: string; model?: string; locale?: Locale },
 ): AsyncGenerator<string> {
   const openai = new OpenAI({ apiKey: opts.apiKey });
   const stream = await openai.chat.completions.create({
@@ -31,7 +32,7 @@ export async function* askTransitChat(
     max_tokens: 300,
     stream: true,
     messages: [
-      { role: 'system', content: SYSTEM },
+      { role: 'system', content: SYSTEM + languageDirective(opts.locale ?? 'zh') },
       { role: 'system', content: compact(natal, transit) },
       ...history.slice(-6),
       { role: 'user', content: question.slice(0, 500) },

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getReading, getReadingCards, saveInterpretation, getInterpretation } from '@/lib/store/db';
 import { getCardById } from '@/lib/tarot/deck';
 import { interpretTarotReading } from '@/lib/ai/interpreter';
+import { resolveLocale } from '@/lib/ai/locale';
+import { cachedFor, mergeFor } from '../../../_locale-cache';
 
 export async function POST(
   request: NextRequest,
@@ -10,10 +12,13 @@ export async function POST(
   try {
     const { readingId } = await context.params;
 
-    const existingInterpretation = getInterpretation(readingId);
-    if (existingInterpretation) {
+    const body = await request.json().catch(() => null);
+    const locale = resolveLocale(body?.locale, request.headers.get('x-locale'));
+    const existingRaw = getInterpretation(readingId)?.full_interpretation;
+    const cached = cachedFor(existingRaw, locale);
+    if (cached) {
       return NextResponse.json({
-        interpretation: JSON.parse(existingInterpretation.full_interpretation),
+        interpretation: cached,
         cached: true
       });
     }
@@ -43,10 +48,11 @@ export async function POST(
     const interpretation = await interpretTarotReading(
       reading.question,
       reading.topic,
-      drawnCards
+      drawnCards,
+      locale
     );
 
-    saveInterpretation(readingId, JSON.stringify(interpretation));
+    saveInterpretation(readingId, mergeFor(existingRaw, locale, interpretation));
 
     return NextResponse.json({
       interpretation,
