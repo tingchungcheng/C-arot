@@ -1,4 +1,5 @@
 "use client";
+import { t as tx } from '../i18n';
 
 import { useState, useEffect, useMemo, useRef, useId } from "react";
 import dynamic from "next/dynamic";
@@ -9,7 +10,7 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
   ssr: false,
   loading: () => (
     <div className="h-80 flex items-center justify-center bg-ob-field rounded-xl border border-ob-border text-text/60">
-      加载地图...
+      {tx('加载地图...')}
     </div>
   ),
 });
@@ -171,7 +172,7 @@ export default function LocationPicker({
           htmlFor={`${listId}-input`}
           className="block text-text mb-2 text-sm"
         >
-          出生地点
+          {tx('出生地点')}
         </label>
         <div className="relative">
           <Icon
@@ -199,7 +200,7 @@ export default function LocationPicker({
               if (results.length) setOpen(true);
             }}
             onKeyDown={onKeyDown}
-            placeholder="搜索城市,例如 Kuala Lumpur"
+            placeholder={tx('搜索城市,例如 Kuala Lumpur')}
             className="w-full h-12 pl-12 pr-10 bg-ob-field text-text rounded-xl border border-ob-border focus:border-primary focus:outline-none"
           />
           {isSearching && (
@@ -207,7 +208,7 @@ export default function LocationPicker({
               className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-text/60"
               aria-live="polite"
             >
-              搜索中…
+              {tx('搜索中…')}
             </span>
           )}
         </div>
@@ -243,7 +244,7 @@ export default function LocationPicker({
         className="text-sm text-primary inline-flex items-center gap-1.5 hover:underline"
       >
         <Icon name={showMap ? "map" : "pin"} size={18} />
-        {showMap ? "收起地图" : "在地图上选择"}
+        {showMap ? tx('收起地图') : tx('在地图上选择')}
       </button>
 
       {showMap && (
@@ -258,8 +259,7 @@ export default function LocationPicker({
           />
           {value && (
             <p className="text-xs text-text/60">
-              坐标 {value.latitude.toFixed(4)}, {value.longitude.toFixed(4)} ·
-              时区 {value.timezone}
+              {tx('坐标')} {value.latitude.toFixed(4)}, {value.longitude.toFixed(4)} {tx('· 时区')} {value.timezone}
             </p>
           )}
         </div>

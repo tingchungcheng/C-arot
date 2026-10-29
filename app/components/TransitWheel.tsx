@@ -1,4 +1,5 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -172,9 +173,9 @@ export default function TransitWheel({ natal, transit, highlight, maxLines = 5, 
   const cusps = natal.houses ?? [];
   const pt = (lon: number, r: number) => polar(wheelAngle(lon, asc), r, C);
 
-  const nat = natal.planets.map((p) => ({ en: p.planet_en, name: p.planet, lon: eclipticLon(p), label: `${p.planet} ${p.sign} ${p.degree.toFixed(0)}°` }));
+  const nat = natal.planets.map((p) => ({ en: p.planet_en, name: p.planet, lon: eclipticLon(p), label: `${tx(p.planet)} ${tx(p.sign)} ${p.degree.toFixed(0)}°` }));
   const natDraw = spreadAngles(nat.map((p) => p.lon), 8);
-  const tr = (transit?.planets ?? []).map((p) => ({ en: p.planet_en, name: p.planet, lon: lons[p.planet_en] ?? p.longitude, label: `行运${p.planet} ${p.sign} ${p.degree.toFixed(0)}°${p.retrograde ? ' 逆行' : ''}`, rx: p.retrograde }));
+  const tr = (transit?.planets ?? []).map((p) => ({ en: p.planet_en, name: p.planet, lon: lons[p.planet_en] ?? p.longitude, label: tx('行运{0} {1} {2}°{3}', [tx(p.planet), tx(p.sign), p.degree.toFixed(0), p.retrograde ? ' 逆行' : '']), rx: p.retrograde }));
   // glyph at the planet's own longitude (no angular spread); on collision (<6°) stack outward by 14px
   const trLevel: number[] = [];
   tr.map((p, i) => ({ lon: p.lon, i })).sort((a, b) => a.lon - b.lon).forEach(({ lon, i }, _k, arr) => {
@@ -190,7 +191,7 @@ export default function TransitWheel({ natal, transit, highlight, maxLines = 5, 
 
   return (
     <div ref={wrapRef} className="mx-auto max-w-full" style={{ width: 350 }}>
-    <svg ref={svgRef} viewBox="0 0 480 480" width="100%" height="100%" data-chart-wheel className={`block w-full h-auto ${className}`} role="img" aria-label={mode === 'transit' ? '行运双圈星盘:内圈本命,外圈行运' : '本命星盘'}>
+    <svg ref={svgRef} viewBox="0 0 480 480" width="100%" height="100%" data-chart-wheel className={`block w-full h-auto ${className}`} role="img" aria-label={mode === 'transit' ? tx('行运双圈星盘:内圈本命,外圈行运') : tx('本命星盘')}>
       <g data-part="band">
       {/* zodiac band */}
       <circle cx={C} cy={C} r={R_Z_OUT} fill="none" stroke="var(--c-primary)" strokeWidth="1.6" />
@@ -250,7 +251,7 @@ export default function TransitWheel({ natal, transit, highlight, maxLines = 5, 
         return (
           <line key={`${a.transit_en}-${a.type}-${a.natal_en}`} data-idx={i} data-draw={tone} x1={s.x} y1={s.y} x2={e.x} y2={e.y} stroke={toneColor(tone)} strokeWidth={highlight === i ? 2.6 : 1.6}
             strokeDasharray={tone === 'minor' ? '4 3' : undefined} opacity={dim ? 0.25 : 0.95} style={{ transition: 'opacity .2s, stroke-width .2s' }}>
-            <title>{`行运${a.transit} ${a.type_zh} 本命${a.natal}`}</title>
+            <title>{tx('行运{0} {1} 本命{2}', [tx(a.transit), tx(a.type_zh), tx(a.natal)])}</title>
           </line>
         );
       })}

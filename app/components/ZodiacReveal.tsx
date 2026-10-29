@@ -1,4 +1,5 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
@@ -33,12 +34,12 @@ export default function ZodiacReveal({ sign }: { sign: ZodiacSign | null }) {
       <div className="zr-body min-w-0">
         {sign ? (
           <>
-            <p className="text-[16px] font-bold text-text">{sign.name_zh} · {sign.name_en}</p>
-            <p className="text-[13px] text-text-ob-2">{formatRangeZh(sign.date_range)} · {ELEMENT_ZH[sign.element]}</p>
-            <p className="text-[13px] text-text mt-0.5">奇境意象:{sign.wonderland_motif}</p>
+            <p className="text-[16px] font-bold text-text">{tx(sign.name_zh)}{tx(sign.name_zh) === sign.name_zh ? ` · ${sign.name_en}` : ''}</p>
+            <p className="text-[13px] text-text-ob-2">{formatRangeZh(sign.date_range)} · {ELEMENT_ZH()[sign.element]}</p>
+            <p className="text-[13px] text-text mt-0.5">{tx('奇境意象:')}{sign.wonderland_motif}</p>
           </>
         ) : (
-          <p className="text-[15px] text-text-ob-2">选好日期后,这里会显示你的太阳星座。</p>
+          <p className="text-[15px] text-text-ob-2">{tx('选好日期后,这里会显示你的太阳星座。')}</p>
         )}
       </div>
     </div>

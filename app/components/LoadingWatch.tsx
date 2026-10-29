@@ -1,11 +1,12 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { LOADER_SVG } from './loader-svg';
 
 /** Pocket-watch loader (design handoff illustration). GSAP drives the hands; reduced motion shows a static watch + progress text. */
-export default function LoadingWatch({ message = '探索中...' }: { message?: string }) {
+export default function LoadingWatch({ message = tx('探索中...') }: { message?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

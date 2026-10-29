@@ -1,4 +1,5 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
@@ -53,7 +54,7 @@ export default function NatalWheel({ chart, ascendant, houses, className = '' }:
   }, [chart]);
 
   return (
-    <svg ref={ref} viewBox="0 0 400 400" className={className} role="img" aria-label="出生星盘图">
+    <svg ref={ref} viewBox="0 0 400 400" className={className} role="img" aria-label={tx('出生星盘图')}>
       <defs>
         <radialGradient id="nw-bg" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="var(--c-primary)" stopOpacity="0.12" />
@@ -110,7 +111,7 @@ export default function NatalWheel({ chart, ascendant, houses, className = '' }:
           <line key={i} className="nw-aspect" x1={s.x} y1={s.y} x2={e.x} y2={e.y}
             stroke={tense ? 'var(--c-primary)' : harm ? 'var(--c-gold)' : 'var(--c-text-3)'}
             strokeWidth={a.orb < 3 ? 1.2 : 0.8} strokeDasharray={tense || harm ? undefined : '3 3'} opacity={0.85}>
-            <title>{`${a.planet1} ${a.type_zh} ${a.planet2}`}</title>
+            <title>{`${tx(a.planet1)} ${tx(a.type_zh)} ${tx(a.planet2)}`}</title>
           </line>
         );
       })}
@@ -128,7 +129,7 @@ export default function NatalWheel({ chart, ascendant, houses, className = '' }:
               fill={isLum ? 'var(--c-gold)' : 'var(--c-text)'} style={{ fontFamily: '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols",serif' }}>
               {symbolFor(p.planet_en) + '\uFE0E'}
             </text>
-            <title>{`${p.planet} ${p.sign} ${p.degree.toFixed(0)}°`}</title>
+            <title>{`${tx(p.planet)} ${tx(p.sign)} ${p.degree.toFixed(0)}°`}</title>
           </g>
         );
       })}

@@ -1,4 +1,5 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Icon from './Icon';
@@ -7,7 +8,7 @@ type Mode = 'day' | 'month' | 'year';
 const pad = (n: number) => String(n).padStart(2, '0');
 const iso = (y: number, m: number, d: number) => { const t = new Date(y, m, d); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`; };
 const parts = (s: string) => { const [y, m, d] = s.split('-').map(Number); return { y, m: m - 1, d }; };
-const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEK = () => ([tx('日'), tx('一'), tx('二'), tx('三'), tx('四'), tx('五'), tx('六')]);
 
 /** Themed period picker (§4c): calendar grid (流日), month grid (流月), year list (流年). Keyboard: arrows/PageUp/PageDown/Home/End, Enter selects, Escape closes. */
 export default function PeriodPicker({ mode, value, today, minYear, maxYear, onChange, children }: {
@@ -90,19 +91,19 @@ export default function PeriodPicker({ mode, value, today, minYear, maxYear, onC
     body = (
       <>
         <div className="flex items-center justify-between mb-2">
-          <button type="button" tabIndex={-1} aria-label="上个月" disabled={y <= minYear && m === 0} onClick={() => moveTo(iso(y, m - 1, 1))} className={navBtn}><Icon name="arrow_left" size={16} /></button>
-          <span className="text-[16px] font-semibold text-text num" aria-live="polite">{y}年{m + 1}月</span>
-          <button type="button" tabIndex={-1} aria-label="下个月" disabled={y >= maxYear && m === 11} onClick={() => moveTo(iso(y, m + 1, 1))} className={navBtn}><Icon name="arrow_right" size={16} /></button>
+          <button type="button" tabIndex={-1} aria-label={tx('上个月')} disabled={y <= minYear && m === 0} onClick={() => moveTo(iso(y, m - 1, 1))} className={navBtn}><Icon name="arrow_left" size={16} /></button>
+          <span className="text-[16px] font-semibold text-text num" aria-live="polite">{tx('{0}年{1}月', [y, m + 1])}</span>
+          <button type="button" tabIndex={-1} aria-label={tx('下个月')} disabled={y >= maxYear && m === 11} onClick={() => moveTo(iso(y, m + 1, 1))} className={navBtn}><Icon name="arrow_right" size={16} /></button>
         </div>
-        <div role="grid" aria-label={`${y}年${m + 1}月`} className="grid grid-cols-7 gap-1">
-          {WEEK.map((w) => <span key={w} role="columnheader" className="h-8 flex items-center justify-center text-[13px] text-text-3">{w}</span>)}
+        <div role="grid" aria-label={tx('{0}年{1}月', [y, m + 1])} className="grid grid-cols-7 gap-1">
+          {WEEK().map((w) => <span key={w} role="columnheader" className="h-8 flex items-center justify-center text-[13px] text-text-3">{w}</span>)}
           {cells.map((d, i) => {
             if (d < 1 || d > days) return <span key={i} className="h-9" />;
             const s = iso(y, m, d);
             const isCur = s === cur;
             return (
               <button key={i} type="button" role="gridcell" tabIndex={isCur ? 0 : -1} data-cur={isCur} aria-selected={s === value}
-                aria-label={`${y}年${m + 1}月${d}日 星期${WEEK[(first + d - 1) % 7]}`} aria-current={s === today ? 'date' : undefined}
+                aria-label={tx('{0}年{1}月{2}日 星期{3}', [y, m + 1, d, WEEK()[(first + d - 1) % 7]])} aria-current={s === today ? 'date' : undefined}
                 onClick={() => pick(s)} className={`h-9 ${cell} ${state(s === value, s === today)}`}>{d}</button>
             );
           })}
@@ -114,17 +115,17 @@ export default function PeriodPicker({ mode, value, today, minYear, maxYear, onC
     body = (
       <>
         <div className="flex items-center justify-between mb-2">
-          <button type="button" tabIndex={-1} aria-label="上一年" disabled={y <= minYear} onClick={() => moveTo(iso(y - 1, c.m, 1))} className={navBtn}><Icon name="arrow_left" size={16} /></button>
-          <span className="text-[16px] font-semibold text-text num" aria-live="polite">{y}年</span>
-          <button type="button" tabIndex={-1} aria-label="下一年" disabled={y >= maxYear} onClick={() => moveTo(iso(y + 1, c.m, 1))} className={navBtn}><Icon name="arrow_right" size={16} /></button>
+          <button type="button" tabIndex={-1} aria-label={tx('上一年')} disabled={y <= minYear} onClick={() => moveTo(iso(y - 1, c.m, 1))} className={navBtn}><Icon name="arrow_left" size={16} /></button>
+          <span className="text-[16px] font-semibold text-text num" aria-live="polite">{tx('{0}年', [y])}</span>
+          <button type="button" tabIndex={-1} aria-label={tx('下一年')} disabled={y >= maxYear} onClick={() => moveTo(iso(y + 1, c.m, 1))} className={navBtn}><Icon name="arrow_right" size={16} /></button>
         </div>
-        <div role="grid" aria-label={`${y}年`} className="grid grid-cols-3 gap-2">
+        <div role="grid" aria-label={tx('{0}年', [y])} className="grid grid-cols-3 gap-2">
           {Array.from({ length: 12 }, (_, m) => {
             const isCur = c.y === y && c.m === m;
             return (
               <button key={m} type="button" role="gridcell" tabIndex={isCur ? 0 : -1} data-cur={isCur} aria-selected={v.y === y && v.m === m}
-                aria-label={`${y}年${m + 1}月`} onClick={() => pick(iso(y, m, 1))}
-                className={`h-11 ${cell} ${state(v.y === y && v.m === m, t.y === y && t.m === m)}`}>{m + 1}月</button>
+                aria-label={tx('{0}年{1}月', [y, m + 1])} onClick={() => pick(iso(y, m, 1))}
+                className={`h-11 ${cell} ${state(v.y === y && v.m === m, t.y === y && t.m === m)}`}>{tx('{0}月', [m + 1])}</button>
             );
           })}
         </div>
@@ -133,7 +134,7 @@ export default function PeriodPicker({ mode, value, today, minYear, maxYear, onC
   } else {
     body = (
       <div className="relative">
-      <ul ref={listRef} role="listbox" aria-label="选择年份" className="h-[232px] overflow-y-auto grid grid-cols-3 auto-rows-[40px] gap-2 snap-y snap-mandatory [scrollbar-width:none] py-0">
+      <ul ref={listRef} role="listbox" aria-label={tx('选择年份')} className="h-[232px] overflow-y-auto grid grid-cols-3 auto-rows-[40px] gap-2 snap-y snap-mandatory [scrollbar-width:none] py-0">
         {Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i).map((y) => {
           const isCur = c.y === y;
           return (
@@ -156,12 +157,12 @@ export default function PeriodPicker({ mode, value, today, minYear, maxYear, onC
         {children}
       </button>
       {open && (
-        <div ref={panelRef} role="dialog" aria-label={mode === 'day' ? '选择日期' : mode === 'month' ? '选择月份' : '选择年份'} onKeyDown={onKey}
+        <div ref={panelRef} role="dialog" aria-label={mode === 'day' ? tx('选择日期') : mode === 'month' ? tx('选择月份') : tx('选择年份')} onKeyDown={onKey}
           className="absolute z-50 top-[calc(100%+8px)] left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[300px] p-3 bg-ob-sheet border border-ob-border rounded-[var(--r-card)] shadow-[var(--shadow-1)]">
           {body}
           <div className="mt-3 pt-3 border-t border-ob-border flex justify-between items-center">
-            <span className="text-[13px] text-text-3">Esc 关闭 · 方向键选择</span>
-            <button type="button" onClick={() => pick(today)} className="text-[15px] text-primary hover:underline">{mode === 'day' ? '今天' : mode === 'month' ? '本月' : '今年'}</button>
+            <span className="text-[13px] text-text-3">{tx('Esc 关闭 · 方向键选择')}</span>
+            <button type="button" onClick={() => pick(today)} className="text-[15px] text-primary hover:underline">{mode === 'day' ? tx('今天') : mode === 'month' ? tx('本月') : tx('今年')}</button>
           </div>
         </div>
       )}

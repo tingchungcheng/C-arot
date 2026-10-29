@@ -1,7 +1,8 @@
+import { t as tx } from '../i18n';
 import * as Astronomy from 'astronomy-engine';
 
 const SIGN_IDS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
-const SIGN_ZH = ['白羊座', '金牛座', '双子座', '巨蟹座', '狮子座', '处女座', '天秤座', '天蝎座', '射手座', '摩羯座', '水瓶座', '双鱼座'];
+const SIGN_ZH = () => ([tx('白羊座'), tx('金牛座'), tx('双子座'), tx('巨蟹座'), tx('狮子座'), tx('处女座'), tx('天秤座'), tx('天蝎座'), tx('射手座'), tx('摩羯座'), tx('水瓶座'), tx('双鱼座')]);
 const D2R = Math.PI / 180;
 const norm = (d: number) => ((d % 360) + 360) % 360;
 
@@ -58,7 +59,7 @@ export function computeAscendant(utc: Date, latitude: number, longitude: number)
 
 export function signOf(lon: number) {
   const i = Math.floor(norm(lon) / 30);
-  return { sign: SIGN_ZH[i], sign_en: SIGN_IDS[i][0].toUpperCase() + SIGN_IDS[i].slice(1), degree: norm(lon) % 30 };
+  return { sign: SIGN_ZH()[i], sign_en: SIGN_IDS[i][0].toUpperCase() + SIGN_IDS[i].slice(1), degree: norm(lon) % 30 };
 }
 
 /** Equal-house number (1–12) of a longitude relative to the ascendant. */

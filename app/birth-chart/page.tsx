@@ -1,4 +1,5 @@
 'use client';
+import { t as tx, getLocale, localeHeaders } from '../i18n';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -22,7 +23,7 @@ interface StoredBirth { nickname?: string; date: string; time?: string; place: s
 interface ChartSummary { sun: string; moon: string; rising: string; traits: string[]; strength: string; challenge: string; summary: string }
 interface ChartResponse { chartId?: string; chartData: BirthChartData; summary: string; interpretation: string }
 
-const fmtDeg = (p?: { sign: string; degree: number }) => (p ? `${p.sign} ${String(Math.floor(p.degree)).padStart(2, '0')}°` : '—');
+const fmtDeg = (p?: { sign: string; degree: number }) => (p ? `${tx(p.sign)} ${String(Math.floor(p.degree)).padStart(2, '0')}°` : '—');
 const symbolOf = (en: string) => PLANETS.find((x) => x.name_en.toLowerCase() === en.toLowerCase())?.symbol ?? '';
 
 export default function BirthChartPage() {
@@ -98,8 +99,8 @@ export default function BirthChartPage() {
     const ac = new AbortController(); abortRef.current = ac;
     try {
       const res = await fetch('/api/birth-chart/interpret', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac.signal,
-        body: JSON.stringify({ chartId: chart?.chartId, ...birthPayload(birthData), regenerate }),
+        method: 'POST', headers: localeHeaders(), signal: ac.signal,
+        body: JSON.stringify({ chartId: chart?.chartId, ...birthPayload(birthData), regenerate, locale: getLocale() }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const json = (await res.json()) as { summary: ChartSummary };
@@ -134,8 +135,9 @@ export default function BirthChartPage() {
     try {
       const response = await fetch('/api/birth-chart', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: localeHeaders(),
         body: JSON.stringify({
+          locale: getLocale(),
           nickname: data.nickname,
           date: data.date,
           time: data.time || undefined,
@@ -151,7 +153,7 @@ export default function BirthChartPage() {
       setChart(json);
     } catch (e) {
       console.error('Error generating chart:', e);
-      setError('生成星盘失败,请稍后再试。');
+      setError(tx('生成星盘失败,请稍后再试。'));
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +172,7 @@ export default function BirthChartPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bg pt-16 md:pt-20 flex items-center justify-center">
-        <LoadingWatch message="正在计算星盘..." />
+        <LoadingWatch message={tx('正在计算星盘...')} />
       </div>
     );
   }
@@ -180,9 +182,9 @@ export default function BirthChartPage() {
       <div className="min-h-screen bg-bg pt-16 md:pt-20 px-5 flex items-center justify-center">
         <div className="text-center max-w-sm">
           <Icon name="star" size={48} className="text-gold mx-auto mb-4" />
-          <h2 className="text-[24px] text-text mb-2">请先完成个人资料</h2>
-          <p className="text-[15px] text-text-2 mb-6">星盘需要你的出生日期、时间与地点。</p>
-          <Link href="/onboarding" className="btn btn-primary">前往填写 <Icon name="arrow_right" size={20} /></Link>
+          <h2 className="text-[24px] text-text mb-2">{tx('请先完成个人资料')}</h2>
+          <p className="text-[15px] text-text-2 mb-6">{tx('星盘需要你的出生日期、时间与地点。')}</p>
+          <Link href="/onboarding" className="btn btn-primary">{tx('前往填写')} <Icon name="arrow_right" size={20} /></Link>
         </div>
       </div>
     );
@@ -193,9 +195,9 @@ export default function BirthChartPage() {
       <div className="min-h-screen bg-bg pt-24 px-5">
         <div className="mx-auto max-w-xl text-center">
           <Icon name="chart_wheel" size={48} className="text-gold mx-auto mb-4" />
-          <h1 className="text-[32px] text-text mb-4">你的星盘</h1>
+          <h1 className="text-[32px] text-text mb-4">{tx('你的星盘')}</h1>
           {error && <p className="mb-4 flex justify-center items-center gap-2 text-[15px] text-danger"><Icon name="warning" size={20} />{error}</p>}
-          {birthData && <button onClick={() => handleGenerate(birthData)} className="btn btn-primary">生成星盘 <Icon name="sparkle" size={20} /></button>}
+          {birthData && <button onClick={() => handleGenerate(birthData)} className="btn btn-primary">{tx('生成星盘')} <Icon name="sparkle" size={20} /></button>}
         </div>
       </div>
     );
@@ -207,18 +209,18 @@ export default function BirthChartPage() {
   const asc = houses?.length ? houses[0] : chartData.rising ? eclipticLon(chartData.rising) : undefined;
   const risingPos = chartData.rising;
   const cards = [
-    ...(risingPos ? [{ key: 'asc', label: '上升', sym: 'AC', pos: risingPos, house: undefined as number | undefined }] : []),
-    ...chartData.planets.map((p) => ({ key: p.planet_en, label: p.planet, sym: symbolOf(p.planet_en), pos: p as { sign: string; degree: number }, house: p.house })),
+    ...(risingPos ? [{ key: 'asc', label: tx('上升'), sym: 'AC', pos: risingPos, house: undefined as number | undefined }] : []),
+    ...chartData.planets.map((p) => ({ key: p.planet_en, label: tx(p.planet), sym: symbolOf(p.planet_en), pos: p as { sign: string; degree: number }, house: p.house })),
   ];
-  const dateLabel = birthData?.date ? birthData.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, (_, y, m, d) => `${y}年${+m}月${+d}日`) : '';
+  const dateLabel = birthData?.date ? birthData.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, (_, y, m, d) => tx('{0}年{1}月{2}日', [y, +m, +d])) : '';
 
   return (
     <div className="min-h-screen bg-bg pt-16 md:pt-20 pb-16">
       <div className="mx-auto max-w-[1312px] px-5 md:px-10 xl:px-16 pt-8 flex flex-col md:grid md:grid-cols-12 md:gap-6">
         <div className="md:col-span-12 md:flex md:items-end md:justify-between md:gap-6">
           <div>
-          <p className="overline text-primary">Chart · 出生星盘</p>
-          <h1 className="text-[32px] leading-[1.2] tracking-[0.04em] text-text mt-2">{birthData?.nickname?.trim() ? `${birthData.nickname.trim()}的星盘` : '你的出生星盘'}</h1>
+          <p className="overline text-primary">{tx('Chart · 出生星盘')}</p>
+          <h1 className="text-[32px] leading-[1.2] tracking-[0.04em] text-text mt-2">{birthData?.nickname?.trim() ? tx('{0}的星盘', [birthData.nickname.trim()]) : tx('你的出生星盘')}</h1>
           </div>
           <p className="mt-2 flex items-center gap-2 text-[15px] text-text-2"><Icon name="pin" size={18} />{birthData?.place}{dateLabel && ` · ${dateLabel}`}{birthData?.time && ` ${birthData.time}`}</p>
         </div>
@@ -229,18 +231,18 @@ export default function BirthChartPage() {
           {/* legends crossfade (stacked in one grid cell); 流年 caption stays under the transit legend */}
           <div className="mt-4 grid">
             <ul aria-hidden={view !== 'natal'} className={`[grid-area:1/1] flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-text-2 justify-center self-start transition-opacity duration-300 ${view === 'natal' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-primary" />紧张相位</li>
-              <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-gold" />和谐相位</li>
-              <li className="flex items-center gap-2"><span className="w-5 border-t border-dashed border-text-3" />次要</li>
+              <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-primary" />{tx('紧张相位')}</li>
+              <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-gold" />{tx('和谐相位')}</li>
+              <li className="flex items-center gap-2"><span className="w-5 border-t border-dashed border-text-3" />{tx('次要')}</li>
             </ul>
             <div aria-hidden={view === 'natal'} className={`[grid-area:1/1] transition-opacity duration-300 ${view !== 'natal' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-text-2 justify-center">
-                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-text" />本命(内圈)</li>
-                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" />行运(外圈)</li>
-                <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-gold" />和谐</li>
-                <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-primary" />紧张</li>
+                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-text" />{tx('本命(内圈)')}</li>
+                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" />{tx('行运(外圈)')}</li>
+                <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-gold" />{tx('和谐')}</li>
+                <li className="flex items-center gap-2"><span className="w-5 h-0.5 bg-primary" />{tx('紧张')}</li>
               </ul>
-              {view === 'year' && <p className="mt-2 text-center text-[13px] leading-[18px] text-text-2">流年仅显示木星及以外慢行星</p>}
+              {view === 'year' && <p className="mt-2 text-center text-[13px] leading-[18px] text-text-2">{tx('流年仅显示木星及以外慢行星')}</p>}
             </div>
           </div>
         </div>
@@ -249,12 +251,12 @@ export default function BirthChartPage() {
           <>
             <div className="order-1 md:col-span-12 mt-6 pb-4 border-b border-border"><ChartTabs value={view} onChange={setView} /></div>
         <div data-natal-slide className="order-3 md:col-span-12 xl:col-span-6 mt-6 space-y-4">
-          <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3" aria-label="行星位置">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3" aria-label={tx('行星位置')}>
             {cards.map((c) => (
               <li key={c.key} className="bg-surface-1 border border-border rounded-[var(--r-card)] p-3">
                 <p className="text-[13px] text-text-2 flex items-center gap-1.5">
                   <span aria-hidden="true" className="text-gold w-4 text-center" style={{ fontFamily: '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols",serif' }}>{c.sym === 'AC' ? 'AC' : c.sym + '\uFE0E'}</span>
-                  {c.label}{c.house ? <span className="ml-auto num text-text-3">{c.house}宫</span> : null}
+                  {c.label}{c.house ? <span className="ml-auto num text-text-3">{tx('{0}宫', [c.house])}</span> : null}
                 </p>
                 <p className="text-[16px] font-bold text-text mt-1">{fmtDeg(c.pos)}</p>
               </li>
@@ -262,47 +264,47 @@ export default function BirthChartPage() {
           </ul>
 
           {aiState !== 'done' && (
-            <section ref={boxRef} aria-label="星盘摘要" aria-busy={aiState === 'loading'} className={`bg-surface-1 rounded-[var(--r-card)] p-5 ${aiState === 'loading' ? 'border-[1.5px] border-primary' : 'border border-border'}`}>
+            <section ref={boxRef} aria-label={tx('星盘摘要')} aria-busy={aiState === 'loading'} className={`bg-surface-1 rounded-[var(--r-card)] p-5 ${aiState === 'loading' ? 'border-[1.5px] border-primary' : 'border border-border'}`}>
               {aiState === 'idle' && (
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <span className="shrink-0 w-16 h-16 rounded-full border border-gold/40 flex items-center justify-center text-gold"><Icon name="pocket_watch" size={36} /></span>
                   <div className="flex-1">
-                    <h3 className="text-[18px] text-text font-semibold">让白兔读一读你的星盘</h3>
-                    <p className="text-[15px] text-text-2 mt-1">用 AI 把太阳、月亮、上升整理成一张简明摘要</p>
+                    <h3 className="text-[18px] text-text font-semibold">{tx('让白兔读一读你的星盘')}</h3>
+                    <p className="text-[15px] text-text-2 mt-1">{tx('用 AI 把太阳、月亮、上升整理成一张简明摘要')}</p>
                   </div>
-                  <button type="button" onClick={() => fetchSummary()} className="btn btn-primary md:w-auto px-5"><Icon name="sparkle" size={20} />生成星盘摘要</button>
+                  <button type="button" onClick={() => fetchSummary()} className="btn btn-primary md:w-auto px-5"><Icon name="sparkle" size={20} />{tx('生成星盘摘要')}</button>
                 </div>
               )}
               {aiState === 'loading' && (
                 <div className="min-h-[76px] -my-2 flex items-center gap-4">
                   <PocketWatchTicking size={48} className="shrink-0 text-gold" />
                   <div className="flex-1">
-                    <p className="text-[15px] text-text font-semibold">白兔正在读你的星盘… <span className="text-text-3 font-normal">约 5 秒</span></p>
+                    <p className="text-[15px] text-text font-semibold">{tx('白兔正在读你的星盘…')} <span className="text-text-3 font-normal">{tx('约 5 秒')}</span></p>
                     <span className="mt-2 block h-[3px] rounded-full bg-surface-3 overflow-hidden"><span className="block h-full w-2/3 rounded-full bg-gradient-to-r from-primary to-gold motion-safe:animate-pulse" /></span>
                   </div>
-                  <button type="button" onClick={() => abortRef.current?.abort()} className="text-[14px] text-text-2 underline underline-offset-4 hover:text-primary">取消</button>
+                  <button type="button" onClick={() => abortRef.current?.abort()} className="text-[14px] text-text-2 underline underline-offset-4 hover:text-primary">{tx('取消')}</button>
                 </div>
               )}
               {aiState === 'error' && (
                 <div className="text-[15px] text-text-2">
-                  <p className="flex items-center gap-2"><Icon name="warning" size={18} className="text-danger" />星盘摘要暂时不可用,请稍后再试。</p>
-                  <button type="button" onClick={() => fetchSummary()} className="btn btn-secondary mt-3">重试</button>
+                  <p className="flex items-center gap-2"><Icon name="warning" size={18} className="text-danger" />{tx('星盘摘要暂时不可用,请稍后再试。')}</p>
+                  <button type="button" onClick={() => fetchSummary()} className="btn btn-secondary mt-3">{tx('重试')}</button>
                 </div>
               )}
             </section>
           )}
-          <p className="sr-only" aria-live="polite">{aiState === 'loading' ? '正在生成星盘摘要' : aiState === 'done' ? '星盘摘要已生成' : ''}</p>
+          <p className="sr-only" aria-live="polite">{aiState === 'loading' ? tx('正在生成星盘摘要') : aiState === 'done' ? tx('星盘摘要已生成') : ''}</p>
 
           {aiState === 'done' && summary && (
             <section ref={sumRef} aria-labelledby="sum-h" className="sum-card bg-surface-1 border border-border rounded-[var(--r-card)] p-5 md:p-6">
-              <h2 id="sum-h" className="text-[19px] text-text flex items-center gap-2 mb-5"><Icon name="crystal_ball" size={22} className="text-gold" />星盘摘要</h2>
+              <h2 id="sum-h" className="text-[19px] text-text flex items-center gap-2 mb-5"><Icon name="crystal_ball" size={22} className="text-gold" />{tx('星盘摘要')}</h2>
 
-              <h3 className="sum-row text-[17px] text-text font-semibold mb-2" style={{ fontFamily: 'var(--font-serif-zh, inherit)' }}>核心三要素 <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Big three</i></h3>
+              <h3 className="sum-row text-[17px] text-text font-semibold mb-2" style={{ fontFamily: 'var(--font-serif-zh, inherit)' }}>{tx('核心三要素')} <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Big three</i></h3>
               <ul className="mb-6">
                 {([
-                  ['sun', '太阳', chartData.sun?.sign, summary.sun, 'text-gold border-gold/60'],
-                  ['moon', '月亮', chartData.moon?.sign, summary.moon, 'text-text border-text/60'],
-                  ['ascendant', '上升', chartData.rising?.sign, summary.rising, 'text-primary border-primary/60'],
+                  ['sun', tx('太阳'), chartData.sun?.sign && tx(chartData.sun.sign), summary.sun, 'text-gold border-gold/60'],
+                  ['moon', tx('月亮'), chartData.moon?.sign && tx(chartData.moon.sign), summary.moon, 'text-text border-text/60'],
+                  ['ascendant', tx('上升'), chartData.rising?.sign && tx(chartData.rising.sign), summary.rising, 'text-primary border-primary/60'],
                 ] as const).filter((r) => r[3]).map(([ic, label, sign, line, ring]) => (
                   <li key={ic} className="sum-row grid grid-cols-[36px_48px_72px_1fr] items-center gap-3 py-3 border-t border-border">
                     <span className={`w-9 h-9 rounded-full border flex items-center justify-center ${ring}`}><Icon name={ic} size={18} /></span>
@@ -313,26 +315,26 @@ export default function BirthChartPage() {
                 ))}
               </ul>
 
-              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">性格关键词 <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Keywords</i></h3>
+              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">{tx('性格关键词')} <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Keywords</i></h3>
               <ul className="sum-row flex flex-wrap gap-2 mb-6">
                 {summary.traits.map((t) => <li key={t} className="sum-tag px-3.5 py-1 rounded-full text-[15px] text-text bg-surface-2 border border-border-strong">{t}</li>)}
               </ul>
 
-              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">优势 / 课题 <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Strengths · Lessons</i></h3>
+              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">{tx('优势 / 课题')} <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>Strengths · Lessons</i></h3>
               <div className="space-y-2.5 mb-6">
-                <p className="sum-row flex items-center gap-3 text-[15px] text-text-2"><span aria-hidden="true" className="w-1 h-[22px] rounded-full bg-leaf" /><b className="text-leaf font-semibold">优势</b>{summary.strength}</p>
-                <p className="sum-row flex items-center gap-3 text-[15px] text-text-2"><span aria-hidden="true" className="w-1 h-[22px] rounded-full bg-gold" /><b className="text-gold font-semibold">课题</b>{summary.challenge}</p>
+                <p className="sum-row flex items-center gap-3 text-[15px] text-text-2"><span aria-hidden="true" className="w-1 h-[22px] rounded-full bg-leaf" /><b className="text-leaf font-semibold">{tx('优势')}</b>{summary.strength}</p>
+                <p className="sum-row flex items-center gap-3 text-[15px] text-text-2"><span aria-hidden="true" className="w-1 h-[22px] rounded-full bg-gold" /><b className="text-gold font-semibold">{tx('课题')}</b>{summary.challenge}</p>
               </div>
 
-              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">一句话总结 <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>In one line</i></h3>
+              <h3 className="sum-row text-[17px] text-text font-semibold mb-3">{tx('一句话总结')} <i className="text-[14px] text-gold font-normal" style={{ fontFamily: 'var(--font-display, serif)' }}>In one line</i></h3>
               <blockquote className="sum-row bg-primary-soft border-l-[3px] border-primary rounded-r-[10px] px-4 py-3 text-[18px] font-semibold text-text">“{summary.summary}”</blockquote>
 
               <div className="mt-4 flex justify-end">
-                <button type="button" onClick={() => fetchSummary(true)} className="text-[15px] text-text-2 underline underline-offset-4 hover:text-primary inline-flex items-center gap-1.5"><Icon name="reversed" size={16} />重新生成</button>
+                <button type="button" onClick={() => fetchSummary(true)} className="text-[15px] text-text-2 underline underline-offset-4 hover:text-primary inline-flex items-center gap-1.5"><Icon name="reversed" size={16} />{tx('重新生成')}</button>
               </div>
             </section>
           )}
-          <p className="flex items-center gap-2 text-[15px] text-text-3 bg-surface-1 border border-border rounded-[var(--r-card)] px-4 py-3"><Icon name="info" size={16} />塔罗与星盘是探索与反思的工具,非预测或专业建议。</p>
+          <p className="flex items-center gap-2 text-[15px] text-text-3 bg-surface-1 border border-border rounded-[var(--r-card)] px-4 py-3"><Icon name="info" size={16} />{tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}</p>
 
 
         </div>

@@ -1,4 +1,5 @@
 'use client';
+import { t as tx, getLocale, localeHeaders } from '../i18n';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -14,7 +15,7 @@ interface Turn { role: 'user' | 'assistant'; content: string; error?: string }
 const pad = (n: number) => String(n).padStart(2, '0');
 const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
-const WEEK = '日一二三四五六';
+const WEEK = () => (tx('日一二三四五六'));
 
 function step(at: string, period: TransitPeriod, dir: number) {
   const d = parse(at);
@@ -26,21 +27,21 @@ function step(at: string, period: TransitPeriod, dir: number) {
 const periodKey = (at: string, p: TransitPeriod) => (p === 'day' ? at : p === 'month' ? at.slice(0, 7) : at.slice(0, 4));
 const label = (at: string, p: TransitPeriod, short = false) => {
   const d = parse(at);
-  if (p === 'year') return `${d.getFullYear()}年`;
-  if (p === 'month') return `${d.getFullYear()}年${d.getMonth() + 1}月`;
-  return short ? `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}` : `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  if (p === 'year') return tx('{0}年', [d.getFullYear()]);
+  if (p === 'month') return tx('{0}年{1}月', [d.getFullYear(), d.getMonth() + 1]);
+  return short ? tx('{0}月{1}日 周{2}', [d.getMonth() + 1, d.getDate(), WEEK()[d.getDay()]]) : tx('{0}年{1}月{2}日', [d.getFullYear(), d.getMonth() + 1, d.getDate()]);
 };
 
-const MODE = {
-  day: { reset: '今天', focus: '今日重点', noun: '这一天', ctx: '流日', chips: ['今天适合表白吗?', '我该如何面对工作压力?', '今天的幸运时段?'] },
-  month: { reset: '本月', focus: '本月重点', noun: '这个月', ctx: '流月', chips: ['这个月的感情运势如何?', '本月工作要注意什么?', '这个月适合开始新计划吗?'] },
-  year: { reset: '今年', focus: '今年重点', noun: '今年', ctx: '流年', chips: ['今年事业有什么机会?', '今年的感情主题是什么?', '今年最该专注什么?'] },
-} as const;
+const MODE = () => ({
+  day: { reset: tx('今天'), focus: tx('今日重点'), noun: tx('这一天'), ctx: tx('流日'), chips: [tx('今天适合表白吗?'), tx('我该如何面对工作压力?'), tx('今天的幸运时段?')] },
+  month: { reset: tx('本月'), focus: tx('本月重点'), noun: tx('这个月'), ctx: tx('流月'), chips: [tx('这个月的感情运势如何?'), tx('本月工作要注意什么?'), tx('这个月适合开始新计划吗?')] },
+  year: { reset: tx('今年'), focus: tx('今年重点'), noun: tx('今年'), ctx: tx('流年'), chips: [tx('今年事业有什么机会?'), tx('今年的感情主题是什么?'), tx('今年最该专注什么?')] },
+} as const);
 
-const MEANING: Record<string, string> = {
-  Conjunction: '能量叠加,主题被放大', Sextile: '小机会出现,主动把握', Trine: '顺流助力,事半功倍',
-  Square: '张力推动你做出调整', Opposition: '两端拉扯,寻找平衡', Quincunx: '需要微调与适应', Semisextile: '细微的提示',
-};
+const MEANING = (): Record<string, string> => ({
+  Conjunction: tx('能量叠加,主题被放大'), Sextile: tx('小机会出现,主动把握'), Trine: tx('顺流助力,事半功倍'),
+  Square: tx('张力推动你做出调整'), Opposition: tx('两端拉扯,寻找平衡'), Quincunx: tx('需要微调与适应'), Semisextile: tx('细微的提示'),
+});
 
 /** Bold markdown → primary; everything else as text. */
 function Rich({ text }: { text: string }) {
@@ -55,7 +56,7 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
   const at = atBy[period];
   const key = 'chat'; // one thread across 流日/流月/流年 (history kept when switching tabs)
   const isCurrent = periodKey(at, period) === periodKey(today, period);
-  const m = MODE[period];
+  const m = MODE()[period];
 
   const [transit, setTransit] = useState<TransitResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,8 +102,8 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
     const ac = new AbortController(); abortRef.current = ac;
     const patchLast = (p: Partial<Turn>) => setThreads((all) => { const t = [...(all[key] ?? [])]; t[t.length - 1] = { ...t[t.length - 1], ...p }; return { ...all, [key]: t }; });
     try {
-      const res = await fetch('/api/transits/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...birth, period, at, question, history }), signal: ac.signal });
-      if (res.status === 429) { setLimited(true); patchLast({ error: '今天问得够多啦,明天再来' }); return; }
+      const res = await fetch('/api/transits/chat', { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ ...birth, period, at, question, history, locale: getLocale() }), signal: ac.signal });
+      if (res.status === 429) { setLimited(true); patchLast({ error: tx('今天问得够多啦,明天再来') }); return; }
       if (!res.ok || !res.body) throw new Error(String(res.status));
       const reader = res.body.getReader(); const dec = new TextDecoder(); let acc = '';
       for (;;) {
@@ -112,7 +113,7 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
         patchLast({ content: acc }); setBusy('streaming');
       }
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') { patchLast({ error: '白兔迷路了,请重试' }); if (!fromChip) setInput(question); }
+      if ((e as Error).name !== 'AbortError') { patchLast({ error: tx('白兔迷路了,请重试') }); if (!fromChip) setInput(question); }
     } finally { setBusy('idle'); abortRef.current = null; }
   };
   const retry = () => {
@@ -168,13 +169,13 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
 
   const stepper = (
     <div className="relative flex items-center gap-2">
-      <button type="button" aria-label="上一个" onClick={() => setAtBy((s) => ({ ...s, [period]: step(at, period, -1) }))} className="icon-btn w-10 h-10 rounded-[10px] border border-border-strong flex items-center justify-center text-text-2 hover:text-primary"><Icon name="arrow_left" size={18} /></button>
+      <button type="button" aria-label={tx('上一个')} onClick={() => setAtBy((s) => ({ ...s, [period]: step(at, period, -1) }))} className="icon-btn w-10 h-10 rounded-[10px] border border-border-strong flex items-center justify-center text-text-2 hover:text-primary"><Icon name="arrow_left" size={18} /></button>
       <PeriodPicker mode={period} value={at} today={today} minYear={birthYear} maxYear={birthYear + 80}
         onChange={(v) => setAtBy((s) => ({ ...s, [period]: v }))}>
         <Icon name="calendar" size={18} className="text-text-2" />
         <span className="text-[17px] font-semibold text-text num"><span className="hidden md:inline">{label(at, period)}</span><span className="md:hidden">{label(at, period, true)}</span></span>
       </PeriodPicker>
-      <button type="button" aria-label="下一个" onClick={() => setAtBy((s) => ({ ...s, [period]: step(at, period, 1) }))} className="icon-btn w-10 h-10 rounded-[10px] border border-border-strong flex items-center justify-center text-text-2 hover:text-primary"><Icon name="arrow_right" size={18} /></button>
+      <button type="button" aria-label={tx('下一个')} onClick={() => setAtBy((s) => ({ ...s, [period]: step(at, period, 1) }))} className="icon-btn w-10 h-10 rounded-[10px] border border-border-strong flex items-center justify-center text-text-2 hover:text-primary"><Icon name="arrow_right" size={18} /></button>
       <button type="button" disabled={isCurrent} onClick={() => setAtBy((s) => ({ ...s, [period]: today }))}
         className={`h-10 px-4 rounded-[10px] text-[15px] ${isCurrent ? 'border border-dashed border-border-strong text-text-3' : 'border border-border-strong text-text hover:border-primary'}`}>{m.reset}</button>
     </div>
@@ -185,17 +186,17 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border">
         <span className="w-9 h-9 rounded-full bg-primary-soft text-primary flex items-center justify-center"><Icon name="rabbit" size={20} /></span>
         <div className="flex-1 min-w-0">
-          <h3 id="chat-h" className="text-[17px] text-text font-semibold">问问白兔</h3>
-          <p className="text-[13px] text-text-3 truncate">已读取:本命盘 + {label(at, period)}{m.ctx === '流日' ? '' : m.ctx}行运</p>
+          <h3 id="chat-h" className="text-[17px] text-text font-semibold">{tx('问问白兔')}</h3>
+          <p className="text-[13px] text-text-3 truncate">{tx('已读取:本命盘 + {0}{1}行运', [label(at, period), m.ctx === tx('流日') ? '' : m.ctx])}</p>
         </div>
-        {inSheet && <button type="button" onClick={() => setSheet('closed')} aria-label="关闭" className="text-text-2 px-2 text-[15px]">关闭</button>}
+        {inSheet && <button type="button" onClick={() => setSheet('closed')} aria-label={tx('关闭')} className="text-text-2 px-2 text-[15px]">{tx('关闭')}</button>}
       </header>
       <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" aria-live="polite">
         {turns.length === 0 && (
           <div className="text-center py-4">
             <span className="mx-auto w-16 h-16 rounded-full border border-gold/40 flex items-center justify-center text-gold"><Icon name="pocket_watch" size={36} /></span>
-            <p className="mt-3 text-[17px] text-text font-semibold">想知道{m.noun}的星象对你意味着什么?</p>
-            <p className="mt-1 text-[15px] text-text-2">白兔已读好你的本命盘和{m.ctx}行运,点一个问题开始。</p>
+            <p className="mt-3 text-[17px] text-text font-semibold">{tx('想知道{0}的星象对你意味着什么?', [m.noun])}</p>
+            <p className="mt-1 text-[15px] text-text-2">{tx('白兔已读好你的本命盘和{0}行运,点一个问题开始。', [m.ctx])}</p>
           </div>
         )}
         {chips.length > 0 && (
@@ -210,11 +211,11 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
             <span className="shrink-0 w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center"><Icon name="rabbit" size={16} /></span>
             <div className="max-w-[90%] px-3.5 py-2.5 text-[15px] leading-[1.7] text-text-2 bg-surface-2 rounded-[14px_14px_14px_4px]">
               {t.error ? (
-                <p className="flex items-center gap-2"><Icon name="warning" size={16} className="text-danger" />{t.error}{!limited && <button type="button" onClick={retry} className="text-primary underline underline-offset-4">重试</button>}</p>
+                <p className="flex items-center gap-2"><Icon name="warning" size={16} className="text-danger" />{t.error}{!limited && <button type="button" onClick={retry} className="text-primary underline underline-offset-4">{tx('重试')}</button>}</p>
               ) : t.content ? (
                 <p className="whitespace-pre-wrap"><Rich text={t.content} />{busy === 'streaming' && i === turns.length - 1 && <span aria-hidden="true" className="rd-cursor" />}</p>
               ) : (
-                <span className="flex gap-1 py-1.5" aria-label="白兔正在输入"><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce" /><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce [animation-delay:.15s]" /><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce [animation-delay:.3s]" /></span>
+                <span className="flex gap-1 py-1.5" aria-label={tx('白兔正在输入')}><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce" /><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce [animation-delay:.15s]" /><i className="w-1.5 h-1.5 rounded-full bg-text-3 motion-safe:animate-bounce [animation-delay:.3s]" /></span>
               )}
             </div>
           </div>
@@ -225,18 +226,18 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
           <textarea rows={1} value={input} maxLength={200} disabled={loading || limited}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); ask(input); } }}
-            placeholder={limited ? '今天问得够多啦,明天再来' : loading ? '星盘加载中…' : `问问白兔关于${m.noun}的星象…`}
-            aria-label="向白兔提问"
+            placeholder={limited ? tx('今天问得够多啦,明天再来') : loading ? tx('星盘加载中…') : tx('问问白兔关于{0}的星象…', [m.noun])}
+            aria-label={tx('向白兔提问')}
             className="w-full min-h-[46px] max-h-32 resize-none px-3.5 py-3 text-[15px] text-text bg-surface-2 border border-border-strong rounded-[12px] focus:border-primary focus:outline-none disabled:opacity-60" />
           {input.length >= 180 && <span className="absolute right-3 bottom-1 text-[12px] text-text-3 num">{input.length}/200</span>}
         </div>
         {busy !== 'idle' ? (
-          <button type="button" onClick={() => abortRef.current?.abort()} aria-label="停止" className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center"><span className="w-3.5 h-3.5 bg-on-primary rounded-[2px]" /></button>
+          <button type="button" onClick={() => abortRef.current?.abort()} aria-label={tx('停止')} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center"><span className="w-3.5 h-3.5 bg-on-primary rounded-[2px]" /></button>
         ) : (
-          <button type="submit" aria-label="发送" disabled={!input.trim() || loading || limited} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center disabled:opacity-45"><Icon name="arrow_right" size={20} /></button>
+          <button type="submit" aria-label={tx('发送')} disabled={!input.trim() || loading || limited} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center disabled:opacity-45"><Icon name="arrow_right" size={20} /></button>
         )}
       </form>
-      {inSheet && <p className="px-4 pb-4 text-[15px] text-text-3 flex items-center gap-2"><Icon name="info" size={16} />塔罗与星盘是探索与反思的工具,非预测或专业建议。</p>}
+      {inSheet && <p className="px-4 pb-4 text-[15px] text-text-3 flex items-center gap-2"><Icon name="info" size={16} />{tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}</p>}
     </section>
   );
 
@@ -250,11 +251,11 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
         <section data-transit-slide aria-labelledby="focus-h" className="bg-surface-1 border border-border rounded-[var(--r-card)] p-5">
           <h2 id="focus-h" className="text-[19px] text-text flex items-center gap-2 mb-2"><Icon name="star" size={20} className="text-gold" />{m.focus}</h2>
           {loadErr ? (
-            <p className="py-3 text-[15px] text-text-2 flex items-center gap-2"><Icon name="warning" size={16} className="text-danger" />白兔迷路了,请重试<button type="button" onClick={() => setAtBy((s) => ({ ...s }))} className="text-primary underline">重试</button></p>
+            <p className="py-3 text-[15px] text-text-2 flex items-center gap-2"><Icon name="warning" size={16} className="text-danger" />{tx('白兔迷路了,请重试')}<button type="button" onClick={() => setAtBy((s) => ({ ...s }))} className="text-primary underline">{tx('重试')}</button></p>
           ) : !fx && loading ? (
             <div className="space-y-3 py-2">{[0, 1, 2].map((i) => <div key={i} className={`${skeleton} h-12`} />)}</div>
           ) : focus.length === 0 ? (
-            <p className="py-3 text-[15px] text-text-2">这段时间没有紧密的行运相位,适合按自己的节奏前进。</p>
+            <p className="py-3 text-[15px] text-text-2">{tx('这段时间没有紧密的行运相位,适合按自己的节奏前进。')}</p>
           ) : (
             <ul ref={focusRef}>
               {focus.map((a, i) => {
@@ -264,10 +265,10 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
                     className="grid grid-cols-[34px_1fr_auto] gap-3 items-center py-3 border-t border-border first:border-t-0 rounded-[8px] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <span className="w-[34px] h-[34px] rounded-full border flex items-center justify-center text-[16px]" style={{ borderColor: toneColor(tone), color: toneColor(tone), fontFamily: '"Segoe UI Symbol","Apple Symbols",serif' }}>{symbolFor(a.transit_en) + '\uFE0E'}</span>
                     <div>
-                      <p className="text-[15px] text-text font-semibold">行运{a.transit} {a.type_zh} 本命{a.natal}</p>
-                      <p className="text-[15px] text-text-2">{MEANING[a.type.charAt(0).toUpperCase() + a.type.slice(1).toLowerCase()] ?? '留意这一能量的提示'}</p>
+                      <p className="text-[15px] text-text font-semibold">{tx('行运{0} {1} 本命{2}', [tx(a.transit), tx(a.type_zh), tx(a.natal)])}</p>
+                      <p className="text-[15px] text-text-2">{MEANING()[a.type.charAt(0).toUpperCase() + a.type.slice(1).toLowerCase()] ?? tx('留意这一能量的提示')}</p>
                     </div>
-                    <span className="text-[13px] text-text-3 text-right num"><span className={a.applying ? 'text-gold' : 'text-text-2'}>{a.applying ? '渐强' : '渐弱'}</span><br />容许 {a.orb.toFixed(1)}°</span>
+                    <span className="text-[13px] text-text-3 text-right num"><span className={a.applying ? 'text-gold' : 'text-text-2'}>{a.applying ? tx('渐强') : tx('渐弱')}</span><br />{tx('容许')} {a.orb.toFixed(1)}°</span>
                   </li>
                 );
               })}
@@ -276,16 +277,16 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
         </section>
 
         <div className="hidden md:block">{chat(false)}</div>
-        <p className="hidden md:flex items-center gap-2 text-[15px] text-text-3 bg-surface-1 border border-border rounded-[var(--r-card)] px-4 py-3"><Icon name="info" size={16} />塔罗与星盘是探索与反思的工具,非预测或专业建议。</p>
+        <p className="hidden md:flex items-center gap-2 text-[15px] text-text-3 bg-surface-1 border border-border rounded-[var(--r-card)] px-4 py-3"><Icon name="info" size={16} />{tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}</p>
       </div>
 
       {/* mobile: bottom sheet */}
-      <button type="button" onClick={() => setSheet('peek')} className="md:hidden fixed bottom-5 left-5 right-5 z-40 btn btn-primary shadow-[var(--shadow-1)]"><Icon name="rabbit" size={20} />问问白兔</button>
+      <button type="button" onClick={() => setSheet('peek')} className="md:hidden fixed bottom-5 left-5 right-5 z-40 btn btn-primary shadow-[var(--shadow-1)]"><Icon name="rabbit" size={20} />{tx('问问白兔')}</button>
       {sheet !== 'closed' && (
-        <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="问问白兔">
-          <button type="button" aria-label="关闭" className="absolute inset-0 bg-bg/60" onClick={() => setSheet('closed')} />
+        <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={tx('问问白兔')}>
+          <button type="button" aria-label={tx('关闭')} className="absolute inset-0 bg-bg/60" onClick={() => setSheet('closed')} />
           <div className={`absolute left-0 right-0 bottom-0 bg-surface-1 border-t border-border rounded-t-[20px] flex flex-col transition-[height] duration-300 ${sheet === 'full' ? 'h-[92svh]' : 'h-[60svh]'}`}>
-            <button type="button" aria-label={sheet === 'full' ? '收起' : '展开'} onClick={() => setSheet((s) => (s === 'full' ? 'peek' : 'full'))} className="mx-auto mt-2 mb-1 w-12 h-1.5 rounded-full bg-border-strong" />
+            <button type="button" aria-label={sheet === 'full' ? tx('收起') : tx('展开')} onClick={() => setSheet((s) => (s === 'full' ? 'peek' : 'full'))} className="mx-auto mt-2 mb-1 w-12 h-1.5 rounded-full bg-border-strong" />
             <div className="flex-1 min-h-0">{chat(true)}</div>
           </div>
         </div>

@@ -1,10 +1,11 @@
+import { t as tx } from '../i18n';
 import astrology from '@/lib/data/astrology.json';
 import type { AstrologyData, ZodiacSign, Element } from '@/lib/data/types';
 
 const data = astrology as unknown as AstrologyData;
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-export const ELEMENT_ZH: Record<Element, string> = { fire: '火象', earth: '土象', air: '风象', water: '水象' };
+export const ELEMENT_ZH = (): Record<Element, string> => ({ fire: tx('火象'), earth: tx('土象'), air: tx('风象'), water: tx('水象') });
 
 function parseEnd(s: string): [number, number] | null {
   const m = s.trim().match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})$/);
@@ -38,7 +39,7 @@ export function zodiacById(id: string): ZodiacSign | undefined {
 export function formatRangeZh(range: string): string {
   const [a, b] = range.split(/\s*[–—-]\s*/).map(parseEnd);
   if (!a || !b) return range;
-  return `${a[0]}月${a[1]}日 – ${b[0]}月${b[1]}日`;
+  return tx('{0}月{1}日 – {2}月{3}日', [a[0], a[1], b[0], b[1]]);
 }
 
 export const SIGNS = data.signs;

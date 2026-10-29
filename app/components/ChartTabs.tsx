@@ -1,4 +1,5 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
@@ -8,9 +9,9 @@ gsap.registerPlugin(Flip);
 let lastIdx = -1; // survives the remount between 本命盘 and transit layouts
 
 export type ChartViewId = 'natal' | 'day' | 'month' | 'year';
-const TABS: { id: ChartViewId; label: string }[] = [
-  { id: 'natal', label: '本命盘' }, { id: 'day', label: '流日' }, { id: 'month', label: '流月' }, { id: 'year', label: '流年' },
-];
+const TABS = (): { id: ChartViewId; label: string }[] => ([
+  { id: 'natal', label: tx('本命盘') }, { id: 'day', label: tx('流日') }, { id: 'month', label: tx('流月') }, { id: 'year', label: tx('流年') },
+]);
 
 /** Segmented sub-nav (§4c): tablist with arrow-key navigation; scrolls horizontally on mobile. */
 export default function ChartTabs({ value, onChange }: { value: ChartViewId; onChange: (v: ChartViewId) => void }) {
@@ -19,7 +20,7 @@ export default function ChartTabs({ value, onChange }: { value: ChartViewId; onC
   const flipRef = useRef<gsap.core.Timeline | null>(null);
   // orange underline: GSAP Flip from previous tab to active tab (0.35s power3.out); reduced motion = jump
   useLayoutEffect(() => {
-    const idx = TABS.findIndex((t) => t.id === value);
+    const idx = TABS().findIndex((t) => t.id === value);
     const bar = barRef.current; const btn = refs.current[idx];
     if (!bar || !btn) return;
     const place = (b: HTMLElement) => gsap.set(bar, { left: b.offsetLeft, width: b.offsetWidth, x: 0 });
@@ -34,18 +35,18 @@ export default function ChartTabs({ value, onChange }: { value: ChartViewId; onC
     flipRef.current = Flip.from(st, { duration: 0.35, ease: 'power3.out', scale: false });
   }, [value]);
   useEffect(() => () => { flipRef.current?.kill(); }, []);
-  useEffect(() => { refs.current[TABS.findIndex((t) => t.id === value)]?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }, [value]);
+  useEffect(() => { refs.current[TABS().findIndex((t) => t.id === value)]?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }, [value]);
   const onKey = (e: React.KeyboardEvent, i: number) => {
     const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (!d) return;
     e.preventDefault();
-    const n = (i + d + TABS.length) % TABS.length;
-    onChange(TABS[n].id); refs.current[n]?.focus();
+    const n = (i + d + TABS().length) % TABS().length;
+    onChange(TABS()[n].id); refs.current[n]?.focus();
   };
   return (
     <div className="relative max-w-full">
-      <div role="tablist" aria-label="星盘视图" className="relative inline-flex max-w-full overflow-x-auto snap-x gap-1 [scrollbar-width:none]">
-        {TABS.map((t, i) => {
+      <div role="tablist" aria-label={tx('星盘视图')} className="relative inline-flex max-w-full overflow-x-auto snap-x gap-1 [scrollbar-width:none]">
+        {TABS().map((t, i) => {
           const on = t.id === value;
           return (
             <button key={t.id} ref={(el) => { refs.current[i] = el; }} role="tab" type="button" aria-selected={on} tabIndex={on ? 0 : -1}

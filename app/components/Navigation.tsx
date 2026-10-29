@@ -1,28 +1,32 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import CarrotWordmark from './CarrotWordmark';
+import { usePathname, useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import Icon, { type IconName } from './Icon';
+import LanguageSwitcher from './LanguageSwitcher';
 
-const navItems: { href: string; label: string; en: string; icon: IconName }[] = [
-  { href: '/tarot', label: '塔罗占卜', en: 'Tarot', icon: 'tarot_cards' },
-  { href: '/birth-chart', label: '出生星盘', en: 'Natal chart', icon: 'chart_wheel' },
-  { href: '/profile', label: '我的资料', en: 'Profile', icon: 'user' },
-  { href: '/combined', label: '综合解读', en: 'Combined', icon: 'crystal_ball' },
-  { href: '/about', label: '关于', en: 'About', icon: 'info' },
-];
+const navItems = (): { href: string; label: string; en: string; icon: IconName }[] => ([
+  { href: '/tarot', label: tx('塔罗占卜'), en: 'Tarot', icon: 'tarot_cards' },
+  { href: '/birth-chart', label: tx('出生星盘'), en: 'Natal chart', icon: 'chart_wheel' },
+  { href: '/combined', label: tx('综合解读'), en: 'Combined', icon: 'crystal_ball' },
+  { href: '/about', label: tx('关于'), en: 'About', icon: 'info' },
+  { href: '/settings', label: tx('设置'), en: 'Settings', icon: 'settings' },
+]);
 
-const tarotTopics: { topic: string; label: string; desc: string; icon: IconName; tone: string }[] = [
-  { topic: 'love', label: '爱情', desc: '感情关系与心灵连接', icon: 'love', tone: 'text-primary' },
-  { topic: 'career', label: '事业', desc: '职业发展与工作机会', icon: 'career', tone: 'text-gold' },
-  { topic: 'personal_growth', label: '个人成长', desc: '自我探索与内在成长', icon: 'growth', tone: 'text-green' },
-];
+const tarotTopics = (): { topic: string; label: string; desc: string; icon: IconName; tone: string }[] => ([
+  { topic: 'love', label: tx('爱情'), desc: tx('感情关系与心灵连接'), icon: 'love', tone: 'text-primary' },
+  { topic: 'career', label: tx('事业'), desc: tx('职业发展与工作机会'), icon: 'career', tone: 'text-gold' },
+  { topic: 'personal_growth', label: tx('个人成长'), desc: tx('自我探索与内在成长'), icon: 'growth', tone: 'text-green' },
+]);
 
 /** Desktop "塔罗占卜" link with a hover/focus dropdown of topics (ArrowDown opens, Escape closes). */
 function TarotNavItem({ active }: { active: boolean }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const wrap = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const show = () => { if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(true); };
@@ -40,13 +44,20 @@ function TarotNavItem({ active }: { active: boolean }) {
       }}>
       <Link href="/tarot" aria-current={active ? 'page' : undefined} aria-haspopup="true" aria-expanded={open}
         className={`relative px-2 xl:px-4 inline-flex items-center gap-2 text-[14px] xl:text-[15px] transition-colors after:absolute after:left-2 after:right-2 xl:after:left-4 xl:after:right-4 after:bottom-0 after:h-0.5 after:bg-primary after:transition-opacity ${active ? 'text-primary font-medium after:opacity-100' : 'text-text-2 hover:text-text after:opacity-0'}`}>
-        <Icon name="tarot_cards" size={18} />塔罗占卜
+        <Icon name="tarot_cards" size={18} />{tx('塔罗占卜')}
       </Link>
-      <div role="menu" aria-label="塔罗主题"
+      <div role="menu" aria-label={tx('塔罗主题')}
         className={`absolute left-0 top-full w-[400px] bg-surface-1 border border-border rounded-[var(--r-card)] shadow-[var(--shadow-1)] p-3 transition-[opacity,transform] duration-150 motion-reduce:transition-none ${open ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-1 invisible pointer-events-none'}`}>
-        <p className="overline text-primary px-3 pt-1 pb-2">Tarot · 塔罗占卜</p>
-        {tarotTopics.map((t) => (
-          <Link key={t.topic} href={`/tarot?topic=${t.topic}`} role="menuitem" data-dd-item onClick={() => setOpen(false)}
+        <p className="overline text-primary px-3 pt-1 pb-2">{tx('Tarot · 塔罗占卜')}</p>
+        {tarotTopics().map((t) => (
+          <Link key={t.topic} href={`/tarot?topic=${t.topic}`} role="menuitem" data-dd-item
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let new-tab clicks through
+              e.preventDefault();
+              setOpen(false);
+              // fresh nonce so picking the current topic again still advances to step 2/2
+              router.push(`/tarot?topic=${t.topic}&go=${Date.now().toString(36)}`);
+            }}
             className="group flex items-center gap-4 rounded-[12px] px-3 py-3 hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:outline-none">
             <Icon name={t.icon} size={22} className={t.tone} />
             <span className="flex-1">
@@ -62,11 +73,7 @@ function TarotNavItem({ active }: { active: boolean }) {
 }
 
 export function Wordmark({ className = '' }: { className?: string }) {
-  return (
-    <span className={`wordmark text-text ${className}`}>
-      C<span className="text-primary">-</span>arot
-    </span>
-  );
+  return <CarrotWordmark className={`text-text ${className}`} />;
 }
 
 export default function Navigation() {
@@ -109,11 +116,11 @@ export default function Navigation() {
     <>
       <header className="fixed top-0 inset-x-0 z-50 h-16 md:h-20 bg-bg border-b border-border">
         <div className="mx-auto h-full max-w-[1312px] px-5 md:px-10 xl:px-16 flex items-center justify-between">
-          <Link href="/" className="text-[28px] leading-none" aria-label="C-arot 首页">
+          <Link href="/" className="text-[28px] leading-none" aria-label="C-arot">
             <Wordmark />
           </Link>
-          <nav aria-label="主导航" className="hidden md:flex items-stretch h-full gap-1 xl:gap-2">
-            {navItems.map((item) => {
+          <nav aria-label={tx('主导航')} className="hidden md:flex items-stretch h-full gap-1 xl:gap-2">
+            {navItems().map((item) => {
               const active = pathname?.startsWith(item.href);
               if (item.href === '/tarot') return <TarotNavItem key={item.href} active={!!active} />;
               return (
@@ -124,20 +131,23 @@ export default function Navigation() {
               );
             })}
           </nav>
-          <Link href="/tarot" data-rabbit-hole="/tarot" className="hidden md:inline-flex btn btn-primary min-h-[44px] xl:min-h-[48px] px-3 xl:px-5 text-[15px]" aria-label="开始占卜">
-            <Icon name="sparkle" size={20} /><span className="hidden xl:inline">开始占卜</span>
+          <div className="flex items-center gap-2 md:gap-3">
+          <LanguageSwitcher />
+          <Link href="/tarot" data-rabbit-hole="/tarot" className="hidden md:inline-flex btn btn-primary min-h-[44px] xl:min-h-[48px] px-3 xl:px-5 text-[15px]" aria-label={tx('开始占卜')}>
+            <Icon name="sparkle" size={20} /><span className="hidden xl:inline">{tx('开始占卜')}</span>
           </Link>
           <button
             ref={btnRef}
             type="button"
             onClick={() => setIsOpen((o) => !o)}
             className={`icon-btn w-11 h-11 md:hidden ${isOpen ? 'border-primary text-primary' : ''}`}
-            aria-label={isOpen ? '关闭菜单' : '打开菜单'}
+            aria-label={isOpen ? tx('关闭菜单') : tx('打开菜单')}
             aria-expanded={isOpen}
             aria-controls="site-menu"
           >
             <Icon name={isOpen ? 'close' : 'menu'} size={24} />
           </button>
+          </div>
         </div>
       </header>
 
@@ -146,14 +156,14 @@ export default function Navigation() {
         ref={overlayRef}
         role="dialog"
         aria-modal="true"
-        aria-label="网站目录"
+        aria-label={tx('网站目录')}
         className="md:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-bg checkerboard flex flex-col overflow-y-auto"
         style={{ visibility: 'hidden', opacity: 0 }}
       >
         <nav className="mx-auto w-full max-w-[1200px] px-5 md:px-16 pt-8 flex-1">
-          <p className="overline text-primary mb-4">Contents · 目录</p>
+          <p className="overline text-primary mb-4">{tx('Contents · 目录')}</p>
           <ul>
-            {navItems.map((item, i) => {
+            {navItems().map((item, i) => {
               const active = pathname?.startsWith(item.href);
               return (
                 <li key={item.href} className="nav-item border-b border-border">
@@ -178,8 +188,8 @@ export default function Navigation() {
         <div className="mx-auto w-full max-w-[1200px] px-5 md:px-16 py-8 flex items-center gap-4">
           <Icon name="pocket_watch" size={48} className="text-primary" />
           <div>
-            <p className="text-text font-bold text-[16px]">跟随白兔的脚步</p>
-            <p className="text-text-2 text-[15px]">时光兔洞 · v1.0</p>
+            <p className="text-text font-bold text-[16px]">{tx('跟随白兔的脚步')}</p>
+            <p className="text-text-2 text-[15px]">{tx('时光兔洞 · v1.0')}</p>
           </div>
         </div>
       </div>)}
