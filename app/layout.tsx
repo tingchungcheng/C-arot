@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Noto_Serif_SC, Noto_Sans_SC } from "next/font/google";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Navigation from "./components/Navigation";
 import RabbitHoleTransition from "./components/RabbitHoleTransition";
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <main className="flex-1">{children}</main>
         <Suspense fallback={null}><RabbitHoleTransition /></Suspense>
+        <Analytics />
         </AuthGateProvider>
         </LanguageProvider>
       </body>
