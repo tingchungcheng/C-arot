@@ -3,6 +3,7 @@ import { getInterpretation, getLatestBirthChart, getReading, getReadingCards } f
 import { getCardById } from '@/lib/tarot/deck';
 import { interpretCombinedReading } from '@/lib/ai/interpreter';
 import { resolveLocale } from '@/lib/ai/locale';
+import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
 import { cachedFor } from '../_locale-cache';
 
 export async function POST(request: NextRequest) {
@@ -47,18 +48,23 @@ export async function POST(request: NextRequest) {
     const tarotData = cachedFor(tarotInterpretation.full_interpretation, locale) ?? JSON.parse(tarotInterpretation.full_interpretation);
     const chartData = JSON.parse(birthChart.chart_data);
 
-    const combinedInterpretation = await interpretCombinedReading(
+    const charge = await chargeOrDeny(request, 'combined', `reading:${readingId}`);
+    if (charge.denied) return charge.denied;
+    let combinedInterpretation: string;
+    try {
+    combinedInterpretation = await interpretCombinedReading(
       tarotData,
       chartData,
       drawnCards,
       locale
     );
+    } catch (e) { charge.refund(); throw e; }
 
-    return NextResponse.json({
+    return withCreditCookie(NextResponse.json({
       combinedInterpretation,
       tarotInterpretation: tarotData,
       birthChart: chartData
-    });
+    }, { headers: creditHeaders(charge.result) }), charge.ident);
   } catch (error) {
     console.error('Error generating combined reading:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

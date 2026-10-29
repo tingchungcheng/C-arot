@@ -69,8 +69,45 @@ export const localHistoryStore: HistoryStore = {
   },
 };
 
-/** The active store. Swap this for a DB-backed implementation later. */
-export const historyStore: HistoryStore = localHistoryStore;
+export class HistoryAccessError extends Error {
+  constructor(public readonly status: number) {
+    super(status === 403 ? 'Paid plan required' : 'Authentication required');
+    this.name = 'HistoryAccessError';
+  }
+}
+
+/** Cloud store used when NEXT_PUBLIC_HISTORY_STORE=remote. The API owns identity and tier checks. */
+export const remoteHistoryStore: HistoryStore = {
+  async list() {
+    const res = await fetch('/api/history', { cache: 'no-store' });
+    if (!res.ok) throw new HistoryAccessError(res.status);
+    return await res.json() as CombinedHistoryEntry[];
+  },
+  async get(id) {
+    const res = await fetch(`/api/history/${encodeURIComponent(id)}`, { cache: 'no-store' });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new HistoryAccessError(res.status);
+    return await res.json() as CombinedHistoryEntry;
+  },
+  async add(entry) {
+    const res = await fetch('/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+    if (!res.ok) throw new HistoryAccessError(res.status);
+    return await res.json() as CombinedHistoryEntry;
+  },
+  async remove(id) {
+    const res = await fetch(`/api/history/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new HistoryAccessError(res.status);
+  },
+};
+
+/** Local mode remains useful for offline development; production cloud mode is opt-in at build time. */
+export const historyStore: HistoryStore = process.env.NEXT_PUBLIC_HISTORY_STORE === 'remote'
+  ? remoteHistoryStore
+  : localHistoryStore;
 
 const LAST_READING_KEY = 'lastReadingId';
 /** Remember the most recent completed tarot reading (used by /combined). */

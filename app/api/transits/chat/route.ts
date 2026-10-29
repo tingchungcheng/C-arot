@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { askTransitChat } from '@/lib/ai/transit-chat';
 import { resolveLocale } from '@/lib/ai/locale';
 import { BirthBody, computeBoth } from '../_shared';
+import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
+import { requireUser } from '@/lib/auth/session';
 
 // 问问白兔: streams a plain-text answer. Wraps lib's askTransitChat; the API key is read only here (server).
 const Body = BirthBody.extend({
@@ -11,6 +13,8 @@ const Body = BirthBody.extend({
 });
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
   const rawBody = await request.json().catch(() => null);
   const parsed = Body.safeParse(rawBody);
   const locale = resolveLocale(rawBody?.locale, request.headers.get('x-locale'));
@@ -19,6 +23,9 @@ export async function POST(request: NextRequest) {
   if (!apiKey?.trim()) return new Response('AI unavailable', { status: 503 });
 
   const b = parsed.data;
+  // A chat session is charged once, on its first question (empty history).
+  const charge = b.history.length === 0 ? await chargeOrDeny(request, 'chat', `chat:${b.period}:${b.at}:${Date.now()}`) : null;
+  if (charge?.denied) return charge.denied;
   const { natal, transit } = computeBoth(b);
   const gen = askTransitChat(natal, transit, b.question, b.history.slice(-6), { apiKey, model: process.env.OPENAI_MODEL || 'gpt-4o-mini', locale });
 
@@ -28,6 +35,7 @@ export async function POST(request: NextRequest) {
   catch (err) {
     const status = (err as { status?: number }).status;
     console.error('transit chat: upstream status', status ?? 'n/a');
+    charge?.refund?.();
     return new Response('AI failed', { status: status === 401 || status === 429 ? status : 502 });
   }
 
@@ -48,5 +56,5 @@ export async function POST(request: NextRequest) {
     },
     cancel() { gen.return(undefined); },
   });
-  return new Response(stream, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' } });
+  return new Response(stream, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no', ...(charge?.result ? creditHeaders(charge.result) : {}) } });
 }

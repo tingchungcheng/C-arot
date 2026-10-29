@@ -16,6 +16,9 @@
 # next.js
 /.next/
 /out/
+/.aws-sam/
+samconfig.toml
+*client_secret*.json
 
 # production
 /build

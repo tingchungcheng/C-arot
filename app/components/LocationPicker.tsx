@@ -167,7 +167,7 @@ export default function LocationPicker({
 
   return (
     <div className="space-y-4">
-      <div ref={wrapRef} className="relative z-[1100]">
+      <div ref={wrapRef} className="relative z-20">
         <label
           htmlFor={`${listId}-input`}
           className="block text-text mb-2 text-sm"

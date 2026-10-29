@@ -8,6 +8,7 @@ import { gsap } from 'gsap';
 import Icon, { type IconName } from './components/Icon';
 import { HERO_SVG } from './components/hero-svg';
 import HeroShuffle from './components/HeroShuffle';
+import { useAuthGate } from './components/AuthGateProvider';
 
 const index = (): { href: string; title: string; desc: string; icon: IconName }[] => ([
   { href: '/tarot', title: tx('塔罗占卜'), desc: tx('三张牌,看清当下'), icon: 'tarot_cards' },
@@ -17,6 +18,7 @@ const index = (): { href: string; title: string; desc: string; icon: IconName }[
 
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const { requireAuth } = useAuthGate();
 
   useLayoutEffect(() => {
     // the resting state is always visible: wipe any inline styles left from an earlier visit
@@ -76,7 +78,7 @@ export default function LandingPage() {
             <Link href="/settings" className="btn btn-secondary w-full sm:w-auto md:hidden">
               <Icon name="user" size={20} /> {tx('先填写个人资料')}
             </Link>
-            <Link href="/birth-chart" className="btn btn-secondary hidden md:inline-flex">
+            <Link href="/birth-chart" onClick={(e) => { if (!requireAuth('/birth-chart')) e.preventDefault(); }} className="btn btn-secondary hidden md:inline-flex">
               <Icon name="chart_wheel" size={20} /> {tx('查看我的星盘')}
             </Link>
           </div>
@@ -86,7 +88,7 @@ export default function LandingPage() {
             <ul className="border-t border-border md:border-0 md:grid md:grid-cols-3 md:gap-4">
               {index().map((it, i) => (
                 <li key={it.href} className="reveal border-b border-border md:border-0">
-                  <Link href={it.href} className="group flex items-center gap-4 py-4 min-h-[76px]">
+                  <Link href={it.href} onClick={(e) => { if (!requireAuth(it.href)) e.preventDefault(); }} className="group flex items-center gap-4 py-4 min-h-[76px]">
                     <span className="num italic text-gold text-[22px] w-8 md:hidden">{String(i + 1).padStart(2, '0')}</span>
                     <span className="w-12 h-12 rounded-[12px] bg-primary-soft text-primary flex items-center justify-center">
                       <Icon name={it.icon} size={24} />

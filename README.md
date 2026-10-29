@@ -30,7 +30,8 @@ C-arot 是一个以爱丽丝梦游仙境为灵感的 AI 塔罗与星盘解读网
 - **框架**: Next.js 16 (App Router) + TypeScript
 - **样式**: Tailwind CSS + 自定义 Wonderland 主题
 - **动画**: GSAP (页面转场、卡牌翻转、兔子洞动画)
-- **数据持久化**: better-sqlite3 (本地 SQLite 数据库)
+- **数据持久化**: 本地开发使用 better-sqlite3；Phase 2 云端历史记录使用 DynamoDB
+- **认证**: Phase 2 使用 Amazon Cognito Managed Login（邮箱密码 + Google SSO）
 - **AI 解读**: OpenAI API (支持模拟模式)
 - **天文计算**: astronomy-engine (真实星历表)
 - **字体**: Noto Sans SC / Noto Serif SC (中文) + Cinzel (装饰)
@@ -234,9 +235,12 @@ npm start
 - [x] **Nominatim 地理编码**(debounced 搜索,结果列表)
 - [x] **tz-lookup 时区自动推断**(根据经纬度获取 IANA 时区)
 - [x] **精确坐标用于星盘计算**(houses/rising 计算)
+- [x] Phase 2 AWS 基础设施模板（Cognito、Google SSO、DynamoDB、API Gateway、Lambda）
+- [x] Phase 2 账户会话、免费 / 付费 tier 读取、付费历史记录 API
+- [x] Phase 2 星盘 AI 摘要与「问问白兔」AI 对话的付费权限保护
 
 ### 🚧 TODO (待实现)
-- [ ] Supabase 集成(替换 SQLite)
+- [ ] 将所有读取、星盘和 AI 结果从本地 SQLite 完整迁移到 DynamoDB（Phase 2 下一子阶段）
 - [ ] 支付集成(Billplz 或其他)
 - [ ] 阅读历史与账户系统
 - [ ] 社交分享功能
@@ -247,8 +251,21 @@ npm start
 ## 🐛 已知问题与限制 (Known Issues)
 
 ### 当前版本限制
-1. **无账户系统**: 所有数据存储在本地,换设备后不保留
-2. **无支付功能**: 当前版本所有解读免费,支付集成在 Supabase 版本中实现
+1. **云端部署前需配置 Cognito**: 未配置时本地功能继续使用本地模式，受保护功能不会伪装成已授权
+2. **SQLite 仍是部分本地数据源**: 云端历史 API 已接入 DynamoDB；现有 reading/chart 计算路线仍需下一步迁移，避免生产环境依赖 Lambda 本地文件系统
+3. **无支付功能**: `custom:tier=paid` 目前需要由管理员或后续 Phase 3 支付 webhook 设置，浏览器不能自行升级
+
+## ☁️ Phase 2 AWS 部署
+
+AWS 资源模板与部署前说明在 [`infra/template.yaml`](infra/template.yaml) 和 [`infra/README.md`](infra/README.md)。推荐顺序：
+
+1. 使用 Google OAuth web client，并把 Cognito 的 `/oauth2/idpresponse` 回调地址加入 Google Cloud Console。
+2. `sam build --template-file infra/template.yaml`。
+3. `sam deploy --guided --template-file .aws-sam/build/template.yaml`，填写 region、stack name、domain prefix、Google client ID/secret、frontend callback/logout URLs。
+4. 把 CloudFormation outputs 写入 `.env.local`，把 `DATA_STORE=dynamodb`、`NEXT_PUBLIC_HISTORY_STORE=remote` 设在生产环境。
+5. 用 Cognito 管理员命令把测试账户的 `custom:tier` 设为 `paid`；Phase 3 再用支付 webhook 自动授予 entitlement。
+
+详细的部署输入清单见 [`docs/phase-2-aws.md`](docs/phase-2-aws.md)。
 
 ### 模拟模式说明
 在未配置 `OPENAI_API_KEY` 时,应用使用模拟数据:

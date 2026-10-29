@@ -8,6 +8,8 @@ import type { TransitResult, TransitPeriod } from '@/lib/astrology/transits';
 import { aspectTone, symbolFor, toneColor } from './TransitWheel';
 import Icon from './Icon';
 import PeriodPicker from './PeriodPicker';
+import { CarrotCost, RefusalCaption, RefusalModal, useAfford } from './Carrots';
+import { creditsStore, readRefusal, type Refusal } from './credits-store';
 
 interface BirthPayload { date: string; time?: string; latitude: number; longitude: number; timezone: string }
 interface Turn { role: 'user' | 'assistant'; content: string; error?: string }
@@ -55,6 +57,8 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
   const [atBy, setAtBy] = useState<Record<TransitPeriod, string>>({ day: today, month: today, year: today });
   const at = atBy[period];
   const key = 'chat'; // one thread across 流日/流月/流年 (history kept when switching tabs)
+  const { a: chatAfford, state: credits } = useAfford('chat');
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const isCurrent = periodKey(at, period) === periodKey(today, period);
   const m = MODE()[period];
 
@@ -80,6 +84,7 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
   const [threads, setThreads] = useState<Record<string, Turn[]>>({});
   const [used, setUsed] = useState<Record<string, string[]>>({});
   const turns = threads[key] ?? [];
+  const firstAsk = !turns.some((t) => !t.error && t.content && t.role === 'assistant');
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState<'idle' | 'typing' | 'streaming'>('idle');
   const [limited, setLimited] = useState(false);
@@ -93,6 +98,7 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
 
   const ask = async (q: string, fromChip = false) => {
     const question = q.trim().slice(0, 200);
+    if (firstAsk && chatAfford && !chatAfford.ok) return;
     if (!question || busy !== 'idle' || loading || limited) return;
     const history = turns.filter((t) => !t.error && t.content).slice(-6).map(({ role, content }) => ({ role, content }));
     if (fromChip) setUsed((u) => ({ ...u, [key]: [...(u[key] ?? []), q] }));
@@ -102,7 +108,9 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
     const ac = new AbortController(); abortRef.current = ac;
     const patchLast = (p: Partial<Turn>) => setThreads((all) => { const t = [...(all[key] ?? [])]; t[t.length - 1] = { ...t[t.length - 1], ...p }; return { ...all, [key]: t }; });
     try {
-      const res = await fetch('/api/transits/chat', { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ ...birth, period, at, question, history, locale: getLocale() }), signal: ac.signal });
+      const res = await creditsStore.fetch('/api/transits/chat', { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ ...birth, period, at, question, history, locale: getLocale() }), signal: ac.signal });
+      const refused = await readRefusal(res);
+      if (refused) { setThreads((all) => ({ ...all, [key]: (all[key] ?? []).slice(0, -2) })); if (!fromChip) setInput(question); setRefusal(refused); return; }
       if (res.status === 429) { setLimited(true); patchLast({ error: tx('今天问得够多啦,明天再来') }); return; }
       if (!res.ok || !res.body) throw new Error(String(res.status));
       const reader = res.body.getReader(); const dec = new TextDecoder(); let acc = '';
@@ -234,9 +242,13 @@ export default function TransitView({ birth, birthYear, period, tabs, onTransit,
         {busy !== 'idle' ? (
           <button type="button" onClick={() => abortRef.current?.abort()} aria-label={tx('停止')} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center"><span className="w-3.5 h-3.5 bg-on-primary rounded-[2px]" /></button>
         ) : (
-          <button type="submit" aria-label={tx('发送')} disabled={!input.trim() || loading || limited} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center disabled:opacity-45"><Icon name="arrow_right" size={20} /></button>
+          <button type="submit" aria-label={tx('发送')} disabled={!input.trim() || loading || limited || (firstAsk && !!chatAfford && !chatAfford.ok)} className="w-[46px] h-[46px] rounded-[12px] bg-primary text-on-primary flex items-center justify-center disabled:opacity-45"><Icon name="arrow_right" size={20} /></button>
         )}
       </form>
+      {firstAsk && chatAfford && (
+        <p className="px-4 pb-2 text-[13px] text-text-3 flex items-center gap-1" data-testid="chat-cost">{chatAfford.ok ? <>{tx('首个问题')} <CarrotCost cost={chatAfford.cost} /></> : <RefusalCaption a={chatAfford} state={credits} />}</p>
+      )}
+      <RefusalModal refusal={refusal} onClose={() => setRefusal(null)} />
       {inSheet && <p className="px-4 pb-4 text-[15px] text-text-3 flex items-center gap-2"><Icon name="info" size={16} />{tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}</p>}
     </section>
   );

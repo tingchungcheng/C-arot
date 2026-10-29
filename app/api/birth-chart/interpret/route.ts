@@ -4,6 +4,8 @@ import { calculateBirthChart } from '@/lib/astrology/calculator';
 import { generateChartSummary } from '@/lib/ai/chart-summary';
 import { resolveLocale } from '@/lib/ai/locale';
 import { updateBirthChartInterpretation } from '@/lib/store/db';
+import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
+import { requireUser } from '@/lib/auth/session';
 
 // Chart summary (strict JSON) via lib/ai/chart-summary. The API key is read here only (server-side).
 // Results are cached per birth data (date, time, coords); `regenerate: true` forces a fresh call.
@@ -46,18 +48,24 @@ const g = globalThis as unknown as { __chartSummaryCache?: Map<string, ChartSumm
 const cache = (g.__chartSummaryCache ??= new Map());
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (auth.response) return auth.response;
   const rawBody = await request.json().catch(() => null);
   const parsed = Body.safeParse(rawBody);
   const locale = resolveLocale(rawBody?.locale, request.headers.get('x-locale'));
   if (!parsed.success) return Response.json({ error: 'Invalid input' }, { status: 400 });
   const b = parsed.data;
   const key = [b.date, b.time || '-', b.latitude.toFixed(4), b.longitude.toFixed(4), locale].join('|');
-  const headers = { 'Cache-Control': 'no-store' };
+  const headers: Record<string, string> = { 'Cache-Control': 'no-store' };
+
+  const charge = await chargeOrDeny(request, 'chart_summary', `chart:${key.split('|').slice(0, 4).join('|')}`);
+  if (charge.denied) return charge.denied;
+  Object.assign(headers, creditHeaders(charge.result));
 
   if (!b.regenerate && cache.has(key)) return Response.json({ summary: cache.get(key), cached: true }, { headers });
 
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey?.trim()) return Response.json({ error: 'AI unavailable' }, { status: 503 });
+  if (!apiKey?.trim()) { charge.refund(); return Response.json({ error: 'AI unavailable' }, { status: 503 }); }
 
   const chart = calculateBirthChart({ date: b.date, time: b.time, latitude: b.latitude, longitude: b.longitude, timezone: b.timezone });
   let view: ChartSummaryView | null = null;
@@ -67,9 +75,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const status = (err as { status?: number }).status;
     console.error('chart summary: upstream error status', status ?? 'validation');
-    if (status === 401 || status === 429) return Response.json({ error: 'AI failed' }, { status });
+    if (status === 401 || status === 429) { charge.refund(); return Response.json({ error: 'AI failed' }, { status }); }
   }
-  if (!view) return Response.json({ error: 'AI failed' }, { status: 502 });
+  if (!view) { charge.refund(); return Response.json({ error: 'AI failed' }, { status: 502 }); }
   if (!b.time) view.rising = '';
 
   cache.set(key, view);

@@ -7,9 +7,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { isProfileComplete } from '../components/profile-store';
 import LoadingWatch from '../components/LoadingWatch';
 import Icon from '../components/Icon';
+import { CarrotCost, RefusalCaption, RefusalModal, useAfford } from '../components/Carrots';
+import { creditsStore, readRefusal, type Refusal } from '../components/credits-store';
 import Modal from '../components/Modal';
 import Markdown, { stripDevNotes } from '../components/Markdown';
-import { historyStore, getLastReadingId, formatZhDateTime, snippet, type CombinedHistoryEntry, type HistoryCard } from '../components/history-store';
+import { historyStore, HistoryAccessError, getLastReadingId, formatZhDateTime, snippet, type CombinedHistoryEntry, type HistoryCard } from '../components/history-store';
 
 const TOPIC_ZH = (): Record<string, string> => ({ love: tx('爱情'), career: tx('事业'), personal_growth: tx('个人成长'), general: tx('综合') });
 
@@ -32,20 +34,36 @@ function CombinedPageInner() {
   const [openEntry, setOpenEntry] = useState<CombinedHistoryEntry | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CombinedHistoryEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historyLocked, setHistoryLocked] = useState(false);
+  const { a: combAfford, state: credits } = useAfford('combined');
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
 
   const refresh = useCallback(async () => {
-    const list = await historyStore.list();
-    setHistory(list);
-    setLoaded(true);
+    try {
+      const list = await historyStore.list();
+      setHistory(list);
+      setHistoryLocked(false);
+      setLoaded(true);
+    } catch (e) {
+      if (e instanceof HistoryAccessError && (e.status === 401 || e.status === 403)) {
+        setHistory([]);
+        setHistoryLocked(true);
+        setLoaded(true);
+        return;
+      }
+      throw e;
+    }
   }, []);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([historyStore.list(), isProfileComplete()]).then(([list, profile]) => {
+    Promise.allSettled([historyStore.list(), isProfileComplete()]).then(([historyResult, profileResult]) => {
       if (!alive) return;
-      setHistory(list);
+      if (historyResult.status === 'fulfilled') setHistory(historyResult.value);
+      else if (historyResult.reason instanceof HistoryAccessError && (historyResult.reason.status === 401 || historyResult.reason.status === 403)) setHistoryLocked(true);
+      if (profileResult.status !== 'fulfilled') return;
       setLoaded(true);
-      setCtx({ lastId: getLastReadingId(), profile });
+      setCtx({ lastId: getLastReadingId(), profile: profileResult.value });
     });
     return () => { alive = false; };
   }, []);
@@ -56,9 +74,11 @@ function CombinedPageInner() {
     setIsLoading(true);
     try {
       const [res, metaRes] = await Promise.all([
-        fetch('/api/combined', { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ readingId: id, locale: getLocale() }) }),
+        creditsStore.fetch('/api/combined', { method: 'POST', headers: localeHeaders(), body: JSON.stringify({ readingId: id, locale: getLocale() }) }),
         fetch(`/api/readings/${id}`, { headers: localeHeaders(false) }),
       ]);
+      const refused = await readRefusal(res);
+      if (refused) { setRefusal(refused); return; }
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
       const meta = metaRes.ok ? await metaRes.json() : null;
@@ -97,6 +117,7 @@ function CombinedPageInner() {
 
   const modals = (
     <>
+      <RefusalModal refusal={refusal} onClose={() => setRefusal(null)} />
       <Modal
         open={!!pendingDelete}
         onClose={() => setPendingDelete(null)}
@@ -166,9 +187,10 @@ function CombinedPageInner() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <button type="button" onClick={() => handleGenerate(readingId)} data-testid="generate" className="btn btn-primary px-6">
-                {tx('生成综合解读')} <Icon name="sparkle" size={20} />
+              <button type="button" onClick={() => handleGenerate(readingId)} data-testid="generate" disabled={!!combAfford && !combAfford.ok} className="btn btn-primary px-6 disabled:opacity-50">
+                {tx('生成综合解读')} <CarrotCost cost={combAfford?.cost} /> <Icon name="sparkle" size={20} />
               </button>
+              <RefusalCaption a={combAfford} state={credits} className="mt-0" />
               <p className="text-text-3 text-xs">{tx('将使用你最近一次的塔罗解读')}</p>
             </div>
           )}
@@ -179,7 +201,13 @@ function CombinedPageInner() {
             <h2 id="history-h" className="text-xl font-bold text-text">{tx('历史记录')}</h2>
             {history.length > 0 && <span className="text-text-3 text-sm">{tx('{0} 条', [history.length])}</span>}
           </div>
-          {loaded && history.length === 0 ? (
+          {historyLocked ? (
+            <div data-testid="history-locked" className="rounded-2xl border border-border bg-surface-1 p-8 text-center text-text-2">
+              <span className="inline-block rounded-full border border-gold/50 bg-gold/15 px-3 py-0.5 text-[13px] font-bold text-gold">{tx('即将推出')}</span>
+              <p className="mt-3 font-semibold text-text">{tx('跨设备历史记录')}</p>
+              <p className="mt-2 text-sm">{tx('登录后在不同设备查看和删除自己的记录。')}</p>
+            </div>
+          ) : loaded && history.length === 0 ? (
             <div data-testid="history-empty" className="rounded-2xl border border-dashed border-border p-8 text-center text-text-3">
               <Icon name="crystal_ball" size={32} className="mx-auto mb-3 opacity-60" />
               {tx('还没有综合解读记录。生成后会自动保存在这里。')}

@@ -9,12 +9,12 @@ export const artSrc = (id?: string) => {
 };
 
 /** Face-up illustrated card: 2:3.5, 12px radius, 1px ob-border. Name is printed on the art, so no overlay. */
-export default function TarotArt({ src, alt, reversed = false, className = '' }: { src: string; alt: string; reversed?: boolean; className?: string }) {
+export default function TarotArt({ src, alt, reversed = false, className = '', loading = 'lazy' }: { src: string; alt: string; reversed?: boolean; className?: string; loading?: 'lazy' | 'eager' }) {
   // Minor art ships as a transparent, rounded-corner card contained in a 400×700 canvas: no box border/bg, so corners stay clean.
   const minor = MINOR.has(src.replace(/^.*\/|\.webp$/g, ''));
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} draggable={false} decoding="async"
+    <img src={src} alt={alt} draggable={false} decoding="async" loading={loading}
       className={`block w-full h-full aspect-[2/3.5] ${minor ? 'object-contain' : 'rounded-[12px] border border-ob-border object-cover bg-bg'} ${reversed ? 'rotate-180' : ''} ${className}`} />
   );
 }

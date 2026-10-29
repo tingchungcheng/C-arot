@@ -11,6 +11,9 @@ import LoadingWatch from "../components/LoadingWatch";
 import Modal from "../components/Modal";
 import Icon, { type IconName } from "../components/Icon";
 import Link from "next/link";
+import { CarrotCost, RefusalCaption, RefusalModal, useAfford } from "../components/Carrots";
+import { creditsStore, readRefusal, type Refusal } from "../components/credits-store";
+import { useAuthGate } from "../components/AuthGateProvider";
 import {
   readProfile,
   profileToBirthData,
@@ -84,6 +87,7 @@ const reduceMotion = () =>
 
 function TarotPageInner() {
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
   const [step, setStep] = useState<"topic" | "question" | "draw">("topic");
   const [topic, setTopic] = useState<Topic>("love");
   const [question, setQuestion] = useState("");
@@ -121,6 +125,9 @@ function TarotPageInner() {
   } | null>(null);
   const suppressClick = useRef(false);
   const flipping = useRef(false);
+  const { a: tarotAfford, state: credits } = useAfford("tarot");
+  const blocked = !!tarotAfford && !tarotAfford.ok;
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const landing = useRef<{ slot: number; from: DOMRect; drop: boolean } | null>(
     null,
   );
@@ -132,6 +139,7 @@ function TarotPageInner() {
   // makes re-picking the same topic count as a new pick. Adjust-state-during-render, no effect.
   const params = useSearchParams();
   const linkTopic = params.get("topic");
+  const demo = params.get("demo") === "1";
   const linkKey = `${linkTopic ?? ""}|${params.get("go") ?? ""}`;
   const [seenLink, setSeenLink] = useState<string | null>(null);
   if (linkKey !== seenLink) {
@@ -336,7 +344,7 @@ function TarotPageInner() {
   // 410 (expired/used draw): reshuffle once and retry the same positions; still 410 → ask to re-pick.
   const submitPicks = async (positions: number[]) => {
     const post = (id: string) =>
-      fetch("/api/readings", {
+      creditsStore.fetch("/api/readings", {
         method: "POST",
         headers: localeHeaders(),
         body: JSON.stringify({
@@ -351,6 +359,8 @@ function TarotPageInner() {
     let r = await post(drawId);
     if (r.status === 410) r = await post(await newDraw());
     if (r.status === 410) return "expired" as const;
+    const refused = await readRefusal(r);
+    if (refused) return refused;
     if (!r.ok) throw new Error(`readings ${r.status}`);
     return (await r.json()) as { readingId: string; cards: DrawnCard[] };
   };
@@ -398,6 +408,7 @@ function TarotPageInner() {
   // 3D Y-flip, 0.5s per card, face swaps in at 90°; reduced motion: crossfade
   const flip = async () => {
     if (flipping.current || flipped || revealing) return;
+    if (!readingId && blocked) return;
     let drawn = cards;
     if (!readingId) {
       setRevealing(true);
@@ -406,6 +417,10 @@ function TarotPageInner() {
         const res = await submitPicks(slots as number[]);
         if (res === "expired") {
           setExpired(true);
+          return;
+        }
+        if ("error" in res) {
+          setRefusal(res);
           return;
         }
         drawn = res.cards;
@@ -469,6 +484,7 @@ function TarotPageInner() {
 
   const handleDrawCards = async () => {
     if (!question.trim()) return;
+    if (!demo && !requireAuth("/tarot")) return;
     setIsLoading(true);
     setError("");
     try {
@@ -530,8 +546,8 @@ function TarotPageInner() {
                     type="button"
                     role="radio"
                     aria-checked={sel}
-                    onClick={() => setTopic(x.value)}
-                    onDoubleClick={() => setStep("question")}
+                    onClick={() => { if (demo || requireAuth(`/tarot?topic=${x.value}`)) setTopic(x.value); }}
+                    onDoubleClick={() => { if (demo || requireAuth(`/tarot?topic=${x.value}`)) setStep("question"); }}
                     className={`step-in relative text-center rounded-[var(--r-card)] border p-6 md:p-8 transition-[border-color,box-shadow,background-color] ${sel ? "border-primary bg-primary-soft shadow-[var(--glow-primary)]" : "border-border bg-surface-1 hover:border-border-strong"}`}
                   >
                     {sel && (
@@ -571,7 +587,7 @@ function TarotPageInner() {
               </p>
               <button
                 type="button"
-                onClick={() => setStep("question")}
+                onClick={() => { if (demo || requireAuth("/tarot")) setStep("question"); }}
                 className="btn btn-primary w-full md:w-auto"
               >
                 {tx("下一步:写下你的问题")}{" "}
@@ -677,18 +693,19 @@ function TarotPageInner() {
                   <button
                     type="button"
                     onClick={handleDrawCards}
-                    disabled={!question.trim() || isLoading}
-                    className="btn btn-primary"
+                    disabled={!question.trim() || isLoading || blocked}
+                    className="btn btn-primary disabled:opacity-50"
                   >
                     {isLoading ? (
                       tx("洗牌中…")
                     ) : (
                       <>
-                        {tx("开始抽牌")} <Icon name="tarot_cards" size={20} />
+                        {tx("开始抽牌")} <CarrotCost cost={blocked && tarotAfford?.reason === "daily_limit" ? 0 : tarotAfford?.cost} /> <Icon name="tarot_cards" size={20} />
                       </>
                     )}
                   </button>
                 </div>
+                <RefusalCaption a={tarotAfford} state={credits} className="sm:text-right" />
               </div>
             </div>
           </section>
@@ -873,6 +890,7 @@ function TarotPageInner() {
               </div>
             )}
 
+            <RefusalModal refusal={refusal} onClose={() => setRefusal(null)} />
             <Modal
               open={expired}
               onClose={() => {
@@ -926,14 +944,15 @@ function TarotPageInner() {
                     <button
                       type="button"
                       onClick={flip}
-                      disabled={!allPicked || revealing}
-                      className="btn btn-primary"
+                      disabled={!allPicked || revealing || (!readingId && blocked)}
+                      className="btn btn-primary disabled:opacity-50"
                     >
                       {revealing
                         ? tx("正在揭晓…")
                         : allPicked
                           ? tx("翻开牌面")
                           : tx("再选 {0} 张", [3 - picked.length])}{" "}
+                      {!readingId && <CarrotCost cost={blocked && tarotAfford?.reason === "daily_limit" ? 0 : tarotAfford?.cost} />}
                       <Icon name="sparkle" size={20} />
                     </button>
                   ) : (
@@ -955,10 +974,16 @@ function TarotPageInner() {
   );
 }
 
+function TarotPageRoute() {
+  const params = useSearchParams();
+  const restartKey = params.get("restart");
+  return <TarotPageInner key={restartKey ?? "initial"} />;
+}
+
 export default function TarotPage() {
   return (
     <Suspense fallback={null}>
-      <TarotPageInner />
+      <TarotPageRoute />
     </Suspense>
   );
 }

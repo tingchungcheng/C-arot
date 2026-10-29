@@ -1,6 +1,7 @@
 'use client';
 import { t as tx, cardName, getLocale, localeHeaders } from '../../../i18n';
 import { setLastReadingId } from '../../../components/history-store';
+import { CarrotCost, useAfford } from '@/app/components/Carrots';
 
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
@@ -39,6 +40,7 @@ function ReadingResultContent() {
   const router = useRouter();
   const readingId = params?.readingId as string;
   const [meta, setMeta] = useState<Meta | null>(null);
+  const combCost = useAfford('combined').a?.cost;
   const [metaError, setMetaError] = useState(false);
   const [text, setText] = useState('');
   const [phase, setPhase] = useState<Phase>('waiting');
@@ -81,6 +83,9 @@ function ReadingResultContent() {
 
   const stop = () => abortRef.current?.abort();
   const busy = phase === 'waiting' || phase === 'streaming';
+  const startAnotherReading = () => {
+    if (!busy) router.push(`/tarot?restart=${Date.now()}`);
+  };
 
   const { secs } = splitSections(stripDevNotes(text));
   const doneCount = phase === 'streaming' ? Math.max(0, secs.length - 1) : secs.length;
@@ -146,8 +151,8 @@ function ReadingResultContent() {
           <div className="hidden md:flex mt-10 pt-6 border-t border-border gap-3 flex-wrap">
             <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? tx('已保存') : tx('保存')}</button>
             <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? tx('已复制链接') : tx('分享')}</button>
-            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
-            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined" className={actionCls('btn-secondary')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}</button>
+            <button type="button" onClick={startAnotherReading} aria-disabled={busy || undefined} className={actionCls('btn-primary')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
+            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined" className={actionCls('btn-secondary')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}<CarrotCost cost={combCost} /></button>
           </div>
         </aside>
 
@@ -192,12 +197,12 @@ function ReadingResultContent() {
           </p>
 
           <div className="md:hidden mt-6 grid gap-3">
-            <button type="button" onClick={() => { if (!busy) router.push('/tarot'); }} aria-disabled={busy || undefined} className={actionCls('btn-primary w-full')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
+            <button type="button" onClick={startAnotherReading} aria-disabled={busy || undefined} className={actionCls('btn-primary w-full')}><Icon name="tarot_cards" size={20} />{tx('再抽一次')}</button>
             <div className="grid grid-cols-2 gap-3">
               <button type="button" onClick={save} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={saved ? 'check' : 'star'} size={20} />{saved ? tx('已保存') : tx('保存')}</button>
               <button type="button" onClick={share} aria-disabled={busy || undefined} className={actionCls('btn-secondary')}><Icon name={shared ? 'check' : 'link'} size={20} />{shared ? tx('已复制') : tx('分享')}</button>
             </div>
-            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined-m" className={actionCls('btn-secondary w-full')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}</button>
+            <button type="button" onClick={() => { if (!busy) router.push(`/combined?readingId=${encodeURIComponent(readingId)}`); }} aria-disabled={busy || undefined} data-testid="go-combined-m" className={actionCls('btn-secondary w-full')}><Icon name="crystal_ball" size={20} />{tx('生成综合解读')}<CarrotCost cost={combCost} /></button>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 
-// Profile/birth data lives only in the browser: localStorage 'birthData' (written by onboarding and 设置).
+// Profile/birth data is cached in localStorage and, for signed-in users, synced to DynamoDB.
 export const PROFILE_KEY = 'birthData';
 export type StoredProfile = {
   nickname: string; date: string; time: string; timeUnknown: boolean; place: string;
@@ -26,8 +26,12 @@ export function readProfile(): StoredProfile | null {
 /** Read the saved profile once after hydration and hand it to the form (no-op for a fresh user). */
 export function useProfilePrefill(apply: (p: StoredProfile) => void) {
   useEffect(() => {
-    const p = readProfile();
-    if (p) apply(p);
+    let active = true;
+    profileStore.get().then((p) => { if (active && p) apply(p); }).catch(() => {
+      const p = readProfile();
+      if (active && p) apply(p);
+    });
+    return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
@@ -58,12 +62,46 @@ export interface ProfileStore {
 
 export const localProfileStore: ProfileStore = {
   async get() { return readProfile(); },
-  async save(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); },
+  async save(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...readProfile(), ...p })); },
   async clear() { localStorage.removeItem(PROFILE_KEY); },
 };
 
-/** The store the app uses; swap this one line for a remote implementation. */
-export const profileStore: ProfileStore = localProfileStore;
+const remoteEnabled = process.env.NEXT_PUBLIC_PROFILE_STORE === 'remote' || process.env.NEXT_PUBLIC_HISTORY_STORE === 'remote';
+
+export const remoteProfileStore: ProfileStore = {
+  async get() {
+    const local = readProfile();
+    try {
+      const response = await fetch('/api/profile', { cache: 'no-store' });
+      if (response.status === 401) return local;
+      if (!response.ok) throw new Error('Profile unavailable');
+      const data = await response.json() as { profile?: StoredProfile | null };
+      if (!data.profile) {
+        await localProfileStore.clear();
+        return null;
+      }
+      await localProfileStore.save(data.profile);
+      return data.profile;
+    } catch {
+      return local;
+    }
+  },
+  async save(p) {
+    await localProfileStore.save(p);
+    const response = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(await localProfileStore.get()),
+    });
+    if (response.status === 401) return;
+    if (!response.ok) throw new Error('Profile unavailable');
+  },
+  async clear() {
+    await localProfileStore.clear();
+  },
+};
+
+export const profileStore: ProfileStore = remoteEnabled ? remoteProfileStore : localProfileStore;
 
 export async function isProfileComplete(store: ProfileStore = profileStore) {
   const p = await store.get();

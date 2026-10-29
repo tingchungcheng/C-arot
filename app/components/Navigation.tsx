@@ -8,9 +8,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import Icon, { type IconName } from './Icon';
 import LanguageSwitcher from './LanguageSwitcher';
+import { CarrotBalance } from './Carrots';
+import { useAuthGate } from './AuthGateProvider';
+
+const requiresAuth = (href: string) => !href.includes('demo=1') && (href === '/tarot' || href.startsWith('/tarot?') || href === '/birth-chart' || href === '/combined');
 
 const navItems = (): { href: string; label: string; en: string; icon: IconName }[] => ([
   { href: '/tarot', label: tx('塔罗占卜'), en: 'Tarot', icon: 'tarot_cards' },
+  { href: '/tarot?demo=1', label: tx('试玩塔罗'), en: 'Try Tarot', icon: 'sparkle' },
   { href: '/birth-chart', label: tx('出生星盘'), en: 'Natal chart', icon: 'chart_wheel' },
   { href: '/combined', label: tx('综合解读'), en: 'Combined', icon: 'crystal_ball' },
   { href: '/about', label: tx('关于'), en: 'About', icon: 'info' },
@@ -27,6 +32,7 @@ const tarotTopics = (): { topic: string; label: string; desc: string; icon: Icon
 function TarotNavItem({ active }: { active: boolean }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
   const wrap = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const show = () => { if (closeTimer.current) clearTimeout(closeTimer.current); setOpen(true); };
@@ -43,6 +49,7 @@ function TarotNavItem({ active }: { active: boolean }) {
         else if (e.key === 'ArrowUp' && idx >= 0) { e.preventDefault(); if (idx === 0) (wrap.current?.querySelector('a') as HTMLElement)?.focus(); else focusItem(idx - 1); }
       }}>
       <Link href="/tarot" aria-current={active ? 'page' : undefined} aria-haspopup="true" aria-expanded={open}
+        onClick={(e) => { if (!requireAuth('/tarot')) e.preventDefault(); }}
         className={`relative px-2 xl:px-4 inline-flex items-center gap-2 text-[14px] xl:text-[15px] transition-colors after:absolute after:left-2 after:right-2 xl:after:left-4 xl:after:right-4 after:bottom-0 after:h-0.5 after:bg-primary after:transition-opacity ${active ? 'text-primary font-medium after:opacity-100' : 'text-text-2 hover:text-text after:opacity-0'}`}>
         <Icon name="tarot_cards" size={18} />{tx('塔罗占卜')}
       </Link>
@@ -55,8 +62,10 @@ function TarotNavItem({ active }: { active: boolean }) {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let new-tab clicks through
               e.preventDefault();
               setOpen(false);
+              const href = `/tarot?topic=${t.topic}&go=${Date.now().toString(36)}`;
+              if (!requireAuth(href)) return;
               // fresh nonce so picking the current topic again still advances to step 2/2
-              router.push(`/tarot?topic=${t.topic}&go=${Date.now().toString(36)}`);
+              router.push(href);
             }}
             className="group flex items-center gap-4 rounded-[12px] px-3 py-3 hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:outline-none">
             <Icon name={t.icon} size={22} className={t.tone} />
@@ -67,6 +76,17 @@ function TarotNavItem({ active }: { active: boolean }) {
             <Icon name="arrow_right" size={18} className="text-text-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
           </Link>
         ))}
+        <div className="my-2 border-t border-border" />
+        <Link href="/tarot/cards" role="menuitem" data-dd-item
+          onClick={() => setOpen(false)}
+          className="group flex items-center gap-4 rounded-[12px] px-3 py-3 hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:outline-none">
+          <Icon name="tarot_cards" size={22} className="text-gold" />
+          <span className="flex-1">
+            <span className="block text-[15px] font-bold text-text">{tx('塔罗牌图鉴')}</span>
+            <span className="block text-[13px] text-text-2">{tx('浏览全部 78 张牌')}</span>
+          </span>
+          <Icon name="arrow_right" size={18} className="text-text-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+        </Link>
       </div>
     </div>
   );
@@ -77,6 +97,7 @@ export function Wordmark({ className = '' }: { className?: string }) {
 }
 
 export default function Navigation() {
+  const { requireAuth } = useAuthGate();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -125,6 +146,7 @@ export default function Navigation() {
               if (item.href === '/tarot') return <TarotNavItem key={item.href} active={!!active} />;
               return (
                 <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined}
+                  onClick={(e) => { if (requiresAuth(item.href) && !requireAuth(item.href)) e.preventDefault(); }}
                   className={`relative px-2 xl:px-4 inline-flex items-center gap-2 text-[14px] xl:text-[15px] transition-colors after:absolute after:left-2 after:right-2 xl:after:left-4 xl:after:right-4 after:bottom-0 after:h-0.5 after:bg-primary after:transition-opacity ${active ? 'text-primary font-medium after:opacity-100' : 'text-text-2 hover:text-text after:opacity-0'}`}>
                   <Icon name={item.icon} size={18} />{item.label}
                 </Link>
@@ -132,8 +154,9 @@ export default function Navigation() {
             })}
           </nav>
           <div className="flex items-center gap-2 md:gap-3">
+          <CarrotBalance />
           <LanguageSwitcher />
-          <Link href="/tarot" data-rabbit-hole="/tarot" className="hidden md:inline-flex btn btn-primary min-h-[44px] xl:min-h-[48px] px-3 xl:px-5 text-[15px]" aria-label={tx('开始占卜')}>
+          <Link href="/tarot" data-rabbit-hole="/tarot" data-auth-gate="immediate" className="hidden md:inline-flex btn btn-primary min-h-[44px] xl:min-h-[48px] px-3 xl:px-5 text-[15px]" aria-label={tx('开始占卜')}>
             <Icon name="sparkle" size={20} /><span className="hidden xl:inline">{tx('开始占卜')}</span>
           </Link>
           <button
@@ -169,7 +192,7 @@ export default function Navigation() {
                 <li key={item.href} className="nav-item border-b border-border">
                   <Link
                     href={item.href}
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => { setIsOpen(false); if (requiresAuth(item.href) && !requireAuth(item.href)) e.preventDefault(); }}
                     className={`group flex items-center gap-5 py-5 min-h-[88px] ${active ? 'text-primary' : 'text-text hover:text-primary'} transition-colors`}
                   >
                     <span className="num italic text-gold text-[22px] w-8">{String(i + 1).padStart(2, '0')}</span>

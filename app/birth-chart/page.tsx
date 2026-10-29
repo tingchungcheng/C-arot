@@ -14,6 +14,8 @@ import LoadingWatch from '../components/LoadingWatch';
 import TransitWheel from '../components/TransitWheel';
 import type { TransitResult } from '@/lib/astrology/transits';
 import Icon from '../components/Icon';
+import { CarrotCost, RefusalCaption, RefusalModal, useAfford } from '../components/Carrots';
+import { creditsStore, readRefusal, type Refusal } from '../components/credits-store';
 import { eclipticLon } from '../components/natal-geometry';
 import { PLANETS } from '../components/zodiac';
 import type { BirthChartData } from '@/lib/astrology/calculator';
@@ -62,6 +64,8 @@ export default function BirthChartPage() {
     return () => { tw.kill(); gsap.set(els, { clearProps: 'opacity,transform' }); };
   }, [view]);
   const [summary, setSummary] = useState<ChartSummary | null>(null);
+  const { a: chartAfford, state: credits } = useAfford('chart_summary');
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const sumRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -98,10 +102,12 @@ export default function BirthChartPage() {
     setAiState('loading');
     const ac = new AbortController(); abortRef.current = ac;
     try {
-      const res = await fetch('/api/birth-chart/interpret', {
+      const res = await creditsStore.fetch('/api/birth-chart/interpret', {
         method: 'POST', headers: localeHeaders(), signal: ac.signal,
         body: JSON.stringify({ chartId: chart?.chartId, ...birthPayload(birthData), regenerate, locale: getLocale() }),
       });
+      const refused = await readRefusal(res);
+      if (refused) { setRefusal(refused); setAiState(prev === 'done' && summary ? 'done' : 'idle'); return; }
       if (!res.ok) throw new Error(`status ${res.status}`);
       const json = (await res.json()) as { summary: ChartSummary };
       setSummary(json.summary);
@@ -272,7 +278,9 @@ export default function BirthChartPage() {
                     <h3 className="text-[18px] text-text font-semibold">{tx('让白兔读一读你的星盘')}</h3>
                     <p className="text-[15px] text-text-2 mt-1">{tx('用 AI 把太阳、月亮、上升整理成一张简明摘要')}</p>
                   </div>
-                  <button type="button" onClick={() => fetchSummary()} className="btn btn-primary md:w-auto px-5"><Icon name="sparkle" size={20} />{tx('生成星盘摘要')}</button>
+                  <button type="button" onClick={() => fetchSummary()} disabled={!!chartAfford && !chartAfford.ok} className="btn btn-primary md:w-auto px-5 disabled:opacity-50"><Icon name="sparkle" size={20} />{tx('生成星盘摘要')} <CarrotCost cost={chartAfford?.cost} /></button>
+                  <RefusalCaption a={chartAfford} state={credits} />
+                  <RefusalModal refusal={refusal} onClose={() => setRefusal(null)} />
                 </div>
               )}
               {aiState === 'loading' && (

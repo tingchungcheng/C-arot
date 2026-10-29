@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import { hasCompleteProfile } from './profile-store';
+import { useAuthGate } from './AuthGateProvider';
 
 /*
  * Full-screen "falling down the rabbit hole" transition for the 进入兔子洞 / 开始占卜 CTAs.
@@ -27,6 +28,7 @@ function wantsQuick() {
 
 export default function RabbitHoleTransition() {
   const router = useRouter();
+  const { requireAuth } = useAuthGate();
   const pathname = usePathname();
   const [phase, setPhase] = useState<Phase>('idle');
   const [mode, setMode] = useState<'video' | 'quick'>('quick');
@@ -61,11 +63,18 @@ export default function RabbitHoleTransition() {
   // overlay stays opaque; navigate, then finish() once the new route is mounted (or after a 2s cap)
   const go = useCallback(() => {
     const r = run.current; if (!r || r.pushed) return;
+    if (!requireAuth(r.href)) {
+      const href = r.href;
+      r.pushed = true;
+      finish();
+      requestAnimationFrame(() => requireAuth(href));
+      return;
+    }
     r.pushed = true; setPhase('leaving');
     if (r.href === r.from) { finish(); return; }
     router.push(r.href);
     r.timer = setTimeout(() => finish(), 2000);
-  }, [router, finish]);
+  }, [router, finish, requireAuth]);
 
   // new pathname mounted → fade out
   useEffect(() => {
@@ -101,6 +110,7 @@ export default function RabbitHoleTransition() {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // let new-tab clicks through
       const href = t.dataset.rabbitHole || t.getAttribute('href'); if (!href) return;
       e.preventDefault(); e.stopPropagation();
+      if (t.dataset.authGate === 'immediate' && !requireAuth(href)) return;
       start(href);
     };
     const onWarm = (e: Event) => { if (target(e)) preload(); };
@@ -110,7 +120,7 @@ export default function RabbitHoleTransition() {
       document.removeEventListener('click', onClick, true);
       ['pointerover', 'pointerdown', 'focusin'].forEach((t) => document.removeEventListener(t, onWarm, true));
     };
-  }, [start, preload]);
+  }, [start, preload, requireAuth]);
 
   // Esc skips; back/forward tears the overlay down at once
   useEffect(() => {
