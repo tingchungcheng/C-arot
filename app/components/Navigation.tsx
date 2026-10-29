@@ -1,10 +1,10 @@
 'use client';
 import { t as tx } from '../i18n';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import CarrotWordmark from './CarrotWordmark';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { gsap } from 'gsap';
 import Icon, { type IconName } from './Icon';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -96,10 +96,30 @@ export function Wordmark({ className = '' }: { className?: string }) {
   return <CarrotWordmark className={`text-text ${className}`} />;
 }
 
+/** Active-tab match: the query matters only for the demo item (/tarot?demo=1). */
+export function navActive(pathname: string | null, isDemo: boolean, href: string) {
+  const [path, q] = href.split('?');
+  if (q?.includes('demo=1')) return isDemo;
+  return !!pathname?.startsWith(path) && !(path === '/tarot' && isDemo);
+}
+
+function NavigationWithParams() {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const demo = pathname === '/tarot' && params.get('demo') === '1';
+  return <NavigationInner isDemo={demo} />;
+}
+
+// useSearchParams needs a Suspense boundary (cacheComponents); the fallback is the same nav without demo awareness.
 export default function Navigation() {
+  return <Suspense fallback={<NavigationInner isDemo={false} />}><NavigationWithParams /></Suspense>;
+}
+
+function NavigationInner({ isDemo }: { isDemo: boolean }) {
   const { requireAuth } = useAuthGate();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const isActive = (href: string) => navActive(pathname, isDemo, href);
   const overlayRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   // #site-menu is only in the DOM while open (kept mounted through the exit fade)
@@ -142,7 +162,7 @@ export default function Navigation() {
           </Link>
           <nav aria-label={tx('主导航')} className="hidden md:flex items-stretch h-full gap-1 xl:gap-2">
             {navItems().map((item) => {
-              const active = pathname?.startsWith(item.href);
+              const active = isActive(item.href);
               if (item.href === '/tarot') return <TarotNavItem key={item.href} active={!!active} />;
               return (
                 <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined}
@@ -187,7 +207,7 @@ export default function Navigation() {
           <p className="overline text-primary mb-4">{tx('Contents · 目录')}</p>
           <ul>
             {navItems().map((item, i) => {
-              const active = pathname?.startsWith(item.href);
+              const active = isActive(item.href);
               return (
                 <li key={item.href} className="nav-item border-b border-border">
                   <Link

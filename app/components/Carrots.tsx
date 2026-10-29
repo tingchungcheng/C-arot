@@ -34,13 +34,14 @@ export function useCredits() {
   const { status } = useAuthGate();
   const [state, setState] = useState<CreditState | null>(null);
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status === 'loading') return;
     let alive = true;
+    // guests are keyed by the httpOnly carot_anon cookie; refetch when the identity changes
     creditsStore.getBalance().then((s) => alive && s && setState(s));
     const off = creditsStore.onChange((s) => setState(s));
     return () => { alive = false; off(); };
   }, [status]);
-  return status === 'authenticated' ? state : null;
+  return status === 'loading' ? null : state;
 }
 
 export function useAfford(feature: Feature): { a: Affordance | null; state: CreditState | null } {
@@ -50,8 +51,7 @@ export function useAfford(feature: Feature): { a: Affordance | null; state: Cred
 
 /** Calm dimmed-button caption for a refusal. */
 export function RefusalCaption({ a, state, className = '' }: { a: Affordance | null; state: CreditState | null; className?: string }) {
-  const { status } = useAuthGate();
-  if (status !== 'authenticated' || !a || a.ok || !state) return null;
+  if (!a || a.ok || !state) return null;
   return (
     <p role="status" data-testid="carrot-refusal" className={`mt-2 text-[13px] text-text-2 ${className}`}>
       {a.reason === 'daily_limit' ? tx('今日已抽牌 · 明日再来') : tx('胡萝卜不足 · {0} 补充', [hhmm(state.resetsAt)])}
@@ -70,6 +70,7 @@ const FEATURES: { f: Feature; label: string }[] = [
 
 /** Header pill (Dev-05): 32px, ob-sheet fill, ob-border, 20px carrot, cream tabular number. */
 export function CarrotBalance() {
+  const { status } = useAuthGate();
   const state = useCredits();
   const [shown, setShown] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -93,7 +94,7 @@ export function CarrotBalance() {
     window.addEventListener('mousedown', close); window.addEventListener('keydown', close);
     return () => { window.removeEventListener('mousedown', close); window.removeEventListener('keydown', close); };
   }, [open]);
-  if (!state) return null;
+  if (!state || status !== 'authenticated') return null; // pill stays hidden for guests
   const v = shown ?? state.balance;
   const tone = v <= 0 ? 'text-text-2' : v < 2 ? 'text-gold' : 'text-text';
   return (
