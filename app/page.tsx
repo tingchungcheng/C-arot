@@ -1,4 +1,6 @@
 'use client';
+import CarrotWordmark from './components/CarrotWordmark';
+import { t as tx } from './i18n';
 
 import { useLayoutEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -7,11 +9,11 @@ import Icon, { type IconName } from './components/Icon';
 import { HERO_SVG } from './components/hero-svg';
 import HeroShuffle from './components/HeroShuffle';
 
-const index: { href: string; title: string; desc: string; icon: IconName }[] = [
-  { href: '/tarot', title: '塔罗占卜', desc: '三张牌,看清当下', icon: 'tarot_cards' },
-  { href: '/birth-chart', title: '出生星盘', desc: '行星在出生时的位置', icon: 'chart_wheel' },
-  { href: '/combined', title: '综合解读', desc: '牌面与星盘的对话', icon: 'crystal_ball' },
-];
+const index = (): { href: string; title: string; desc: string; icon: IconName }[] => ([
+  { href: '/tarot', title: tx('塔罗占卜'), desc: tx('三张牌,看清当下'), icon: 'tarot_cards' },
+  { href: '/birth-chart', title: tx('出生星盘'), desc: tx('行星在出生时的位置'), icon: 'chart_wheel' },
+  { href: '/combined', title: tx('综合解读'), desc: tx('牌面与星盘的对话'), icon: 'crystal_ball' },
+]);
 
 export default function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -60,29 +62,29 @@ export default function LandingPage() {
         </div>
 
         <div className="hero-text md:col-span-12 xl:col-span-7 xl:max-w-[540px] md:order-2 xl:order-1 relative z-10">
-          <p className="reveal overline text-primary">Down the rabbit hole · 奇境</p>
+          <p className="reveal overline text-primary">{tx('Down the rabbit hole · 奇境')}</p>
           <h1 className="reveal wordmark text-[length:var(--fs-display)] text-text mt-3">
-            C<span className="text-primary">-</span>arot
+            <CarrotWordmark />
           </h1>
-          <p className="reveal text-[length:var(--fs-h1)] leading-[var(--lh-h1)] font-[family-name:var(--font-display-zh)] font-bold tracking-[0.04em] text-text mt-3">奇境塔罗与星盘</p>
-          <p className="reveal text-text-2 mt-4 max-w-[30em] text-[16px] leading-[1.7]">跟随白兔,踏入时光兔洞。<br />探索塔罗与星盘的神秘奇境<span className="hidden md:inline">——三张牌与你的出生星盘,为当下提供一面镜子</span>。</p>
+          <p className="reveal text-[length:var(--fs-h1)] leading-[var(--lh-h1)] font-[family-name:var(--font-display-zh)] font-bold tracking-[0.04em] text-text mt-3">{tx('奇境塔罗与星盘')}</p>
+          <p className="reveal text-text-2 mt-4 max-w-[30em] text-[16px] leading-[1.7]">{tx('跟随白兔,踏入时光兔洞。')}<br />{tx('探索塔罗与星盘的神秘奇境')}<span className="hidden md:inline">{tx('——三张牌与你的出生星盘,为当下提供一面镜子')}</span>。</p>
 
           <div className="reveal mt-8 flex flex-col sm:flex-row gap-3">
             <button type="button" data-rabbit-hole="/onboarding" className="btn btn-primary w-full sm:w-auto">
-              进入兔子洞 <Icon name="arrow_right" size={20} />
+              {tx('进入兔子洞')} <Icon name="arrow_right" size={20} />
             </button>
-            <Link href="/profile" className="btn btn-secondary w-full sm:w-auto md:hidden">
-              <Icon name="user" size={20} /> 先建立我的资料
+            <Link href="/settings" className="btn btn-secondary w-full sm:w-auto md:hidden">
+              <Icon name="user" size={20} /> {tx('先填写个人资料')}
             </Link>
             <Link href="/birth-chart" className="btn btn-secondary hidden md:inline-flex">
-              <Icon name="chart_wheel" size={20} /> 查看我的星盘
+              <Icon name="chart_wheel" size={20} /> {tx('查看我的星盘')}
             </Link>
           </div>
 
           <section className="mt-12" aria-labelledby="index-title">
-            <p id="index-title" className="reveal md:hidden overline text-primary mb-3">Index · 目录</p>
+            <p id="index-title" className="reveal md:hidden overline text-primary mb-3">{tx('Index · 目录')}</p>
             <ul className="border-t border-border md:border-0 md:grid md:grid-cols-3 md:gap-4">
-              {index.map((it, i) => (
+              {index().map((it, i) => (
                 <li key={it.href} className="reveal border-b border-border md:border-0">
                   <Link href={it.href} className="group flex items-center gap-4 py-4 min-h-[76px]">
                     <span className="num italic text-gold text-[22px] w-8 md:hidden">{String(i + 1).padStart(2, '0')}</span>
@@ -102,7 +104,7 @@ export default function LandingPage() {
 
           <p className="reveal mt-8 flex gap-3 items-start bg-surface-1 border border-border rounded-[var(--r-card)] p-4 text-[15px] leading-[1.6] text-text-3">
             <Icon name="info" size={20} className="text-gold mt-0.5" />
-            塔罗与星盘是探索与反思的工具,非预测或专业建议。
+            {tx('塔罗与星盘是探索与反思的工具,非预测或专业建议。')}
           </p>
         </div>
       </div>
