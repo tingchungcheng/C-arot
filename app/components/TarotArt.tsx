@@ -1,3 +1,4 @@
+import { t as tx } from '../i18n';
 import TarotCardBack from './TarotCardBack';
 
 import { MAJOR } from './tarot-art-data';
@@ -17,15 +18,15 @@ export default function TarotArt({ src, alt, reversed = false, className = '' }:
 }
 
 /** Face-up fallback for cards without art (Minor Arcana): the card back with the name on a plate. */
-export function TarotNamedBack({ nameZh, nameEn, reversed = false, className = '' }: { nameZh: string; nameEn?: string; reversed?: boolean; className?: string }) {
+export function TarotNamedBack({ nameZh, nameEn, reversed = false, className = '', showName = true }: { nameZh: string; nameEn?: string; reversed?: boolean; className?: string; showName?: boolean }) {
   return (
     <div className={`relative w-full h-full aspect-[2/3.5] rounded-[12px] overflow-hidden ${className}`}>
       <TarotCardBack className="absolute inset-0" />
-      <div className="absolute inset-x-[8%] bottom-[8%] rounded-[8px] border border-gold/60 bg-bg/85 px-1.5 py-2 text-center">
+      {showName && <div className="absolute inset-x-[8%] bottom-[8%] rounded-[8px] border border-gold/60 bg-bg/85 px-1.5 py-2 text-center">
         <span className="block font-[family-name:var(--font-display-zh)] font-bold text-[14px] md:text-[17px] text-text leading-tight">{nameZh}</span>
         {nameEn && <span className="block font-display italic text-[11px] md:text-[13px] text-text-2 leading-tight">{nameEn}</span>}
-        <span className="block mt-0.5 text-[11px] md:text-[13px] text-text-2">{reversed ? '逆位' : '正位'}</span>
-      </div>
+        <span className="block mt-0.5 text-[11px] md:text-[13px] text-text-2">{reversed ? tx('逆位') : tx('正位')}</span>
+      </div>}
     </div>
   );
 }

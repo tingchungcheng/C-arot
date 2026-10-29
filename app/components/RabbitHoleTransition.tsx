@@ -1,18 +1,18 @@
 'use client';
+import { t as tx } from '../i18n';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
+import { hasCompleteProfile } from './profile-store';
 
 /*
  * Full-screen "falling down the rabbit hole" transition for the 进入兔子洞 / 开始占卜 CTAs.
  * Any element with data-rabbit-hole="<href>" (or an <a data-rabbit-hole> using its href) triggers it.
  * Lives in the root layout so it survives the route change: the overlay stays opaque while the
  * router pushes, then fades out once the new pathname has mounted.
- * Video plays once per session; later clicks, reduced motion, Save-Data or a slow connection get a
- * quick fade instead. Load/play failure navigates immediately.
+ * The video plays on every CTA press; reduced motion, Save-Data or a 2G connection get a quick fade instead. Load/play failure navigates immediately.
  */
-const PLAYED_KEY = 'c-arot:rabbit-hole-played';
 const LEAD = 0.4; // push this long before the video ends
 export const CARDS_EVENT = 'rabbithole:cards'; // detail: 'hide' | 'show' (landing HeroShuffle listens)
 
@@ -22,8 +22,7 @@ const cards = (d: 'hide' | 'show') => window.dispatchEvent(new CustomEvent(CARDS
 function wantsQuick() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
   const c = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-  if (c?.saveData || /(^|-)2g$/.test(c?.effectiveType ?? '')) return true;
-  try { return sessionStorage.getItem(PLAYED_KEY) === '1'; } catch { return false; }
+  return !!(c?.saveData || /(^|-)2g$/.test(c?.effectiveType ?? ''));
 }
 
 export default function RabbitHoleTransition() {
@@ -74,8 +73,10 @@ export default function RabbitHoleTransition() {
     if (r?.pushed && pathname !== r.from) requestAnimationFrame(() => requestAnimationFrame(() => finish()));
   }, [pathname, finish]);
 
-  const start = useCallback((href: string) => {
+  const start = useCallback((target: string) => {
     if (run.current) return;
+    // returning users with a complete profile skip onboarding (edit via /settings or /onboarding?edit=1)
+    const href = target === '/onboarding' && hasCompleteProfile() ? '/tarot' : target;
     router.prefetch(href);
     const quick = wantsQuick() || !video.current;
     run.current = { href, from: window.location.pathname, pushed: false };
@@ -85,7 +86,6 @@ export default function RabbitHoleTransition() {
     cards('hide');
     const el = overlay.current!;
     if (quick) { gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power2.in', onComplete: go }); return; }
-    try { sessionStorage.setItem(PLAYED_KEY, '1'); } catch {}
     const v = video.current!;
     v.currentTime = 0;
     gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' });
@@ -133,7 +133,7 @@ export default function RabbitHoleTransition() {
       ref={overlay}
       role={active ? 'dialog' : undefined}
       aria-modal={active ? true : undefined}
-      aria-label={active ? '正在进入兔子洞' : undefined}
+      aria-label={active ? tx('正在进入兔子洞') : undefined}
       aria-hidden={!active}
       data-phase={phase}
       className={`rabbit-hole fixed inset-0 z-[100] bg-[#0B0A09] ${active ? '' : 'pointer-events-none invisible'}`}
@@ -152,7 +152,7 @@ export default function RabbitHoleTransition() {
       {active && mode === 'video' && (
         <button ref={skipBtn} type="button" onClick={() => { video.current?.pause(); go(); }}
           className="btn btn-secondary absolute right-5 bottom-[max(20px,env(safe-area-inset-bottom))] md:right-10 md:bottom-10 min-h-[44px]">
-          跳过
+          {tx('跳过')}
         </button>
       )}
     </div>
