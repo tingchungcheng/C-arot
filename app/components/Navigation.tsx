@@ -13,9 +13,9 @@ import { useAuthGate } from './AuthGateProvider';
 
 const requiresAuth = (href: string) => !href.includes('demo=1') && (href === '/tarot' || href.startsWith('/tarot?') || href === '/birth-chart' || href === '/combined');
 
-const navItems = (): { href: string; label: string; en: string; icon: IconName }[] => ([
+const navItems = (showDemo: boolean): { href: string; label: string; en: string; icon: IconName }[] => ([
   { href: '/tarot', label: tx('塔罗占卜'), en: 'Tarot', icon: 'tarot_cards' },
-  { href: '/tarot?demo=1', label: tx('试玩塔罗'), en: 'Try Tarot', icon: 'sparkle' },
+  ...(showDemo ? [{ href: '/tarot?demo=1', label: tx('试玩塔罗'), en: 'Try Tarot', icon: 'sparkle' as IconName }] : []),
   { href: '/birth-chart', label: tx('出生星盘'), en: 'Natal chart', icon: 'chart_wheel' },
   { href: '/combined', label: tx('综合解读'), en: 'Combined', icon: 'crystal_ball' },
   { href: '/about', label: tx('关于'), en: 'About', icon: 'info' },
@@ -116,7 +116,8 @@ export default function Navigation() {
 }
 
 function NavigationInner({ isDemo }: { isDemo: boolean }) {
-  const { requireAuth } = useAuthGate();
+  const { requireAuth, status } = useAuthGate();
+  const items = navItems(status === 'guest');
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const isActive = (href: string) => navActive(pathname, isDemo, href);
@@ -161,7 +162,7 @@ function NavigationInner({ isDemo }: { isDemo: boolean }) {
             <Wordmark />
           </Link>
           <nav aria-label={tx('主导航')} className="hidden md:flex items-stretch h-full gap-1 xl:gap-2">
-            {navItems().map((item) => {
+            {items.map((item) => {
               const active = isActive(item.href);
               if (item.href === '/tarot') return <TarotNavItem key={item.href} active={!!active} />;
               return (
@@ -206,7 +207,7 @@ function NavigationInner({ isDemo }: { isDemo: boolean }) {
         <nav className="mx-auto w-full max-w-[1200px] px-5 md:px-16 pt-8 flex-1">
           <p className="overline text-primary mb-4">{tx('Contents · 目录')}</p>
           <ul>
-            {navItems().map((item, i) => {
+            {items.map((item, i) => {
               const active = isActive(item.href);
               return (
                 <li key={item.href} className="nav-item border-b border-border">

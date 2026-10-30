@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { drawThreeCards, drawAt } from '@/lib/tarot/draw';
-import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
+import { chargeOrDeny, creditIdentity, withCreditCookie, creditHeaders } from '@/lib/credits/request';
+import { claimDemoTarot } from '@/lib/credits/ledger';
 import { consumeDrawSession } from '@/lib/tarot/draw-session';
 import { consumeCloudDrawSession, createCloudReading, isDynamoReadingsEnabled } from '@/lib/store/dynamo';
 
@@ -28,8 +29,15 @@ export async function POST(request: NextRequest) {
     const demo = request.nextUrl.searchParams.get('demo') === '1';
     const useCloud = !demo && isDynamoReadingsEnabled();
 
-    const charge = await chargeOrDeny(request, 'tarot', validated.drawId);
-    if (charge.denied) return charge.denied;
+    const demoIdentity = demo ? await creditIdentity(request) : null;
+    if (demoIdentity) {
+      const demoClaim = await claimDemoTarot(demoIdentity.key, demoIdentity.tz);
+      if (!demoClaim.ok) {
+        return withCreditCookie(Response.json({ error: 'tarot_daily_limit', feature: 'tarot', cost: 0, balance: 0, resetsAt: demoClaim.resetsAt }, { status: 429 }), demoIdentity);
+      }
+    }
+    const charge = demo ? null : await chargeOrDeny(request, 'tarot', validated.drawId);
+    if (charge?.denied) return charge.denied;
     let drawResult;
     if (demo) {
       // Vercel functions do not share the in-memory draw-session map. Demo mode is
@@ -40,11 +48,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'drawId and positions must be sent together' }, { status: 400 });
       }
       const deck = useCloud ? await consumeCloudDrawSession(validated.drawId) : consumeDrawSession(validated.drawId);
-      if (!deck) { charge.refund(); return NextResponse.json({ error: 'Draw expired or already used' }, { status: 410 }); }
+      if (!deck) { if (charge) charge.refund(); return NextResponse.json({ error: 'Draw expired or already used' }, { status: 410 }); }
       try {
         drawResult = { cards: drawAt(deck, validated.positions), timestamp: Date.now() };
       } catch (e) {
-        charge.refund();
+        if (charge) charge.refund();
         return NextResponse.json({ error: (e as Error).message }, { status: 400 });
       }
     } else {
@@ -59,6 +67,7 @@ export async function POST(request: NextRequest) {
       orientation: dc.orientation,
     }));
     if (useCloud) {
+      if (!charge) throw new Error('Missing credit identity for cloud reading');
       await createCloudReading({
         id: readingId,
         ownerKey: charge.ident.key,
@@ -72,7 +81,7 @@ export async function POST(request: NextRequest) {
       createReading(validated.topic, validated.question, drawResult.cards, validated.birthData);
     }
 
-    return withCreditCookie(NextResponse.json({
+    const response = NextResponse.json({
       readingId,
       cards: drawResult.cards.map(dc => ({
         id: dc.card.id,
@@ -86,7 +95,8 @@ export async function POST(request: NextRequest) {
           : dc.card.reversed_keywords
       })),
       timestamp: drawResult.timestamp
-    }, { headers: creditHeaders(charge.result) }), charge.ident);
+    }, charge ? { headers: creditHeaders(charge.result) } : undefined);
+    return withCreditCookie(response, charge?.ident ?? demoIdentity!);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.issues }, { status: 400 });

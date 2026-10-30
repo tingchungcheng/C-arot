@@ -41,7 +41,7 @@ const set = (s: CreditState, charged = 0) => { state = s; listeners.forEach((fn)
 export function afford(s: CreditState | null, feature: Feature): Affordance | null {
   if (!s) return null;
   const cost = s.costs[feature];
-  if (feature === 'tarot' && s.tarotUsedToday >= s.tarotPerDay) return { ok: false, cost, reason: 'daily_limit' };
+  // if (feature === 'tarot' && s.tarotUsedToday >= s.tarotPerDay) return { ok: false, cost, reason: 'daily_limit' };
   if (s.balance < cost) return { ok: false, cost, reason: 'balance' };
   return { ok: true, cost };
 }

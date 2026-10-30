@@ -92,9 +92,11 @@ export default function AuthGateProvider({ children }: { children: ReactNode }) 
               <a href={googleHref} className="btn btn-secondary w-full justify-center">
                 <span className="text-base font-bold">G</span> {tx('使用 Google 登录')}
               </a>
-              <a href="/tarot?demo=1" className="btn btn-secondary w-full justify-center border-gold/50 text-gold hover:bg-gold/10">
-                <Icon name="sparkle" size={19} /> {tx('试玩塔罗')}
-              </a>
+              {status === 'guest' && (
+                <a href="/tarot?demo=1" className="btn btn-secondary w-full justify-center border-gold/50 text-gold hover:bg-gold/10">
+                  <Icon name="sparkle" size={19} /> {tx('试玩塔罗')}
+                </a>
+              )}
             </div>
             <p className="mt-5 text-center text-xs text-text-3">{tx('登录由 AWS Cognito 安全处理。')}</p>
           </div>

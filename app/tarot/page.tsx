@@ -135,8 +135,6 @@ function TarotPageInner() {
   } | null>(null);
   const suppressClick = useRef(false);
   const flipping = useRef(false);
-  const { a: tarotAfford, state: credits } = useAfford("tarot");
-  const blocked = !!tarotAfford && !tarotAfford.ok;
   const [refusal, setRefusal] = useState<Refusal | null>(null);
   const landing = useRef<{ slot: number; from: DOMRect; drop: boolean } | null>(
     null,
@@ -150,6 +148,8 @@ function TarotPageInner() {
   const params = useSearchParams();
   const linkTopic = params.get("topic");
   const demo = params.get("demo") === "1";
+  const { a: tarotAfford, state: credits } = useAfford("tarot");
+  const blocked = !demo && !!tarotAfford && !tarotAfford.ok;
   const linkKey = `${linkTopic ?? ""}|${params.get("go") ?? ""}`;
   const [seenLink, setSeenLink] = useState<string | null>(null);
   if (linkKey !== seenLink) {
@@ -749,9 +749,9 @@ function TarotPageInner() {
                         {tx("开始抽牌")}{" "}
                         <CarrotCost
                           cost={
-                            blocked && tarotAfford?.reason === "daily_limit"
+                              !demo && blocked && tarotAfford?.reason === "daily_limit"
                               ? 0
-                              : tarotAfford?.cost
+                                : demo ? undefined : tarotAfford?.cost
                           }
                         />{" "}
                         <Icon name="tarot_cards" size={20} />
@@ -1016,9 +1016,9 @@ function TarotPageInner() {
                       {!readingId && (
                         <CarrotCost
                           cost={
-                            blocked && tarotAfford?.reason === "daily_limit"
+                            !demo && blocked && tarotAfford?.reason === "daily_limit"
                               ? 0
-                              : tarotAfford?.cost
+                              : demo ? undefined : tarotAfford?.cost
                           }
                         />
                       )}

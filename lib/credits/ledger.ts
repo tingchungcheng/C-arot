@@ -1,4 +1,4 @@
-import { GetCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDoc, dynamoTable, isDynamoHistoryEnabled } from '@/lib/store/dynamo';
 
 // Carrot ledger. Amounts are stored in half-carrot units (integers) to avoid float drift.
@@ -8,6 +8,7 @@ export type Tier = 'free' | 'paid';
 
 export const COSTS: Record<Feature, number> = { tarot: 2, combined: 1, chart_summary: 1, chat: 0.5 };
 export const DAILY_ALLOWANCE: Record<Tier, number> = { free: 5, paid: 15 };
+// Temporarily retained for the credit-state shape, but the Tarot daily gate is disabled below.
 export const TAROT_PER_DAY = 1;
 export const DEFAULT_TZ = 'Asia/Kuala_Lumpur';
 
@@ -53,7 +54,8 @@ function buildState(tier: Tier, tz: string, day: string, spentUnits: number, tar
 
 function denyFor(feature: Feature, s: CreditState): SpendResult {
   const cost = COSTS[feature];
-  const tarotOut = feature === 'tarot' && s.tarotUsedToday >= TAROT_PER_DAY;
+  // const tarotOut = feature === 'tarot' && s.tarotUsedToday >= TAROT_PER_DAY;
+  const tarotOut = false;
   return { ok: false, status: tarotOut ? 429 : 402,
     body: { error: tarotOut ? 'tarot_daily_limit' : 'insufficient_carrots', feature, cost, balance: s.balance, resetsAt: s.resetsAt } };
 }
@@ -83,11 +85,10 @@ async function dynSpend(userKey: string, tier: Tier, tz: string, feature: Featur
       ConditionExpression: 'attribute_not_exists(PK)' } },
     { Update: { TableName: dynamoTable(), Key: { PK: pk(userKey), SK: `DAY#${day}` },
       UpdateExpression: 'ADD #u :c, #t :tc SET entity = :e, expiresAt = :x',
-      ConditionExpression: isTarot
-        ? '(attribute_not_exists(#u) OR #u <= :max) AND (attribute_not_exists(#t) OR #t < :tl)'
-        : 'attribute_not_exists(#u) OR #u <= :max',
+      // Tarot's once-per-day condition is intentionally disabled for now.
+      ConditionExpression: 'attribute_not_exists(#u) OR #u <= :max',
       ExpressionAttributeNames: { '#u': 'units', '#t': 'tarot' },
-      ExpressionAttributeValues: { ':c': cost, ':tc': isTarot ? 1 : 0, ':max': maxBefore, ':e': 'credit_day', ':x': ttl(7), ...(isTarot ? { ':tl': TAROT_PER_DAY } : {}) } } },
+      ExpressionAttributeValues: { ':c': cost, ':tc': isTarot ? 1 : 0, ':max': maxBefore, ':e': 'credit_day', ':x': ttl(7) } } },
   ];
   if (feature === 'chart_summary') {
     items.push({ Put: { TableName: dynamoTable(), Item: { PK: pk(userKey), SK: `ONCE#${feature}#${ref}`, entity: 'credit_once', createdAt: Date.now() },
@@ -119,6 +120,27 @@ async function dynRefund(userKey: string, r: Receipt): Promise<void> {
   catch (err) { if ((err as { name?: string }).name !== 'TransactionCanceledException') throw err; } // nothing to refund
 }
 
+export type DemoTarotResult = { ok: boolean; resetsAt: number };
+
+async function dynClaimDemoTarot(userKey: string, tz: string): Promise<DemoTarotResult> {
+  const day = dayIn(tz);
+  const resetsAt = nextResetAt(tz);
+  try {
+    await dynamoDoc().send(new UpdateCommand({
+      TableName: dynamoTable(),
+      Key: { PK: pk(userKey), SK: `DAY#${day}` },
+      UpdateExpression: 'ADD #d :one SET entity = :e, expiresAt = :x',
+      ConditionExpression: 'attribute_not_exists(#d) OR #d < :one',
+      ExpressionAttributeNames: { '#d': 'demoTarot' },
+      ExpressionAttributeValues: { ':one': 1, ':e': 'credit_day', ':x': ttl(7) },
+    }));
+    return { ok: true, resetsAt };
+  } catch (err) {
+    if ((err as { name?: string }).name === 'ConditionalCheckFailedException') return { ok: false, resetsAt };
+    throw err;
+  }
+}
+
 // ---------------- SQLite backend (local dev) ----------------
 async function sql() {
   const { db } = await import('@/lib/store/db');
@@ -148,7 +170,8 @@ async function sqlSpend(userKey: string, tier: Tier, tz: string, feature: Featur
       return { ok: true, charged: false, cost: 0, state, receipt };
     if (db.prepare(`SELECT 1 FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).get(userKey, day, feature, ref))
       return { ok: true, charged: false, cost: 0, state, receipt };
-    if ((feature === 'tarot' && state.tarotUsedToday >= TAROT_PER_DAY) || units(state.balance) < units(COSTS[feature])) return denyFor(feature, state);
+    // if (feature === 'tarot' && state.tarotUsedToday >= TAROT_PER_DAY) return denyFor(feature, state);
+    if (units(state.balance) < units(COSTS[feature])) return denyFor(feature, state);
     db.prepare(`INSERT INTO credit_spend VALUES (?,?,?,?,?,?)`).run(userKey, day, feature, ref, units(COSTS[feature]), Date.now());
     if (feature === 'chart_summary') db.prepare(`INSERT OR IGNORE INTO credit_once VALUES (?,?,?,?)`).run(userKey, feature, ref, Date.now());
     return { ok: true, charged: true, cost: COSTS[feature], state: read(), receipt };
@@ -159,6 +182,18 @@ async function sqlRefund(userKey: string, r: Receipt): Promise<void> {
   const db = await sql();
   db.prepare(`DELETE FROM credit_spend WHERE user_key=? AND day=? AND feature=? AND ref=?`).run(userKey, r.day, r.feature, r.ref);
   if (r.feature === 'chart_summary') db.prepare(`DELETE FROM credit_once WHERE user_key=? AND feature=? AND ref=?`).run(userKey, r.feature, r.ref);
+}
+
+async function sqlClaimDemoTarot(userKey: string, tz: string): Promise<DemoTarotResult> {
+  const db = await sql();
+  const day = dayIn(tz);
+  const resetsAt = nextResetAt(tz);
+  return db.transaction((): DemoTarotResult => {
+    const used = db.prepare(`SELECT 1 FROM credit_spend WHERE user_key=? AND day=? AND feature=? LIMIT 1`).get(userKey, day, 'demo_tarot');
+    if (used) return { ok: false, resetsAt };
+    db.prepare(`INSERT INTO credit_spend VALUES (?,?,?,?,?,?)`).run(userKey, day, 'demo_tarot', 'demo', 0, Date.now());
+    return { ok: true, resetsAt };
+  })();
 }
 
 // ---------------- Public API (async) ----------------
@@ -179,4 +214,9 @@ export function spendCredits(userKey: string, tier: Tier, tz: string, feature: F
 /** Undo a charge when the paid-for work failed (e.g. upstream AI error). */
 export function refundCredits(userKey: string, receipt: Receipt): Promise<void> {
   return cloud() ? dynRefund(userKey, receipt) : sqlRefund(userKey, receipt);
+}
+
+/** Demo Tarot is free, but each identity can use it once per local day. */
+export function claimDemoTarot(userKey: string, tz: string): Promise<DemoTarotResult> {
+  return cloud() ? dynClaimDemoTarot(userKey, tz) : sqlClaimDemoTarot(userKey, tz);
 }
