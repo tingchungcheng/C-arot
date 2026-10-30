@@ -467,6 +467,7 @@ export const en: Record<string, string> = {
   "已有账户？登录": "Already have an account? Sign in",
   发送验证码: "Send code",
   重新发送验证码: "Resend code",
+  "请在 {0} 秒后重发": "Resend in {0}s",
   返回登录: "Back to sign in",
   请输入验证码: "Enter the verification code",
   "密码至少 8 个字符": "At least 8 characters",

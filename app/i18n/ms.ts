@@ -469,6 +469,7 @@ export const ms: Record<string, string> = {
   "已有账户？登录": "Sudah ada akaun? Log masuk",
   发送验证码: "Hantar kod",
   重新发送验证码: "Hantar semula kod",
+  "请在 {0} 秒后重发": "Hantar semula dalam {0}s",
   返回登录: "Kembali ke log masuk",
   请输入验证码: "Masukkan kod pengesahan",
   "密码至少 8 个字符": "Sekurang-kurangnya 8 aksara",
