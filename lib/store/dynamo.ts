@@ -52,6 +52,22 @@ export type CloudReading = {
   updatedAt: number;
 };
 
+export type CloudBirthChart = {
+  id: string;
+  ownerKey: string;
+  user_nickname?: string;
+  birth_date: string;
+  birth_time?: string;
+  birth_place: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  chart_data: string;
+  interpretation?: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
 type HistoryItem = CloudHistoryEntry & {
   PK: string;
   SK: string;
@@ -85,6 +101,7 @@ const sortKey = (id: string) => `HISTORY#${id}`;
 const profileKey = (userId: string) => ({ PK: partition(userId), SK: 'PROFILE' });
 const readingPartition = (ownerKey: string) => `OWNER#${ownerKey}`;
 const readingSortKey = (id: string) => `READING#${id}`;
+const chartSortKey = (id: string) => `CHART#${id}`;
 const drawPartition = (drawId: string) => `DRAW#${drawId}`;
 
 export function isDynamoHistoryEnabled(): boolean {
@@ -154,6 +171,32 @@ export async function saveCloudReadingInterpretation(ownerKey: string, readingId
     UpdateExpression: 'SET interpretation = :interpretation, #status = :status, updatedAt = :updatedAt',
     ExpressionAttributeNames: { '#status': 'status' },
     ExpressionAttributeValues: { ':interpretation': interpretation, ':status': 'interpretation_ready', ':updatedAt': Date.now() },
+  }));
+}
+
+export async function createCloudBirthChart(ownerKey: string, chart: Omit<CloudBirthChart, 'ownerKey' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  const now = Date.now();
+  await documentClient().send(new PutCommand({
+    TableName: tableName(),
+    Item: {
+      ...chart,
+      ownerKey,
+      PK: readingPartition(ownerKey),
+      SK: chartSortKey(chart.id),
+      entity: 'birth_chart',
+      createdAt: now,
+      updatedAt: now,
+    },
+  }));
+}
+
+export async function updateCloudBirthChartInterpretation(ownerKey: string, chartId: string, interpretation: string): Promise<void> {
+  await documentClient().send(new UpdateCommand({
+    TableName: tableName(),
+    Key: { PK: readingPartition(ownerKey), SK: chartSortKey(chartId) },
+    UpdateExpression: 'SET interpretation = :interpretation, updatedAt = :updatedAt',
+    ConditionExpression: 'attribute_exists(PK)',
+    ExpressionAttributeValues: { ':interpretation': interpretation, ':updatedAt': Date.now() },
   }));
 }
 

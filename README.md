@@ -252,7 +252,7 @@ npm start
 
 ### 当前版本限制
 1. **云端部署前需配置 Cognito**: 未配置时本地功能继续使用本地模式，受保护功能不会伪装成已授权
-2. **SQLite 仍是本地开发数据源**: 生产环境的正常塔罗 reading、抽牌 session 和解读结果已使用 DynamoDB；本地 mock 数据无需迁移。星盘及其他非塔罗 AI 结果仍按现有路线处理
+2. **SQLite 仍是本地开发数据源**: 生产环境的塔罗 reading、抽牌 session、解读结果和星盘记录已使用 DynamoDB；本地 mock 数据无需迁移。其他非塔罗 AI 结果仍按现有路线处理
 3. **无支付功能**: `custom:tier=paid` 目前需要由管理员或后续 Phase 3 支付 webhook 设置，浏览器不能自行升级
 
 ## ☁️ Phase 2 AWS 部署

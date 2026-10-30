@@ -19,6 +19,7 @@ import { creditsStore, readRefusal, type Refusal } from '../components/credits-s
 import { eclipticLon } from '../components/natal-geometry';
 import { PLANETS } from '../components/zodiac';
 import type { BirthChartData } from '@/lib/astrology/calculator';
+import { birthChartCacheKey, chartSummaryCacheKey, readCachedJson, writeCachedJson } from '../components/profile-store';
 
 interface StoredBirth { nickname?: string; date: string; time?: string; place: string; latitude?: number; longitude?: number; timezone?: string }
 /** Locked summary shape (see app/api/birth-chart/interpret). */
@@ -83,20 +84,25 @@ export default function BirthChartPage() {
     date: data.date, time: data.time || undefined, place: data.place,
     latitude: data.latitude || 3.139, longitude: data.longitude || 101.687, timezone: data.timezone || 'Asia/Kuala_Lumpur',
   });
-  const cacheKey = (data: StoredBirth) => {
-    const p = birthPayload(data);
-    return `chartSummary:${p.date}|${p.time || '-'}|${p.latitude.toFixed(4)}|${p.longitude.toFixed(4)}`;
-  };
-
   // Restore a saved summary for this birth data (no API call).
   useEffect(() => {
     if (!birthData) return;
-    try { const v = localStorage.getItem(cacheKey(birthData)); const o = v ? JSON.parse(v) : null; if (o?.sun && Array.isArray(o.traits)) { setSummary(o); setAiState('done'); } } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const cached = readCachedJson<ChartSummary>(chartSummaryCacheKey(birthData, getLocale()));
+    if (!cached?.sun || !Array.isArray(cached.traits)) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) { setSummary(cached); setAiState('done'); }
+    });
+    return () => { active = false; };
   }, [birthData]);
 
   const fetchSummary = async (regenerate = false) => {
     if (!birthData || aiState === 'loading') return;
+    const locale = getLocale();
+    if (!regenerate) {
+      const cached = readCachedJson<ChartSummary>(chartSummaryCacheKey(birthData, locale));
+      if (cached?.sun && Array.isArray(cached.traits)) { setSummary(cached); setAiState('done'); return; }
+    }
     const prev = aiState;
     if (boxRef.current) flipState.current = Flip.getState(boxRef.current);
     setAiState('loading');
@@ -104,14 +110,14 @@ export default function BirthChartPage() {
     try {
       const res = await creditsStore.fetch('/api/birth-chart/interpret', {
         method: 'POST', headers: localeHeaders(), signal: ac.signal,
-        body: JSON.stringify({ chartId: chart?.chartId, ...birthPayload(birthData), regenerate, locale: getLocale() }),
+        body: JSON.stringify({ chartId: chart?.chartId, ...birthPayload(birthData), regenerate, locale }),
       });
       const refused = await readRefusal(res);
       if (refused) { setRefusal(refused); setAiState(prev === 'done' && summary ? 'done' : 'idle'); return; }
       if (!res.ok) throw new Error(`status ${res.status}`);
       const json = (await res.json()) as { summary: ChartSummary };
       setSummary(json.summary);
-      try { localStorage.setItem(cacheKey(birthData), JSON.stringify(json.summary)); } catch { /* ignore */ }
+      writeCachedJson(chartSummaryCacheKey(birthData, locale), json.summary);
       setAiState('done');
     } catch (e) {
       if ((e as Error).name === 'AbortError') { setAiState(prev === 'done' && summary ? 'done' : 'idle'); return; }
@@ -136,6 +142,8 @@ export default function BirthChartPage() {
   }, [aiState, summary]);
 
   const handleGenerate = async (data: StoredBirth) => {
+    const cached = readCachedJson<ChartResponse>(birthChartCacheKey(data));
+    if (cached?.chartData?.planets) { setChart(cached); return; }
     setIsLoading(true);
     setError('');
     try {
@@ -156,6 +164,7 @@ export default function BirthChartPage() {
       });
       if (!response.ok) throw new Error('Failed to generate chart');
       const json = (await response.json()) as ChartResponse;
+      writeCachedJson(birthChartCacheKey(data), json);
       setChart(json);
     } catch (e) {
       console.error('Error generating chart:', e);
@@ -166,13 +175,18 @@ export default function BirthChartPage() {
   };
 
   useEffect(() => {
+    let active = true;
     const raw = localStorage.getItem('birthData');
     if (raw) {
       const parsed = JSON.parse(raw) as StoredBirth;
-      setBirthData(parsed);
-      if (parsed.place) handleGenerate(parsed);
+      queueMicrotask(() => {
+        if (!active) return;
+        setBirthData(parsed);
+        if (parsed.place) void handleGenerate(parsed);
+      });
     }
-    setReady(true);
+    queueMicrotask(() => { if (active) setReady(true); });
+    return () => { active = false; };
   }, []);
 
   if (isLoading) {

@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { calculateBirthChart } from '@/lib/astrology/calculator';
 import { generateChartSummary } from '@/lib/ai/chart-summary';
 import { resolveLocale } from '@/lib/ai/locale';
-import { updateBirthChartInterpretation } from '@/lib/store/db';
-import { chargeOrDeny, withCreditCookie, creditHeaders } from '@/lib/credits/request';
+import { isDynamoHistoryEnabled, updateCloudBirthChartInterpretation } from '@/lib/store/dynamo';
+import { chargeOrDeny, creditHeaders } from '@/lib/credits/request';
 import { requireUser } from '@/lib/auth/session';
 
 // Chart summary (strict JSON) via lib/ai/chart-summary. The API key is read here only (server-side).
@@ -81,6 +81,15 @@ export async function POST(request: NextRequest) {
   if (!b.time) view.rising = '';
 
   cache.set(key, view);
-  if (b.chartId) { try { updateBirthChartInterpretation(b.chartId, JSON.stringify(view)); } catch { /* non-fatal */ } }
+  if (b.chartId) {
+    try {
+      if (isDynamoHistoryEnabled()) {
+        await updateCloudBirthChartInterpretation(charge.ident.key, b.chartId, JSON.stringify(view));
+      } else {
+        const { updateBirthChartInterpretation } = await import('@/lib/store/db');
+        updateBirthChartInterpretation(b.chartId, JSON.stringify(view));
+      }
+    } catch { /* non-fatal */ }
+  }
   return Response.json({ summary: view, cached: false }, { headers });
 }

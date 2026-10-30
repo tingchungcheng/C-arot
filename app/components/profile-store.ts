@@ -3,10 +3,52 @@ import { useEffect } from 'react';
 
 // Profile/birth data is cached in localStorage and, for signed-in users, synced to DynamoDB.
 export const PROFILE_KEY = 'birthData';
+const BIRTH_CHART_CACHE_PREFIX = 'birthChart:';
+const CHART_SUMMARY_CACHE_PREFIX = 'chartSummary:';
 export type StoredProfile = {
   nickname: string; date: string; time: string; timeUnknown: boolean; place: string;
   latitude?: number; longitude?: number; timezone?: string;
 };
+
+type ProfileIdentity = {
+  nickname?: string; date?: string; time?: string; timeUnknown?: boolean; place?: string;
+  latitude?: number; longitude?: number; timezone?: string;
+};
+
+function profileFingerprint(p: ProfileIdentity): string {
+  return JSON.stringify([
+    p.nickname?.trim() ?? '', p.date ?? '', p.time ?? '', !!p.timeUnknown, p.place?.trim() ?? '',
+    p.latitude ?? null, p.longitude ?? null, p.timezone ?? null,
+  ]);
+}
+
+export function birthChartCacheKey(p: ProfileIdentity): string {
+  return `${BIRTH_CHART_CACHE_PREFIX}${encodeURIComponent(profileFingerprint(p))}`;
+}
+
+export function chartSummaryCacheKey(p: ProfileIdentity, locale: string): string {
+  return `${CHART_SUMMARY_CACHE_PREFIX}${encodeURIComponent(profileFingerprint(p))}:${locale}`;
+}
+
+export function readCachedJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) as T : null;
+  } catch { return null; }
+}
+
+export function writeCachedJson(key: string, value: unknown): void {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode or quota */ }
+}
+
+/** Clear calculated chart data when the profile owner or birth details change. */
+export function clearBirthChartCaches(): void {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(BIRTH_CHART_CACHE_PREFIX) || key.startsWith(CHART_SUMMARY_CACHE_PREFIX)) localStorage.removeItem(key);
+    }
+  } catch { /* private mode */ }
+}
 
 export function readProfile(): StoredProfile | null {
   try {
@@ -62,8 +104,13 @@ export interface ProfileStore {
 
 export const localProfileStore: ProfileStore = {
   async get() { return readProfile(); },
-  async save(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...readProfile(), ...p })); },
-  async clear() { localStorage.removeItem(PROFILE_KEY); },
+  async save(p) {
+    const previous = readProfile();
+    const next = { ...previous, ...p } as StoredProfile;
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+    if (!previous || profileFingerprint(previous) !== profileFingerprint(next)) clearBirthChartCaches();
+  },
+  async clear() { localStorage.removeItem(PROFILE_KEY); clearBirthChartCaches(); },
 };
 
 const remoteEnabled = process.env.NEXT_PUBLIC_PROFILE_STORE === 'remote' || process.env.NEXT_PUBLIC_HISTORY_STORE === 'remote';

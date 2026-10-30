@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { randomUUID } from 'node:crypto';
 import { calculateBirthChart, formatBirthChartSummary } from '@/lib/astrology/calculator';
 import { renderBirthChartSVG } from '@/lib/astrology/chart-renderer';
 import { interpretBirthChart } from '@/lib/ai/interpreter';
 import { resolveLocale } from '@/lib/ai/locale';
-import { saveBirthChart, updateBirthChartInterpretation } from '@/lib/store/db';
+import { creditIdentity, withCreditCookie } from '@/lib/credits/request';
+import { createCloudBirthChart, isDynamoHistoryEnabled } from '@/lib/store/dynamo';
 
 const BirthChartSchema = z.object({
   nickname: z.string().optional(),
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
       place: validated.place
     }, locale);
 
-    const chartId = saveBirthChart({
+    const chartRecord = {
       user_nickname: validated.nickname,
       birth_date: validated.date,
       birth_time: validated.time,
@@ -51,15 +53,25 @@ export async function POST(request: NextRequest) {
       timezone: validated.timezone,
       chart_data: JSON.stringify(chartData),
       interpretation
-    });
+    };
+    let chartId: string;
+    const owner = isDynamoHistoryEnabled() ? await creditIdentity(request) : null;
+    if (owner) {
+      chartId = randomUUID();
+      await createCloudBirthChart(owner.key, { id: chartId, ...chartRecord });
+    } else {
+      const { saveBirthChart } = await import('@/lib/store/db');
+      chartId = saveBirthChart(chartRecord);
+    }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       chartId,
       chartData,
       chartSvg,
       summary,
       interpretation
     });
+    return owner ? withCreditCookie(response, owner) : response;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.issues }, { status: 400 });
